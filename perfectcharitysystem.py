@@ -156,41 +156,12 @@ def donate(data: DonationCreate):
 	# Optional: you could enforce that the donor wallet must already exist
 	# and/or have enough balance. For now, the blockchain is trust-based.
 
-	# --- Internal AI assessment (no direct user interaction) ---
-	# Build a simple history view for this wallet for the AI engine.
-	wallet_history: list[dict] = []
-	for block_dict in blockchain.to_dict():
-		for tx in block_dict["transactions"]:
-			if tx["sender"] == data.from_wallet:
-				wallet_history.append(
-					{
-						"timestamp": block_dict["timestamp"],
-						"sender": tx["sender"],
-						"receiver": tx["receiver"],
-						"amount": tx["amount"],
-						"profile_id": (tx.get("metadata") or {}).get("profile_id"),
-					}
-				)
-
-	assessment = pcs_ai.assess_donation(
-		from_wallet=data.from_wallet,
-		profile_id=profile.profile_id,
-		amount=data.amount,
-		wallet_history=wallet_history,
-	)
-
-	extra_metadata = {
-		"ai_risk_level": assessment.level.value,
-		"ai_reasons": assessment.reasons,
-	}
-
 	block = blockchain.create_donation(
 		from_wallet=data.from_wallet,
 		to_wallet=profile.wallet_id,
 		amount=data.amount,
 		profile_id=profile.profile_id,
 		message=data.message,
-		extra_metadata=extra_metadata,
 	)
 
 	# Save blockchain to disk after each donation
@@ -209,8 +180,8 @@ def donate(data: DonationCreate):
 		amount=tx.amount,
 		profile_id=tx.metadata.get("profile_id") if tx.metadata else None,
 		message=tx.metadata.get("message") if tx.metadata else None,
-		ai_risk_level=(tx.metadata or {}).get("ai_risk_level") if tx.metadata else None,
-		ai_reasons=(tx.metadata or {}).get("ai_reasons") if tx.metadata else None,
+		ai_risk_level=None,
+		ai_reasons=None,
 	)
 
 

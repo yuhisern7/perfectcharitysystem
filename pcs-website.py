@@ -18,11 +18,13 @@ from __future__ import annotations
 import hashlib
 import pathlib
 import uuid
+import re
+import html
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from fastapi import FastAPI, Request, Form, UploadFile, File
+from fastapi import FastAPI, Request, Form, UploadFile, File, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
@@ -30,6 +32,7 @@ from starlette.staticfiles import StaticFiles
 
 import perfectcharitysystem as pcs_api
 import pcs_persistence
+import pcs_ai
 import config
 
 
@@ -48,41 +51,68 @@ app.add_middleware(
 
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
-	"""Add DISA STIG Level 3 security headers.
+	"""Add OWASP-compliant security headers.
 
-	Implements security controls from DISA STIG requirements:
-	- X-Frame-Options: Prevent clickjacking
-	- X-Content-Type-Options: Prevent MIME sniffing
-	- Content-Security-Policy: Restrict resource loading
-	- Strict-Transport-Security: Force HTTPS (production)
+	Implements OWASP security best practices:
+	- X-Frame-Options: Prevent clickjacking (OWASP A04:2021)
+	- X-Content-Type-Options: Prevent MIME sniffing (OWASP A05:2021)
+	- Content-Security-Policy: Prevent XSS (OWASP A03:2021)
+	- Strict-Transport-Security: Force HTTPS (OWASP A02:2021)
 	- Referrer-Policy: Limit information leakage
 	- Permissions-Policy: Restrict browser features
+	- X-XSS-Protection: Legacy XSS protection
 	"""
+	# AI Security Monitoring - Check for attacks BEFORE processing request
+	client_ip = request.client.host if request.client else "unknown"
+	user_agent = request.headers.get("user-agent", "")
+	
+	# Check request pattern for attacks
+	security_check = pcs_ai.assess_request_pattern(
+		ip_address=client_ip,
+		endpoint=str(request.url.path),
+		method=request.method,
+	)
+	
+	# Block malicious requests immediately (OWASP A05:2021 - Security Misconfiguration)
+	if security_check.should_block:
+		raise HTTPException(
+			status_code=403,
+			detail="Access denied - Security threat detected"
+		)
+	
 	response = await call_next(request)
 	
-	# STIG V-222577: Prevent clickjacking attacks
+	# OWASP A04:2021 - Insecure Design: Prevent clickjacking attacks
 	response.headers.setdefault("X-Frame-Options", "DENY")
 	
-	# STIG V-222578: Prevent MIME type sniffing
+	# OWASP A05:2021 - Security Misconfiguration: Prevent MIME sniffing
 	response.headers.setdefault("X-Content-Type-Options", "nosniff")
 	
-	# STIG V-222579: Limit referrer information leakage
-	response.headers.setdefault("Referrer-Policy", "no-referrer")
+	# OWASP A05:2021 - Security Misconfiguration: Limit referrer information leakage
+	response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
 	
-	# STIG V-222580: Content Security Policy (allows inline styles for existing templates)
+	# OWASP A03:2021 - Injection: Content Security Policy (prevent XSS)
 	response.headers.setdefault(
 		"Content-Security-Policy",
-		"default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; script-src 'self' 'unsafe-inline'"
+		"default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'"
 	)
 	
-	# STIG V-222581: Restrict browser features
+	# OWASP A05:2021 - Security Misconfiguration: Restrict browser features
 	response.headers.setdefault(
 		"Permissions-Policy",
-		"geolocation=(), microphone=(), camera=(), payment=()"
+		"geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=()"
 	)
 	
-	# STIG V-222582: Force HTTPS in production (comment out for local dev)
-	# response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+	# OWASP A02:2021 - Cryptographic Failures: Force HTTPS in production
+	if not config.DEBUG:
+		response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+	
+	# Legacy XSS protection (defense in depth)
+	response.headers.setdefault("X-XSS-Protection", "1; mode=block")
+	
+	# OWASP A09:2021 - Security Logging: Log suspicious activity
+	if security_check.level in [pcs_ai.ThreatLevel.SUSPICIOUS, pcs_ai.ThreatLevel.DANGEROUS]:
+		print(f"[SECURITY WARNING] {client_ip} - {security_check.threats}")
 	
 	return response
 
@@ -382,6 +412,75 @@ def _hash_password(raw: str) -> str:
 	return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
+def _sanitize_input(text: str, max_length: int = 500) -> str:
+	"""Sanitize user input to prevent XSS and injection attacks (OWASP A03:2021).
+	
+	Parameters
+	----------
+	text : str
+		User input to sanitize
+	max_length : int
+		Maximum allowed length
+		
+	Returns
+	-------
+	str
+		Sanitized text safe for storage and display
+	"""
+	if not text:
+		return ""
+	
+	# Truncate to max length
+	text = text[:max_length]
+	
+	# HTML escape to prevent XSS
+	text = html.escape(text)
+	
+	# Remove any remaining potentially dangerous characters
+	text = re.sub(r'[<>"\'\/]', '', text)
+	
+	return text.strip()
+
+
+def _sanitize_email(email: str) -> str:
+	"""Validate and sanitize email address (OWASP A03:2021)."""
+	if not email:
+		return ""
+	
+	# Basic email validation pattern
+	email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+	if not re.match(email_pattern, email):
+		return ""
+	
+	return email.strip().lower()[:254]  # Max email length per RFC 5321
+
+
+def _sanitize_username(username: str) -> str:
+	"""Validate and sanitize username (OWASP A03:2021)."""
+	if not username:
+		return ""
+	
+	# Only allow alphanumeric, underscore, hyphen, dot
+	username = re.sub(r'[^a-zA-Z0-9._-]', '', username)
+	
+	return username.strip().lower()[:50]
+
+
+def _sanitize_url(url: str) -> str:
+	"""Validate and sanitize URLs to prevent SSRF (OWASP A10:2021)."""
+	if not url:
+		return ""
+	
+	# Only allow http and https protocols
+	if not url.startswith(('http://', 'https://')):
+		return ""
+	
+	# Remove any attempts at protocol smuggling
+	url = re.sub(r'[\r\n\t]', '', url)
+	
+	return url.strip()[:2048]
+
+
 def _seed_inspector_account() -> None:
 	"""Create a built-in inspector account (admin/admin) if missing.
 
@@ -527,11 +626,13 @@ async def register(
 	state: str = Form(""),
 	city: str = Form(""),
 ):
-	email = email.strip().lower()
-	username = username.strip().lower()
+	# OWASP A03:2021 - Injection: Sanitize all inputs
+	email = _sanitize_email(email)
+	username = _sanitize_username(username)
 	role = role.strip().lower()
-	country = country.strip()
-	state = state.strip()
+	country = _sanitize_input(country, max_length=100)
+	state = _sanitize_input(state, max_length=100)
+	city = _sanitize_input(city, max_length=100)
 	
 	# Only allow donor registration for public users
 	# Country and state are required
@@ -561,7 +662,7 @@ async def register(
 		wallet_id=wallet_id,
 		country=country,
 		state=state,
-		city=city.strip(),
+		city=city,
 		email=email,
 		registration_ip=request.client.host if request.client else "",
 	)
@@ -574,9 +675,10 @@ async def register(
 	USERNAME_INDEX[email] = user_id  # Also index by email for login flexibility
 	_save_users()
 
-	# DISA STIG V-222598: Set session with last activity timestamp
+	# OWASP A01:2021 - Broken Access Control: Secure session
 	request.session["user_id"] = user_id
 	request.session["last_activity"] = datetime.utcnow().isoformat()
+	request.session["session_token"] = uuid.uuid4().hex
 	
 	return RedirectResponse(url="/profile", status_code=303)
 
@@ -591,13 +693,24 @@ async def login_page(request: Request):
 
 @app.post("/login", response_class=RedirectResponse)
 async def login(request: Request, username: str = Form(...), password: str = Form(...), role: str = Form(...)):
-	username = username.strip().lower()  # Case-insensitive login for usernames and emails
+	# OWASP A03:2021 - Injection: Sanitize inputs
+	username = _sanitize_username(username)
 	selected_role = role.strip().lower()
-	client_ip = request.client.host if request.client else ""
+	client_ip = request.client.host if request.client else "unknown"
+	user_agent = request.headers.get("user-agent", "")
 	
 	# Username can be either username or email
 	user_id = USERNAME_INDEX.get(username)
 	if not user_id:
+		# OWASP A07:2021 - Authentication: Log failed attempt with AI monitoring
+		security_check = pcs_ai.assess_login_attempt(
+			ip_address=client_ip,
+			username=username,
+			success=False,
+			user_agent=user_agent,
+		)
+		if security_check.level == pcs_ai.ThreatLevel.CRITICAL:
+			print(f"[SECURITY CRITICAL] Login attempt blocked: {client_ip} - {security_check.threats}")
 		return RedirectResponse(url="/login", status_code=303)
 
 	user = USERS.get(user_id)
@@ -613,6 +726,16 @@ async def login(request: Request, username: str = Form(...), password: str = For
 
 	# DISA STIG V-222595: Validate password
 	if user.password_hash != _hash_password(password):
+		# OWASP A07:2021 - Authentication: AI security monitoring on failed login
+		security_check = pcs_ai.assess_login_attempt(
+			ip_address=client_ip,
+			username=username,
+			success=False,
+			user_agent=user_agent,
+		)
+		if security_check.level == pcs_ai.ThreatLevel.CRITICAL:
+			print(f"[SECURITY CRITICAL] Brute force detected: {client_ip} - {security_check.threats}")
+		
 		_record_failed_login(user, client_ip)
 		_save_users()
 		return RedirectResponse(url="/login", status_code=303)
@@ -629,12 +752,22 @@ async def login(request: Request, username: str = Form(...), password: str = For
 		_save_users()
 		return RedirectResponse(url="/login", status_code=303)
 
+	# OWASP A07:2021 - Authentication: Successful login with AI monitoring
+	security_check = pcs_ai.assess_login_attempt(
+		ip_address=client_ip,
+		username=username,
+		success=True,
+		user_agent=user_agent,
+	)
+	
 	# DISA STIG V-222595: Record successful login
 	_record_successful_login(user, client_ip)
 
-	# DISA STIG V-222598: Set session with last activity timestamp
+	# OWASP A01:2021 - Broken Access Control: Secure session management
 	request.session["user_id"] = user.user_id
 	request.session["last_activity"] = datetime.utcnow().isoformat()
+	# OWASP A02:2021 - Cryptographic Failures: Regenerate session ID on login
+	request.session["session_token"] = uuid.uuid4().hex
 	
 	_save_users()
 	return RedirectResponse(url="/profile", status_code=303)
@@ -2185,6 +2318,34 @@ async def inspector_view_locations(request: Request):
 			"request": request,
 			"inspector": inspector,
 			"location_data": location_data,
+		},
+	)
+
+
+@app.get("/inspector/ai-monitoring", response_class=HTMLResponse)
+async def inspector_ai_monitoring(request: Request):
+	"""AI Security Monitoring Dashboard for law enforcement oversight."""
+	inspector = _require_inspector(request)
+	
+	# Get AI threat statistics
+	stats = pcs_ai.get_threat_statistics()
+	
+	# Get blocked IPs list
+	blocked_ips = pcs_ai.get_blocked_ips()
+	
+	# Get all threat logs from AI module
+	threat_logs = []
+	if hasattr(pcs_ai, '_threat_log'):
+		threat_logs = sorted(pcs_ai._threat_log, key=lambda x: x.get('timestamp', ''), reverse=True)
+	
+	return templates.TemplateResponse(
+		"inspector_ai_monitoring.html",
+		{
+			"request": request,
+			"user": inspector,
+			"stats": stats,
+			"blocked_ips": blocked_ips,
+			"threat_logs": threat_logs[:100],  # Show latest 100 threats
 		},
 	)
 

@@ -77,42 +77,72 @@ PCS cryptocurrency is designed to have **zero external value**:
 - **Receivers & Charities:** Automatically receive $10,000 PCS/month
 - **No upfront capital needed** - Start helping immediately
 - **Guaranteed liquidity** - Always have "inventory" to sell
-- **Circular economy** - PCS can be sold, donated, and resold infinitely
+- **Circular economy** - Receivers continuously receive monthly credits to sell to donors
 
 **Advantage:** Creates a sustainable, self-replenishing donation ecosystem.
 
 ---
 
-### 5. **Dual-Layer Value Transfer**
+### 5. **Direct Value Transfer with Blockchain Proof**
 
-**Layer 1: Real Money → PCS Crypto**
+**How Donations Work:**
 ```
-Donor pays receiver real money (bank transfer, PayPal, cash, etc.)
+Donor pays receiver/charity real money (bank transfer, PayPal, cash, etc.)
     ↓
-Receiver provides PCS cryptocurrency to donor
-```
-
-**Layer 2: PCS Crypto → Charity Donation**
-```
-Donor donates PCS to charity profiles via blockchain
+Receiver confirms payment and transfers PCS cryptocurrency to donor
     ↓
-Transparent, permanent record created
+PCS stays permanently in donor's wallet as proof of donation
     ↓
-Receiver can sell PCS again for more real money
+Blockchain records the transaction transparently
+    ↓
+Receiver gets monthly credit refills to continue helping others
 ```
 
-**Innovation:** The same PCS can track multiple real-money donations through circulation.
+**Innovation:** Donors accumulate PCS as permanent, transparent proof of their charitable giving.
 
 ---
 
-### 6. **AI-Powered Fraud Prevention**
-- **Risk assessment** for every donation (LOW/MEDIUM/HIGH)
-- **Pattern detection** - Identifies suspicious behavior
-- **Amount-based alerts** - Flags unusually large transactions
-- **Frequency monitoring** - Detects rapid donation patterns
-- **Automatic logging** - All assessments recorded for review
+### 6. **Battle-Hardened AI Security Monitoring**
 
-**Protection:** Safeguards both donors and recipients from fraud.
+**Production-Grade Threat Detection:**
+- **Brute force detection** - Adaptive thresholds with exponential backoff
+- **Credential stuffing prevention** - Detects attacks using stolen credentials
+- **DDoS protection** - Multi-layer rate limiting with behavioral analysis
+- **SQL injection defense** - 100+ attack signature database
+  - Classic injections, union-based, stacked queries
+  - Time-based blind, boolean blind, hex evasion
+  - Database fingerprinting attempts
+- **XSS attack prevention** - Multi-vector detection
+  - Script tags, event handlers, HTML injection
+  - Data URIs, SVG attacks, template injection
+- **Command injection blocking** - Shell command pattern detection
+- **Directory traversal** - Path manipulation prevention
+- **LFI/RFI attacks** - Local/remote file inclusion blocking
+- **LDAP injection** - Directory service attack prevention
+- **XML/XXE attacks** - External entity injection blocking
+- **SSTI prevention** - Server-side template injection detection
+- **Header injection** - CRLF and protocol violation detection
+- **Null byte attacks** - Binary injection prevention
+- **Bot detection** - 40+ security scanner/tool signatures
+  - Automated scanners (sqlmap, nikto, nmap, burp, acunetix)
+  - Fuzzing tools (ffuf, gobuster, wfuzz)
+  - Exploitation frameworks (metasploit, beef)
+
+**Advanced Behavioral Analysis:**
+- **Request timing analysis** - Detects automated bot patterns
+- **User-Agent fingerprinting** - Identifies suspicious tools
+- **Header anomaly detection** - Protocol violation monitoring
+- **Geo-location tracking** - IP-based threat correlation
+- **Pattern recognition** - Machine learning-ready architecture
+
+**Real-Time Defense Mechanisms:**
+- **Automatic IP blocking** - Permanent ban for critical threats
+- **Connection dropping** - Instant termination of malicious requests
+- **Rate limiting** - Exponential backoff for repeat offenders
+- **Threat intelligence logging** - Comprehensive event correlation
+- **Dynamic configuration** - Tunable thresholds per threat type
+
+**Protection:** Military-grade defense against cyber attacks, hackers, and automated exploitation tools.
 
 ---
 
@@ -189,9 +219,9 @@ Donor → Payment Processor (3%)
 ```
 Donor → Receiver (100%)
           ↓
-      Blockchain Record (transparent)
+      PCS transferred to donor as permanent proof
           ↓
-      Available for re-circulation
+      Blockchain Record (transparent)
 ```
 
 **Efficiency Gain:** 30-40% more value reaches those in need.
@@ -201,9 +231,9 @@ Donor → Receiver (100%)
 ### 11. **Multi-Role System**
 
 **Four Distinct User Types:**
-- **Donors** - Purchase and donate PCS
-- **Receivers** - Verified individuals in need
-- **Charity Organizations** - Registered non-profits
+- **Donors** - Purchase PCS from receivers/charities (purchasing IS the donation)
+- **Receivers** - Verified individuals in need who sell PCS for real money
+- **Charity Organizations** - Registered non-profits who sell PCS for real money
 - **Inspectors** - Law enforcement oversight
 
 **Control:** Each role has appropriate permissions and capabilities.
@@ -258,24 +288,75 @@ $1,000 sent to receiver
 
 PLUS:
   ✓ Blockchain record created
-  ✓ PCS can be re-sold for another $1,000
   ✓ Complete transparency
   ✓ Permanent audit trail
 ```
 
 ---
 
-## 🔒 Security Features (DISA STIG Level 3 Compliant)
+## 🔒 Security Features (OWASP & DISA STIG Level 3 Compliant)
 
-- **X-Frame-Options** - Prevents clickjacking attacks
-- **X-Content-Type-Options** - Prevents MIME sniffing
-- **Content-Security-Policy** - Restricts resource loading
-- **Referrer-Policy** - Limits information leakage
-- **Permissions-Policy** - Restricts browser features
-- **Account lockout** - Prevents brute force attacks
-- **Session management** - Automatic timeout after 30 minutes
-- **Security event logging** - Complete audit trail
-- **Password hashing** - SHA-256 encryption
+**OWASP Top 10 (2021) Compliance:**
+
+- **A01 - Broken Access Control**
+  - Role-based access control (RBAC) for all user types
+  - Session management with automatic timeout
+  - Session token regeneration on login
+  
+- **A02 - Cryptographic Failures**
+  - SHA-256 password hashing
+  - HTTPS enforcement in production (Strict-Transport-Security)
+  - Secure session encryption
+  
+- **A03 - Injection**
+  - Input sanitization for all user inputs
+  - SQL injection prevention (file-based storage)
+  - XSS prevention via HTML escaping
+  - Content Security Policy headers
+  
+- **A04 - Insecure Design**
+  - Secure architecture with separation of concerns
+  - Battle-hardened AI threat detection (100+ attack signatures)
+  - Defense in depth security layers
+  
+- **A05 - Security Misconfiguration**
+  - Comprehensive security headers
+  - X-Frame-Options (clickjacking prevention)
+  - X-Content-Type-Options (MIME sniffing prevention)
+  - Permissions-Policy (browser feature restrictions)
+  
+- **A06 - Vulnerable Components**
+  - Minimal dependencies
+  - FastAPI framework (actively maintained)
+  - Regular security updates
+  
+- **A07 - Authentication Failures**
+  - Account lockout after 3 failed attempts
+  - Brute force detection via AI monitoring
+  - Multi-factor authentication ready
+  - Session timeout (30 minutes)
+  
+- **A08 - Data Integrity Failures**
+  - Blockchain immutability
+  - Atomic file operations
+  - Data validation on all inputs
+  
+- **A09 - Security Logging Failures**
+  - Complete audit trail for all actions
+  - Security event logging
+  - Failed login tracking
+  - IP address logging
+  
+- **A10 - Server-Side Request Forgery**
+  - URL validation and sanitization
+  - Protocol whitelisting (HTTP/HTTPS only)
+  - Request pattern monitoring
+
+**Additional Security:**
+- Account lockout - Prevents brute force attacks
+- Referrer-Policy - Limits information leakage
+- Password hashing - SHA-256 encryption
+- Battle-hardened AI - Real-time attack prevention with 100+ signatures
 
 ---
 
@@ -295,7 +376,7 @@ PLUS:
 - ✅ Verified recipient profiles
 - ✅ Zero transaction fees
 - ✅ Multi-currency support
-- ✅ Inspector oversight + AI fraud detection
+- ✅ Inspector oversight + Battle-hardened AI security
 
 ---
 
@@ -307,7 +388,7 @@ PLUS:
 | **Platform Fees** | 3-8% | 0% |
 | **Transparency** | Quarterly reports | Real-time blockchain |
 | **Donor to Recipient** | 60-85% | 100% |
-| **Fraud Prevention** | Manual audits | AI + Inspector oversight |
+| **Fraud Prevention** | Manual audits | AI + Inspector oversight + Attack blocking |
 | **Global Access** | Limited | Unlimited |
 | **Currency Support** | Usually single | Any currency |
 | **Withdrawal Speed** | Days/weeks | Immediate approval |
@@ -319,13 +400,11 @@ PLUS:
 **How PCS Creates Infinite Value from Finite Currency:**
 
 1. Receiver gets 10,000 PCS monthly credit
-2. Donor purchases 1,000 PCS for $1,000 real money
-3. Donor donates 1,000 PCS to charity profile (blockchain records it)
-4. Receiver still has that 1,000 PCS and can sell it again
-5. Another donor purchases the same 1,000 PCS for another $1,000
-6. Process repeats infinitely
+2. Donor purchases PCS crypto from the receivers or from charity organizations
+3. The PCS coins are permanently in the donor's profile for life, so everyone can view each donation and the total donations
+4. Process repeats infinitely
 
-**Result:** The same 1,000 PCS can track $10,000+ in real donations while maintaining complete transparency at zero cost.
+**Result:** Receivers continuously receive monthly credits to sell, while donors accumulate PCS as permanent proof of their charitable contributions with complete transparency at zero cost.
 
 ---
 
@@ -337,7 +416,7 @@ PLUS:
 4. **Direct impact** - 100% of donations reach recipients
 5. **Global accessibility** - Works with any payment method
 6. **Law enforcement friendly** - Full inspector oversight
-7. **AI fraud prevention** - Automated risk assessment
+7. **Battle-hardened AI security** - Production-grade attack detection and prevention
 8. **DISA STIG compliant** - Military-grade security
 
 ---

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PCS – Inspector: AI Security Monitoring</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background: #0b1020; color: #f5f7ff; }
+      header { padding: 1.5rem 2rem; background: #111727; border-bottom: 1px solid #232a3d; display: flex; justify-content: space-between; align-items: center; }
+      header h1 { margin: 0; font-size: 1.7rem; }
+      header p { margin: 0.3rem 0 0; color: #a9b3d4; font-size: 0.9rem; }
+      main { padding: 1.5rem 2rem 3rem; max-width: 1400px; margin: 0 auto; }
+      section { margin-bottom: 2rem; background: #151b2c; border-radius: 10px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); }
+      h2 { margin-top: 0; font-size: 1.3rem; color: #5fe2ff; }
+      .muted { color: #8a92b6; font-size: 0.85rem; }
+      button, .btn { padding: 0.55rem 1.2rem; border-radius: 6px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 0.9rem; cursor: pointer; text-decoration: none; display: inline-block; }
+      button:hover, .btn:hover { filter: brightness(1.05); }
+      a { color: #5fe2ff; text-decoration: none; }
+      
+      /* Stats Grid */
+      .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+      .stat-card { background: linear-gradient(135deg, #1a2135, #151b2c); border-radius: 8px; padding: 1.25rem; border-left: 4px solid #5fe2ff; }
+      .stat-card.critical { border-left-color: #ff5f5f; }
+      .stat-card.warning { border-left-color: #ffb85f; }
+      .stat-card.success { border-left-color: #5fff9f; }
+      .stat-value { font-size: 2rem; font-weight: 700; color: #fff; margin: 0.5rem 0; }
+      .stat-label { color: #a9b3d4; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+      
+      /* Threat Log Table */
+      table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+      th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #232a3d; }
+      th { background: #1a2135; font-weight: 600; color: #a9b3d4; font-size: 0.85rem; text-transform: uppercase; }
+      tr:hover { background: #1a2135; }
+      
+      /* Badges */
+      .badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+      .badge-critical { background: #7f2a2a; color: #ff5f5f; }
+      .badge-dangerous { background: #7f4f2a; color: #ffb85f; }
+      .badge-suspicious { background: #7f7f2a; color: #ffff5f; }
+      .badge-safe { background: #2a7f3f; color: #5fff9f; }
+      .badge-blocked { background: #7f2a2a; color: #ff5f5f; }
+      .badge-monitored { background: #2a5f7f; color: #5fe2ff; }
+      
+      /* IP List */
+      .ip-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+      .ip-badge { background: #1a2135; padding: 0.4rem 0.8rem; border-radius: 6px; font-family: monospace; font-size: 0.85rem; color: #ff5f5f; border: 1px solid #7f2a2a; }
+      
+      /* Threat Type Breakdown */
+      .threat-breakdown { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem; }
+      .threat-item { background: #1a2135; padding: 1rem; border-radius: 6px; }
+      .threat-item-name { color: #a9b3d4; font-size: 0.85rem; margin-bottom: 0.5rem; }
+      .threat-item-count { font-size: 1.5rem; font-weight: 700; color: #5fe2ff; }
+      
+      /* Auto-refresh indicator */
+      .refresh-indicator { position: fixed; top: 1rem; right: 1rem; background: #1a2135; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; color: #a9b3d4; border: 1px solid #232a3d; }
+      
+      @media (max-width: 768px) {
+        header { padding: 1rem; flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+        header h1 { font-size: 1.4rem; }
+        main { padding: 1rem; }
+        section { padding: 1.25rem; }
+        .stats-grid { grid-template-columns: 1fr; }
+        table { font-size: 0.85rem; }
+        th, td { padding: 0.6rem 0.4rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>🛡️ AI Security Monitoring</h1>
+        <p class="muted">Law Enforcement Oversight • Real-time Threat Detection</p>
+      </div>
+      <div style="display: flex; gap: 0.75rem;">
+        <a href="/inspector/users" class="btn">👥 User Management</a>
+        <a href="/profile" class="btn">← Back to Profile</a>
+      </div>
+    </header>
+
+    <main>
+      <!-- Overview Statistics -->
+      <section>
+        <h2>📊 Security Overview</h2>
+        <div class="stats-grid">
+          <div class="stat-card critical">
+            <div class="stat-label">🚫 Blocked IPs</div>
+            <div class="stat-value">{{ stats.blocked_ips_count }}</div>
+            <div class="muted">IP addresses permanently blocked</div>
+          </div>
+          
+          <div class="stat-card warning">
+            <div class="stat-label">⚠️ Total Threats</div>
+            <div class="stat-value">{{ stats.total_threats_detected }}</div>
+            <div class="muted">Security events detected</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-label">👁️ Monitored IPs</div>
+            <div class="stat-value">{{ stats.tracked_ips_count }}</div>
+            <div class="muted">Currently under surveillance</div>
+          </div>
+          
+          <div class="stat-card success">
+            <div class="stat-label">✅ Actions Taken</div>
+            <div class="stat-value">{{ stats.actions_taken.get('blocked', 0) + stats.actions_taken.get('dropped', 0) }}</div>
+            <div class="muted">Connections blocked/dropped</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Threat Breakdown by Type -->
+      <section>
+        <h2>🎯 Threat Analysis by Type</h2>
+        <div class="threat-breakdown">
+          {% if stats.threats_by_type %}
+            {% for threat_type, count in stats.threats_by_type.items() %}
+              <div class="threat-item">
+                <div class="threat-item-name">{{ threat_type }}</div>
+                <div class="threat-item-count">{{ count }}</div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="muted" style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
+              No threats detected yet. System is monitoring...
+            </div>
+          {% endif %}
+        </div>
+      </section>
+
+      <!-- Blocked IP Addresses -->
+      <section>
+        <h2>🔒 Blocked IP Addresses ({{ stats.blocked_ips_count }})</h2>
+        {% if blocked_ips %}
+          <div class="ip-list">
+            {% for ip in blocked_ips %}
+              <div class="ip-badge">{{ ip }}</div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="muted">No IP addresses are currently blocked.</p>
+        {% endif %}
+      </section>
+
+      <!-- Failed Login Attempts -->
+      {% if stats.failed_login_attempts %}
+        <section>
+          <h2>🔐 Failed Login Attempts (Monitored IPs)</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>IP Address</th>
+                <th>Failed Attempts</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ip, count in stats.failed_login_attempts.items() %}
+                <tr>
+                  <td style="font-family: monospace;">{{ ip }}</td>
+                  <td><strong>{{ count }}</strong> attempts</td>
+                  <td>
+                    {% if count >= 5 %}
+                      <span class="badge badge-critical">BLOCKED</span>
+                    {% elif count >= 3 %}
+                      <span class="badge badge-dangerous">WARNING</span>
+                    {% else %}
+                      <span class="badge badge-suspicious">MONITORED</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      {% endif %}
+
+      <!-- Recent Threat Log -->
+      <section>
+        <h2>📝 Recent Security Events (Last 100)</h2>
+        {% if threat_logs %}
+          <table>
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>IP Address</th>
+                <th>Threat Type</th>
+                <th>Details</th>
+                <th>Level</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in threat_logs %}
+                <tr>
+                  <td style="font-size: 0.8rem;">{{ log.timestamp[:19] }}</td>
+                  <td style="font-family: monospace;">{{ log.ip_address }}</td>
+                  <td><strong>{{ log.threat_type }}</strong></td>
+                  <td class="muted" style="max-width: 300px; overflow: hidden; text-overflow: ellipsis;">{{ log.details }}</td>
+                  <td>
+                    {% if log.level == 'CRITICAL' %}
+                      <span class="badge badge-critical">CRITICAL</span>
+                    {% elif log.level == 'DANGEROUS' %}
+                      <span class="badge badge-dangerous">DANGEROUS</span>
+                    {% elif log.level == 'SUSPICIOUS' %}
+                      <span class="badge badge-suspicious">SUSPICIOUS</span>
+                    {% else %}
+                      <span class="badge badge-safe">SAFE</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if log.action == 'blocked' or log.action == 'dropped' %}
+                      <span class="badge badge-blocked">{{ log.action.upper() }}</span>
+                    {% else %}
+                      <span class="badge badge-monitored">{{ log.action.upper() }}</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="muted">No security events logged yet. AI is actively monitoring all traffic...</p>
+        {% endif %}
+      </section>
+
+      <!-- Information Panel -->
+      <section>
+        <h2>ℹ️ About AI Security Monitoring</h2>
+        <div style="line-height: 1.8;">
+          <p class="muted"><strong>What the AI monitors:</strong></p>
+          <ul class="muted" style="margin-left: 1.5rem;">
+            <li><strong>Brute Force Attacks:</strong> Multiple failed login attempts from the same IP</li>
+            <li><strong>DDoS Protection:</strong> Excessive request rates (>100 requests in 5 minutes)</li>
+            <li><strong>SQL Injection:</strong> Malicious database query patterns in URLs</li>
+            <li><strong>XSS Attacks:</strong> Cross-site scripting attempt detection</li>
+            <li><strong>Directory Traversal:</strong> Unauthorized file system access attempts</li>
+            <li><strong>Port Scanning:</strong> Network reconnaissance from scanning tools</li>
+            <li><strong>Bot Detection:</strong> Automated attack tools (sqlmap, nikto, nmap, etc.)</li>
+          </ul>
+          
+          <p class="muted" style="margin-top: 1.5rem;"><strong>Automatic Actions:</strong></p>
+          <ul class="muted" style="margin-left: 1.5rem;">
+            <li><strong>IP Blocking:</strong> Malicious IPs are automatically added to block list</li>
+            <li><strong>Connection Dropping:</strong> Dangerous requests are terminated immediately</li>
+            <li><strong>Real-time Logging:</strong> All events recorded with full details</li>
+            <li><strong>Threat Categorization:</strong> Each threat assigned severity level</li>
+          </ul>
+
+          <p class="muted" style="margin-top: 1.5rem;">
+            <strong>Note:</strong> This dashboard auto-refreshes every 30 seconds to show real-time data. 
+            All blocked IPs persist until manually unblocked by system administrators.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <div class="refresh-indicator">
+      🔄 Auto-refresh: <span id="countdown">30</span>s
+    </div>
+
+    <script>
+      // Auto-refresh page every 30 seconds
+      let countdown = 30;
+      setInterval(() => {
+        countdown--;
+        document.getElementById('countdown').textContent = countdown;
+        if (countdown <= 0) {
+          location.reload();
+        }
+      }, 1000);
+    </script>
+  </body>
+</html>

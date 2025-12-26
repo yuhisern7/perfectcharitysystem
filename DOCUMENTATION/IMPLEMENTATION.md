@@ -155,7 +155,7 @@ uvicorn pcs-website:app --host 0.0.0.0 --port 8000 --workers 4
 1. **User Registration** → Save to `users.json`
 2. **Login** → Update last login IP/timestamp → Save to `users.json`
 3. **Profile Update** → Auto-save to `users.json`
-4. **Donation** → Add to blockchain → Save `blockchain.json`
+4. **PCS Purchase/Transfer** → Add to blockchain → Save `blockchain.json` → Update balances
 5. **Ban User** → Update user data → Save to `users.json`
 6. **Create Receiver** → Save to `users.json`
 

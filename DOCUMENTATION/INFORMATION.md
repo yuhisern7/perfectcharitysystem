@@ -6,6 +6,7 @@ A blockchain-based charity donation platform with transparent transaction tracki
 
 - 🔗 **Private Blockchain**: Transparent, immutable donation tracking using the PCS coin
 - 👥 **User Management**: Separate donor and receiver accounts
+- 🤖 **AI Security Monitoring**: Real-time threat detection and attack prevention
 - 🔒 **Inspector Controls**: Law enforcement dashboard with:
   - User account banning/unbanning
   - Geographical location tracking
@@ -75,14 +76,16 @@ PCS/
 ### Donor
 - Register through public signup
 - Create personal profile with media
-- Donate PCS to receivers
+- Purchase PCS from receivers/charities (purchasing IS the donation)
+- PCS stays permanently in wallet as proof of charitable giving
 - View transaction history
 - Optional privacy controls
 
 ### Receiver
 - Created by admin/inspector only
 - Always public profile
-- Receive donations
+- Sell PCS cryptocurrency to donors for real money
+- Receive $10,000 PCS monthly credit
 - Linked to charity profiles
 
 ### Inspector (Law Enforcement)
@@ -146,7 +149,7 @@ The system also exposes a REST API under `/api`:
 - `POST /api/profiles` - Create charity profile
 - `GET /api/profiles` - List all profiles
 - `GET /api/profiles/{id}` - Get profile details
-- `POST /api/donate` - Make a donation
+- `POST /api/donate` - Record PCS transfer (internal blockchain operation)
 - `GET /api/wallets/{id}` - Get wallet balance
 - `GET /api/chain` - View blockchain
 

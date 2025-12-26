@@ -22,8 +22,8 @@ python pcs-website.py
 
 | Role | Registration | Features |
 |------|--------------|----------|
-| **Donor** | Public signup | Create profile, donate, view history |
-| **Receiver** | Admin creates | Receive donations, public profile |
+| **Donor** | Public signup | Create profile, purchase PCS (which IS donating), view history |
+| **Receiver** | Admin creates | Sell PCS to donors for real money, get monthly credits, public profile |
 | **Inspector** | Pre-seeded | Ban users, view locations, export data |
 
 ## 🔗 Key URLs
@@ -94,7 +94,7 @@ tar -xzf backup.tar.gz
 
 - `GET /api/health` - Health check
 - `GET /api/profiles` - List profiles
-- `POST /api/donate` - Make donation
+- `POST /api/donate` - Record PCS transfer (internal use)
 - `GET /api/chain` - View blockchain
 
 ## 🐛 Troubleshooting
