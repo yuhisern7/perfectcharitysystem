@@ -26,7 +26,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from fastapi import FastAPI, Request, Form, UploadFile, File, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse, Response
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.staticfiles import StaticFiles
@@ -589,6 +589,76 @@ def _wallet_history_for_user(user: User) -> List[Dict[str, object]]:
 # Mount the JSON API under /api so the same server exposes
 # both the website and the programmatic endpoints.
 app.mount("/api", pcs_api.app)
+
+
+@app.get("/robots.txt", response_class=PlainTextResponse)
+async def robots_txt():
+	"""Serve robots.txt for search engine crawlers."""
+	robots_content = """# robots.txt for Perfect Charity System (PCS)
+# Allow search engines to index public charity and receiver profiles
+
+User-agent: *
+Allow: /public/
+Allow: /
+Disallow: /profile
+Disallow: /login
+Disallow: /register
+Disallow: /logout
+Disallow: /api/
+Disallow: /inspector/
+Disallow: /notifications
+Disallow: /sell-crypto
+Disallow: /purchase-crypto
+Disallow: /my-purchases
+
+# Sitemap location
+Sitemap: https://perfectcharitysystem.org/sitemap.xml
+
+# Crawl rate (optional - be respectful)
+Crawl-delay: 1
+"""
+	return robots_content
+
+
+@app.get("/sitemap.xml", response_class=Response)
+async def sitemap_xml(request: Request):
+	"""Generate dynamic sitemap.xml for search engines."""
+	from datetime import datetime
+	
+	# Get base URL from request
+	base_url = str(request.base_url).rstrip('/')
+	
+	# Start sitemap XML
+	sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n'
+	sitemap += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+	
+	# Add homepage
+	sitemap += '  <url>\n'
+	sitemap += f'    <loc>{base_url}/</loc>\n'
+	sitemap += '    <changefreq>daily</changefreq>\n'
+	sitemap += '    <priority>1.0</priority>\n'
+	sitemap += '  </url>\n'
+	
+	# Add directory page
+	sitemap += '  <url>\n'
+	sitemap += f'    <loc>{base_url}/directory</loc>\n'
+	sitemap += '    <changefreq>daily</changefreq>\n'
+	sitemap += '    <priority>0.9</priority>\n'
+	sitemap += '  </url>\n'
+	
+	# Add all public profiles for charity_org and receiver
+	for user in USERS.values():
+		if user.role in ["charity_org", "receiver"]:
+			sitemap += '  <url>\n'
+			sitemap += f'    <loc>{base_url}/public/{user.username}</loc>\n'
+			sitemap += f'    <lastmod>{datetime.utcnow().strftime("%Y-%m-%d")}</lastmod>\n'
+			sitemap += '    <changefreq>weekly</changefreq>\n'
+			sitemap += '    <priority>0.8</priority>\n'
+			sitemap += '  </url>\n'
+	
+	sitemap += '</urlset>'
+	
+	return Response(content=sitemap, media_type="application/xml")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -1921,6 +1991,109 @@ async def view_user_profile(request: Request, user_id: str):
 			"volunteer_hours": volunteer_hours,
 			"country_rank": target_ranks["country_rank"],
 			"worldwide_rank": target_ranks["worldwide_rank"],
+		},
+	)
+
+
+@app.get("/public/{username}", response_class=HTMLResponse)
+async def public_profile(request: Request, username: str):
+	"""Public profile view accessible without login (for charity_org and receiver accounts).
+	
+	This endpoint is designed for SEO and public discoverability.
+	Charity organizations and receivers can be found via search engines.
+	"""
+	# Find user by username
+	target = None
+	for user in USERS.values():
+		if user.username.lower() == username.lower():
+			target = user
+			break
+	
+	if not target:
+		# Return a 404 page
+		return HTMLResponse(
+			content="<html><body><h1>404 - Profile Not Found</h1><p>The profile you are looking for does not exist.</p></body></html>",
+			status_code=404
+		)
+	
+	# Only allow public access to charity_org and receiver profiles
+	if target.role not in ["charity_org", "receiver"]:
+		return HTMLResponse(
+			content="<html><body><h1>403 - Access Denied</h1><p>This profile is not publicly accessible.</p></body></html>",
+			status_code=403
+		)
+	
+	# Calculate total donations and volunteer hours
+	wallet_history = _wallet_history_for_user(target)
+	total_donations = sum(tx.get("amount", 0.0) for tx in wallet_history)
+	
+	# For charity orgs, also count completed cryptocurrency purchases as donations
+	if target.role == "charity_org":
+		completed_purchases = [
+			req for req in target.my_purchase_requests 
+			if req.get("status") == "completed"
+		]
+		total_donations += sum(req.get("amount", 0.0) for req in completed_purchases)
+	
+	volunteer_hours = 0  # Placeholder
+
+	# Get donor rankings (if applicable)
+	target_ranks = _get_user_ranks(target.user_id)
+
+	return templates.TemplateResponse(
+		"profile_public_seo.html",
+		{
+			"request": request,
+			"profile_user": target,
+			"wallet_history": wallet_history,
+			"total_donations": total_donations,
+			"volunteer_hours": volunteer_hours,
+			"country_rank": target_ranks["country_rank"],
+			"worldwide_rank": target_ranks["worldwide_rank"],
+			"is_public_view": True,  # Flag to indicate this is public view
+		},
+	)
+
+
+@app.get("/directory", response_class=HTMLResponse)
+async def public_directory(request: Request):
+	"""Public directory of all charity organizations and receivers (SEO-friendly).
+	
+	This page helps search engines discover all public profiles.
+	"""
+	# Get all charity organizations and receivers
+	charities = [user for user in USERS.values() if user.role == "charity_org"]
+	receivers = [user for user in USERS.values() if user.role == "receiver"]
+	
+	# Sort by username
+	charities.sort(key=lambda u: u.username.lower())
+	receivers.sort(key=lambda u: u.username.lower())
+	
+	# Group by country
+	charities_by_country = {}
+	for charity in charities:
+		country = charity.country if charity.country else "Other"
+		if country not in charities_by_country:
+			charities_by_country[country] = []
+		charities_by_country[country].append(charity)
+	
+	receivers_by_country = {}
+	for receiver in receivers:
+		country = receiver.country if receiver.country else "Other"
+		if country not in receivers_by_country:
+			receivers_by_country[country] = []
+		receivers_by_country[country].append(receiver)
+	
+	return templates.TemplateResponse(
+		"directory.html",
+		{
+			"request": request,
+			"charities": charities,
+			"receivers": receivers,
+			"charities_by_country": charities_by_country,
+			"receivers_by_country": receivers_by_country,
+			"total_charities": len(charities),
+			"total_receivers": len(receivers),
 		},
 	)
 

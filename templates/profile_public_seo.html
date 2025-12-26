@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{{ profile_user.username }} - {% if profile_user.role == 'charity_org' %}Charity Organization{% else %}Receiver{% endif %} - Perfect Charity System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{{ profile_user.intro[:160] if profile_user.intro else (profile_user.username + ' is a ' + ('charity organization' if profile_user.role == 'charity_org' else 'receiver') + ' on Perfect Charity System (PCS). Learn more about their work and how to support them.') }}" />
+    <meta name="keywords" content="{{ profile_user.username }}, {% if profile_user.role == 'charity_org' %}charity organization, charity, nonprofit{% else %}charity receiver, aid recipient{% endif %}, {{ profile_user.country }}, {{ profile_user.city }}, Perfect Charity System, PCS, donation, humanitarian aid" />
+    <meta name="author" content="{{ profile_user.username }}" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://perfectcharitysystem.org/public/{{ profile_user.username }}" />
+    
+    <!-- Open Graph / Facebook Meta Tags -->
+    <meta property="og:type" content="profile" />
+    <meta property="og:url" content="https://perfectcharitysystem.org/public/{{ profile_user.username }}" />
+    <meta property="og:title" content="{{ profile_user.username }} - {% if profile_user.role == 'charity_org' %}Charity Organization{% else %}Receiver{% endif %}" />
+    <meta property="og:description" content="{{ profile_user.intro[:200] if profile_user.intro else (profile_user.username + ' is a ' + ('charity organization' if profile_user.role == 'charity_org' else 'receiver') + ' on Perfect Charity System.') }}" />
+    {% if profile_user.avatar_files %}
+    <meta property="og:image" content="https://perfectcharitysystem.org/{{ profile_user.avatar_files[0] }}" />
+    {% endif %}
+    <meta property="og:locale" content="en_US" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://perfectcharitysystem.org/public/{{ profile_user.username }}" />
+    <meta name="twitter:title" content="{{ profile_user.username }} - {% if profile_user.role == 'charity_org' %}Charity Organization{% else %}Receiver{% endif %}" />
+    <meta name="twitter:description" content="{{ profile_user.intro[:200] if profile_user.intro else (profile_user.username + ' is a ' + ('charity organization' if profile_user.role == 'charity_org' else 'receiver') + ' on Perfect Charity System.') }}" />
+    {% if profile_user.avatar_files %}
+    <meta name="twitter:image" content="https://perfectcharitysystem.org/{{ profile_user.avatar_files[0] }}" />
+    {% endif %}
+    
+    <!-- Additional SEO Tags -->
+    <meta name="geo.region" content="{{ profile_user.country }}" />
+    {% if profile_user.city %}
+    <meta name="geo.placename" content="{{ profile_user.city }}" />
+    {% endif %}
+    
+    <!-- Schema.org JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "{% if profile_user.role == 'charity_org' %}Organization{% else %}Person{% endif %}",
+      "name": "{{ profile_user.username }}",
+      "description": "{{ profile_user.intro if profile_user.intro else (profile_user.username + ' is a ' + ('charity organization' if profile_user.role == 'charity_org' else 'receiver') + ' on Perfect Charity System.') }}",
+      {% if profile_user.avatar_files %}
+      "image": "https://perfectcharitysystem.org/{{ profile_user.avatar_files[0] }}",
+      {% endif %}
+      "url": "https://perfectcharitysystem.org/public/{{ profile_user.username }}",
+      {% if profile_user.reveal_email and profile_user.email %}
+      "email": "{{ profile_user.email }}",
+      {% endif %}
+      {% if profile_user.reveal_phone and profile_user.phone %}
+      "telephone": "{{ profile_user.phone }}",
+      {% endif %}
+      "address": {
+        "@type": "PostalAddress",
+        {% if profile_user.city %}
+        "addressLocality": "{{ profile_user.city }}",
+        {% endif %}
+        {% if profile_user.state %}
+        "addressRegion": "{{ profile_user.state }}",
+        {% endif %}
+        "addressCountry": "{{ profile_user.country }}"
+      }
+      {% if profile_user.role == 'charity_org' %}
+      ,
+      "nonprofitStatus": "Charitable",
+      {% if profile_user.charity_legal_name %}
+      "legalName": "{{ profile_user.charity_legal_name }}",
+      {% endif %}
+      {% if profile_user.charity_registration_number %}
+      "taxID": "{{ profile_user.charity_registration_number }}",
+      {% endif %}
+      "founder": {
+        "@type": "Person",
+        "name": "{{ profile_user.charity_representative_name if profile_user.charity_representative_name else profile_user.username }}"
+      }
+      {% endif %}
+    }
+    </script>
+    
+    <style>
+      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background: #0b1020; color: #f5f7ff; }
+      header { padding: 1.5rem 2rem; background: #111727; border-bottom: 1px solid #232a3d; }
+      header h1 { margin: 0; font-size: 1.7rem; }
+      header p { margin: 0.3rem 0 0; color: #a9b3d4; font-size: 0.9rem; }
+      main { padding: 1.5rem 2rem 3rem; max-width: 960px; margin: 0 auto; }
+      section { margin-bottom: 2rem; background: #151b2c; border-radius: 10px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); }
+      h2 { margin-top: 0; font-size: 1.3rem; }
+      .pill { display: inline-block; padding: 0.25rem 0.7rem; border-radius: 999px; background: #111727; color: #e1e6ff; font-size: 0.8rem; border: 1px solid #272f47; }
+      .muted { color: #8a92b6; font-size: 0.85rem; }
+      .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; margin-top: 0.5rem; }
+      .media-item { background: #111727; border-radius: 8px; padding: 0.4rem; overflow: hidden; }
+      a { color: #5fe2ff; text-decoration: none; }
+      a.btn { display:inline-block; padding: 0.55rem 1.2rem; border-radius: 6px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 0.9rem; text-decoration:none; }
+      a.btn:hover { filter: brightness(1.05); }
+      
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        header { padding: 1rem; }
+        header h1 { font-size: 1.4rem; }
+        header > div { flex-direction: column; gap: 0.75rem; align-items: flex-start !important; }
+        header > div > div { width: 100%; display: flex; gap: 0.5rem; }
+        header .btn { flex: 1; text-align: center; margin: 0 !important; }
+        main { padding: 1rem; }
+        section { padding: 1.25rem; margin-bottom: 1.5rem; }
+        h2 { font-size: 1.15rem; }
+        .media-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.6rem; }
+      }
+      
+      @media (max-width: 480px) {
+        header { padding: 0.75rem; }
+        header h1 { font-size: 1.25rem; }
+        main { padding: 0.75rem; }
+        section { padding: 1rem; }
+        .media-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+      }
+    </style>
+  </head>
+  <body>
+    <header itemscope itemtype="https://schema.org/{% if profile_user.role == 'charity_org' %}Organization{% else %}Person{% endif %}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+        <div>
+          <h1 itemprop="name">{{ profile_user.username }}</h1>
+          <p class="muted">{% if profile_user.role == 'charity_org' %}Charity Organization{% else %}Receiver{% endif %}{% if profile_user.country %} • {{ profile_user.country }}{% endif %}{% if profile_user.city %}, {{ profile_user.city }}{% endif %}</p>
+        </div>
+        <div>
+          <a href="/register" class="btn">Join PCS</a>
+          <a href="/login" class="btn" style="margin-left:0.5rem;">Login</a>
+        </div>
+      </div>
+    </header>
+    <main>
+      <section itemscope itemtype="https://schema.org/ProfilePage">
+        <div style="display:flex;gap:1.25rem;align-items:flex-start;flex-wrap:wrap;">
+          <div style="width:144px;height:144px;border-radius:20px;background:#111727;border:1px solid #272f47;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+            {% if profile_user.avatar_files %}
+            <img itemprop="image" src="/{{ profile_user.avatar_files[0] }}" alt="{{ profile_user.username }} profile picture" style="width:100%;height:100%;object-fit:cover;" />
+            {% else %}
+            <span style="font-size:0.78rem;color:#8a92b6;">No profile picture</span>
+            {% endif %}
+          </div>
+          <div style="flex:1;min-width:220px;">
+            <h2 style="margin-top:0;">
+              {{ profile_user.username }}
+            </h2>
+            <p class="muted" style="margin-top:0.1rem;">
+              Account type: <span class="pill">{% if profile_user.role == 'charity_org' %}Charity Organization{% else %}Receiver{% endif %}</span>
+              {% if profile_user.country %}
+              &bull;
+              <span class="pill">{{ profile_user.country }}</span>
+              {% endif %}
+            </p>
+            <div style="margin-top:0.75rem;">
+              <h2 style="margin:0 0 0.25rem 0;font-size:1.05rem;">Introduction</h2>
+              {% if profile_user.intro %}
+              <p itemprop="description" style="margin:0;white-space:pre-wrap;">{{ profile_user.intro }}</p>
+              {% else %}
+              <p class="muted" style="margin:0;">This {% if profile_user.role == 'charity_org' %}organization{% else %}user{% endif %} has not added an introduction yet.</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {% if profile_user.role == 'charity_org' and profile_user.charity_legal_name %}
+      <section>
+        <h2>📋 Charity Verification Information</h2>
+        <p class="muted" style="margin-bottom:1rem;">Official registration and legal details.</p>
+        <table style="width:100%;font-size:0.9rem;">
+          <tbody>
+            {% if profile_user.charity_legal_name %}
+            <tr>
+              <td style="padding:0.5rem 0;font-weight:600;color:#a9b3d4;width:40%;">Legal Name:</td>
+              <td style="padding:0.5rem 0;">{{ profile_user.charity_legal_name }}</td>
+            </tr>
+            {% endif %}
+            {% if profile_user.charity_registration_number %}
+            <tr>
+              <td style="padding:0.5rem 0;font-weight:600;color:#a9b3d4;">Registration Number:</td>
+              <td style="padding:0.5rem 0;">{{ profile_user.charity_registration_number }}</td>
+            </tr>
+            {% endif %}
+            {% if profile_user.charity_registration_country %}
+            <tr>
+              <td style="padding:0.5rem 0;font-weight:600;color:#a9b3d4;">Country of Registration:</td>
+              <td style="padding:0.5rem 0;">{{ profile_user.charity_registration_country }}</td>
+            </tr>
+            {% endif %}
+            {% if profile_user.charity_registering_body %}
+            <tr>
+              <td style="padding:0.5rem 0;font-weight:600;color:#a9b3d4;">Registering Body:</td>
+              <td style="padding:0.5rem 0;">{{ profile_user.charity_registering_body }}</td>
+            </tr>
+            {% endif %}
+            {% if profile_user.charity_representative_name %}
+            <tr>
+              <td style="padding:0.5rem 0;font-weight:600;color:#a9b3d4;">Representative:</td>
+              <td style="padding:0.5rem 0;">{{ profile_user.charity_representative_name }} ({{ profile_user.charity_representative_role }})</td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </section>
+      {% endif %}
+
+      <section>
+        <h2>📸 Media Gallery</h2>
+        <p class="muted">Pictures and videos shared by this {% if profile_user.role == 'charity_org' %}organization{% else %}user{% endif %}.</p>
+        {% if profile_user.avatar_files|length > 1 or profile_user.gallery_files or profile_user.video_files %}
+        <div class="media-grid">
+          {% if profile_user.avatar_files|length > 1 %}
+            {% for img in profile_user.avatar_files[1:] %}
+            <div class="media-item">
+              <img src="/{{ img }}" alt="Picture from {{ profile_user.username }}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" />
+            </div>
+            {% endfor %}
+          {% endif %}
+
+          {% for img in profile_user.gallery_files %}
+          <div class="media-item">
+            <img src="/{{ img }}" alt="Gallery picture from {{ profile_user.username }}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" />
+          </div>
+          {% endfor %}
+
+          {% for vid in profile_user.video_files %}
+          <div class="media-item">
+            <video style="width:100%;border-radius:6px;background:#000;" controls>
+              <source src="/{{ vid }}" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="muted">No media has been shared yet.</p>
+        {% endif %}
+      </section>
+
+      <section>
+        <h2>📞 Contact & Social Media</h2>
+        {% if profile_user.social_links or (profile_user.reveal_email and profile_user.email) or (profile_user.reveal_phone and profile_user.phone) or (profile_user.reveal_xchat and profile_user.xchat) %}
+        <ul class="muted" style="list-style:none;padding-left:0;margin:0;">
+          {% for link in profile_user.social_links %}
+          <li style="margin-bottom:0.25rem;">
+            <a href="{{ link }}" target="_blank" rel="noopener noreferrer">🔗 {{ link }}</a>
+          </li>
+          {% endfor %}
+          {% if profile_user.reveal_email and profile_user.email %}
+          <li style="margin-bottom:0.25rem;">✉️ Email: <a href="mailto:{{ profile_user.email }}" itemprop="email">{{ profile_user.email }}</a></li>
+          {% endif %}
+          {% if profile_user.reveal_phone and profile_user.phone %}
+          <li style="margin-bottom:0.25rem;">📱 Phone: <span itemprop="telephone">{{ profile_user.phone }}</span></li>
+          {% endif %}
+          {% if profile_user.reveal_xchat and profile_user.xchat %}
+          <li>💬 XChat: {{ profile_user.xchat }}</li>
+          {% endif %}
+        </ul>
+        {% else %}
+        <p class="muted">This {% if profile_user.role == 'charity_org' %}organization{% else %}user{% endif %} has not shared any contact information publicly.</p>
+        {% endif %}
+      </section>
+
+      {% if profile_user.bank_details or profile_user.payment_gateways or profile_user.other_payment_gateways %}
+      <section>
+        <h2>💳 Payment Information</h2>
+        <p class="muted" style="margin-bottom:1rem;">Ways to support this {% if profile_user.role == 'charity_org' %}organization{% else %}receiver{% endif %}.</p>
+        {% if profile_user.bank_details %}
+        <div style="margin-bottom:1rem;">
+          <h3 style="margin:0 0 0.5rem 0;font-size:1rem;color:#5fe2ff;">Bank Details</h3>
+          <p style="margin:0;white-space:pre-wrap;font-family:monospace;background:#0e1424;padding:0.75rem;border-radius:6px;font-size:0.85rem;">{{ profile_user.bank_details }}</p>
+        </div>
+        {% endif %}
+        {% if profile_user.payment_gateways %}
+        <div style="margin-bottom:1rem;">
+          <h3 style="margin:0 0 0.5rem 0;font-size:1rem;color:#5fe2ff;">Western Union / Money Transfer</h3>
+          <p style="margin:0;white-space:pre-wrap;font-family:monospace;background:#0e1424;padding:0.75rem;border-radius:6px;font-size:0.85rem;">{{ profile_user.payment_gateways }}</p>
+        </div>
+        {% endif %}
+        {% if profile_user.other_payment_gateways %}
+        <div>
+          <h3 style="margin:0 0 0.5rem 0;font-size:1rem;color:#5fe2ff;">Other Payment Methods</h3>
+          <p style="margin:0;white-space:pre-wrap;font-family:monospace;background:#0e1424;padding:0.75rem;border-radius:6px;font-size:0.85rem;">{{ profile_user.other_payment_gateways }}</p>
+        </div>
+        {% endif %}
+      </section>
+      {% endif %}
+
+      <section style="text-align:center;background:#1a2233;border:2px solid #5fe2ff;">
+        <h2 style="margin:0 0 0.5rem 0;">💖 Support {{ profile_user.username }}</h2>
+        <p class="muted" style="margin:0 0 1rem 0;">Join the Perfect Charity System to donate and make a difference</p>
+        <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+          <a href="/register" class="btn" style="font-size:1rem;padding:0.75rem 2rem;">Create Account</a>
+          <a href="/login" class="btn" style="font-size:1rem;padding:0.75rem 2rem;background:linear-gradient(135deg, #6b7280, #9ca3af);">Login to Donate</a>
+        </div>
+      </section>
+      
+      <section style="text-align:center;background:#0e1424;">
+        <h2 style="margin:0 0 0.5rem 0;font-size:1.1rem;">🌍 About Perfect Charity System</h2>
+        <p class="muted" style="margin:0;max-width:720px;margin-left:auto;margin-right:auto;">
+          Perfect Charity System (PCS) is a transparent blockchain-based platform connecting donors with verified charity organizations and receivers worldwide. 
+          All donations are recorded on an immutable blockchain, ensuring complete transparency and accountability.
+        </p>
+        <div style="margin-top:1rem;">
+          <a href="/" style="color:#5fe2ff;text-decoration:underline;">Learn more about PCS →</a>
+        </div>
+      </section>
+    </main>
+    
+    <!-- Footer with additional SEO-friendly content -->
+    <footer style="background:#050814;padding:2rem;text-align:center;border-top:1px solid #232a3d;">
+      <p class="muted" style="margin:0 0 0.5rem 0;font-size:0.8rem;">
+        Perfect Charity System • Transparent Blockchain Charity Platform • {{ profile_user.country }}
+      </p>
+      <p class="muted" style="margin:0;font-size:0.75rem;">
+        Keywords: charity, nonprofit, donation, humanitarian aid, {% if profile_user.role == 'charity_org' %}charity organization{% else %}receiver{% endif %}, {{ profile_user.country }}, blockchain transparency
+      </p>
+    </footer>
+  </body>
+</html>

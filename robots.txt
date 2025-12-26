@@ -1,0 +1,22 @@
+# robots.txt for Perfect Charity System (PCS)
+# Allow search engines to index public charity and receiver profiles
+
+User-agent: *
+Allow: /public/
+Allow: /
+Disallow: /profile
+Disallow: /login
+Disallow: /register
+Disallow: /logout
+Disallow: /api/
+Disallow: /inspector/
+Disallow: /notifications
+Disallow: /sell-crypto
+Disallow: /purchase-crypto
+Disallow: /my-purchases
+
+# Sitemap location
+Sitemap: https://perfectcharitysystem.org/sitemap.xml
+
+# Crawl rate (optional - be respectful)
+Crawl-delay: 1

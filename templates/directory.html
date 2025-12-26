@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Charity Organizations & Receivers Directory - Perfect Charity System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Browse our directory of {{ total_charities }} verified charity organizations and {{ total_receivers }} receivers on Perfect Charity System. Find charities by country and support their causes." />
+    <meta name="keywords" content="charity directory, nonprofit organizations, charity list, receivers, humanitarian aid, donations, verified charities, charity organizations by country" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://perfectcharitysystem.org/directory" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://perfectcharitysystem.org/directory" />
+    <meta property="og:title" content="Charity Organizations & Receivers Directory - Perfect Charity System" />
+    <meta property="og:description" content="Browse {{ total_charities }} verified charity organizations and {{ total_receivers }} receivers. Make a difference today." />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Charity Directory - Perfect Charity System" />
+    <meta name="twitter:description" content="Browse verified charity organizations and receivers worldwide." />
+    
+    <style>
+      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background: #0b1020; color: #f5f7ff; }
+      header { padding: 2rem; background: linear-gradient(135deg, #111727, #1a2233); border-bottom: 1px solid #232a3d; text-align: center; }
+      header h1 { margin: 0; font-size: 2.2rem; background: linear-gradient(135deg, #4f9cff, #5fe2ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+      header p { margin: 0.5rem 0 0; color: #a9b3d4; font-size: 1rem; }
+      .stats { display: flex; gap: 2rem; justify-content: center; margin-top: 1.5rem; flex-wrap: wrap; }
+      .stat-box { background: #0e1424; padding: 1rem 2rem; border-radius: 10px; border: 1px solid #313a55; }
+      .stat-number { font-size: 2rem; font-weight: 700; color: #5fe2ff; margin: 0; }
+      .stat-label { font-size: 0.85rem; color: #8a92b6; margin: 0.25rem 0 0 0; }
+      main { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+      section { margin-bottom: 3rem; }
+      h2 { font-size: 1.8rem; margin: 0 0 1rem 0; color: #5fe2ff; }
+      .country-group { margin-bottom: 2.5rem; background: #151b2c; border-radius: 10px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); }
+      .country-group h3 { margin: 0 0 1rem 0; font-size: 1.3rem; color: #ffd700; border-bottom: 1px solid #262d41; padding-bottom: 0.5rem; }
+      .profiles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+      .profile-card { background: #0e1424; border: 1px solid #262d41; border-radius: 8px; padding: 1rem; transition: transform 0.2s, border-color 0.2s; }
+      .profile-card:hover { transform: translateY(-2px); border-color: #5fe2ff; }
+      .profile-card a { text-decoration: none; color: inherit; display: block; }
+      .profile-header { display: flex; gap: 1rem; align-items: center; margin-bottom: 0.75rem; }
+      .profile-avatar { width: 60px; height: 60px; border-radius: 10px; background: #111727; border: 1px solid #272f47; overflow: hidden; flex-shrink: 0; }
+      .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+      .profile-name { font-size: 1.1rem; font-weight: 600; color: #5fe2ff; margin: 0; }
+      .profile-location { font-size: 0.8rem; color: #8a92b6; margin: 0.25rem 0 0 0; }
+      .profile-intro { font-size: 0.85rem; color: #a9b3d4; margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+      .btn { display: inline-block; padding: 0.6rem 1.5rem; border-radius: 6px; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; text-decoration: none; margin-top: 0.5rem; }
+      .btn:hover { filter: brightness(1.1); }
+      .muted { color: #8a92b6; font-size: 0.9rem; }
+      .empty-state { text-align: center; padding: 3rem 1rem; background: #151b2c; border-radius: 10px; }
+      .empty-state p { color: #8a92b6; margin: 0; }
+      
+      @media (max-width: 768px) {
+        header { padding: 1.5rem 1rem; }
+        header h1 { font-size: 1.8rem; }
+        main { padding: 1.5rem 1rem; }
+        .profiles-grid { grid-template-columns: 1fr; }
+        .stats { gap: 1rem; }
+        .stat-box { padding: 0.75rem 1.5rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>🌍 Charity Directory</h1>
+      <p>Discover verified charity organizations and receivers worldwide</p>
+      <div class="stats">
+        <div class="stat-box">
+          <p class="stat-number">{{ total_charities }}</p>
+          <p class="stat-label">Charity Organizations</p>
+        </div>
+        <div class="stat-box">
+          <p class="stat-number">{{ total_receivers }}</p>
+          <p class="stat-label">Receivers</p>
+        </div>
+        <div class="stat-box">
+          <p class="stat-number">{{ total_charities + total_receivers }}</p>
+          <p class="stat-label">Total Profiles</p>
+        </div>
+      </div>
+      <div style="margin-top: 1.5rem;">
+        <a href="/register" class="btn" style="margin-right: 0.5rem;">Join PCS</a>
+        <a href="/login" class="btn" style="background: linear-gradient(135deg, #6b7280, #9ca3af);">Login</a>
+      </div>
+    </header>
+    
+    <main>
+      <!-- Charity Organizations Section -->
+      <section>
+        <h2>🏛️ Charity Organizations</h2>
+        <p class="muted" style="margin-bottom: 1.5rem;">Browse verified charitable organizations by country</p>
+        
+        {% if charities %}
+          {% for country in charities_by_country|sort %}
+          <div class="country-group">
+            <h3>{{ country }} ({{ charities_by_country[country]|length }})</h3>
+            <div class="profiles-grid">
+              {% for charity in charities_by_country[country] %}
+              <div class="profile-card">
+                <a href="/public/{{ charity.username }}">
+                  <div class="profile-header">
+                    <div class="profile-avatar">
+                      {% if charity.avatar_files %}
+                      <img src="/{{ charity.avatar_files[0] }}" alt="{{ charity.username }}" />
+                      {% endif %}
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                      <p class="profile-name">{{ charity.username }}</p>
+                      <p class="profile-location">
+                        {% if charity.city %}{{ charity.city }}, {% endif %}{{ charity.country }}
+                      </p>
+                    </div>
+                  </div>
+                  {% if charity.intro %}
+                  <p class="profile-intro">{{ charity.intro }}</p>
+                  {% else %}
+                  <p class="profile-intro muted">No introduction provided yet.</p>
+                  {% endif %}
+                </a>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+        <div class="empty-state">
+          <p>No charity organizations registered yet.</p>
+        </div>
+        {% endif %}
+      </section>
+      
+      <!-- Receivers Section -->
+      <section>
+        <h2>🤝 Receivers</h2>
+        <p class="muted" style="margin-bottom: 1.5rem;">Browse individuals receiving aid by country</p>
+        
+        {% if receivers %}
+          {% for country in receivers_by_country|sort %}
+          <div class="country-group">
+            <h3>{{ country }} ({{ receivers_by_country[country]|length }})</h3>
+            <div class="profiles-grid">
+              {% for receiver in receivers_by_country[country] %}
+              <div class="profile-card">
+                <a href="/public/{{ receiver.username }}">
+                  <div class="profile-header">
+                    <div class="profile-avatar">
+                      {% if receiver.avatar_files %}
+                      <img src="/{{ receiver.avatar_files[0] }}" alt="{{ receiver.username }}" />
+                      {% endif %}
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                      <p class="profile-name">{{ receiver.username }}</p>
+                      <p class="profile-location">
+                        {% if receiver.city %}{{ receiver.city }}, {% endif %}{{ receiver.country }}
+                      </p>
+                    </div>
+                  </div>
+                  {% if receiver.intro %}
+                  <p class="profile-intro">{{ receiver.intro }}</p>
+                  {% else %}
+                  <p class="profile-intro muted">No introduction provided yet.</p>
+                  {% endif %}
+                </a>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+        <div class="empty-state">
+          <p>No receivers registered yet.</p>
+        </div>
+        {% endif %}
+      </section>
+      
+      <!-- Call to Action -->
+      <section style="text-align: center; background: linear-gradient(135deg, #1a2233, #111727); padding: 3rem 2rem; border-radius: 15px; border: 2px solid #5fe2ff;">
+        <h2 style="margin: 0 0 0.5rem 0; font-size: 1.8rem;">💖 Make a Difference Today</h2>
+        <p style="margin: 0 0 1.5rem 0; color: #a9b3d4; max-width: 600px; margin-left: auto; margin-right: auto;">
+          Join Perfect Charity System to support verified charity organizations and receivers worldwide. 
+          Every donation is recorded on our transparent blockchain for complete accountability.
+        </p>
+        <a href="/register" class="btn" style="font-size: 1.1rem; padding: 0.75rem 2rem;">Create Free Account</a>
+      </section>
+    </main>
+    
+    <footer style="background: #050814; padding: 2rem; text-align: center; border-top: 1px solid #232a3d; margin-top: 3rem;">
+      <p class="muted" style="margin: 0 0 0.5rem 0; font-size: 0.85rem;">
+        Perfect Charity System • Transparent Blockchain Charity Platform
+      </p>
+      <p class="muted" style="margin: 0; font-size: 0.75rem;">
+        <a href="/" style="color: #5fe2ff; text-decoration: none;">Home</a> • 
+        <a href="/directory" style="color: #5fe2ff; text-decoration: none;">Directory</a> • 
+        <a href="/register" style="color: #5fe2ff; text-decoration: none;">Register</a> • 
+        <a href="/login" style="color: #5fe2ff; text-decoration: none;">Login</a>
+      </p>
+    </footer>
+  </body>
+</html>
