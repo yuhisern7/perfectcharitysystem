@@ -20,6 +20,7 @@ import pathlib
 import uuid
 import re
 import html
+import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -2348,6 +2349,110 @@ async def inspector_ai_monitoring(request: Request):
 			"threat_logs": threat_logs[:100],  # Show latest 100 threats
 		},
 	)
+
+
+@app.get("/inspector/add-coins", response_class=HTMLResponse)
+async def inspector_add_coins_page(request: Request):
+	"""Page for inspectors to manually add PCS coins to accounts."""
+	inspector = _require_inspector(request)
+	
+	# Get all receivers and charity orgs
+	eligible_users = [
+		u for u in USERS.values() 
+		if u.role in ['receiver', 'charity_org'] and not u.is_banned
+	]
+	
+	# Get flash message and clear it
+	flash_message = None
+	if 'flash' in request.session:
+		flash_message = request.session.pop('flash')
+	
+	return templates.TemplateResponse(
+		"inspector_add_coins.html",
+		{
+			"request": request,
+			"user": inspector,
+			"eligible_users": sorted(eligible_users, key=lambda x: x.username),
+			"flash_message": flash_message,
+		},
+	)
+
+
+@app.post("/inspector/add-coins")
+async def inspector_add_coins_action(request: Request):
+	"""Process PCS coin addition by inspector."""
+	inspector = _require_inspector(request)
+	
+	form = await request.form()
+	target_user_id = form.get("user_id", "").strip()
+	amount_str = form.get("amount", "").strip()
+	reason = form.get("reason", "").strip()
+	
+	# Validation
+	if not target_user_id or not amount_str:
+		request.session['flash'] = ("error", "User ID and amount are required")
+		return RedirectResponse("/inspector/add-coins", status_code=303)
+	
+	try:
+		amount = float(amount_str)
+		if amount <= 0:
+			raise ValueError("Amount must be positive")
+		if amount > 1000000:
+			raise ValueError("Amount cannot exceed 1,000,000 PCS")
+	except ValueError as e:
+		request.session['flash'] = ("error", f"Invalid amount: {e}")
+		return RedirectResponse("/inspector/add-coins", status_code=303)
+	
+	# Get target user
+	target_user = USERS.get(target_user_id)
+	if not target_user:
+		request.session['flash'] = ("error", "User not found")
+		return RedirectResponse("/inspector/add-coins", status_code=303)
+	
+	# Check user role
+	if target_user.role not in ['receiver', 'charity_org']:
+		request.session['flash'] = ("error", "Can only add coins to receivers or charity organizations")
+		return RedirectResponse("/inspector/add-coins", status_code=303)
+	
+	if target_user.is_banned:
+		request.session['flash'] = ("error", "Cannot add coins to banned accounts")
+		return RedirectResponse("/inspector/add-coins", status_code=303)
+	
+	# Add coins
+	old_balance = target_user.wallet_balance
+	target_user.wallet_balance += amount
+	_save_users()
+	
+	# Log the action
+	log_entry = {
+		"timestamp": datetime.utcnow().isoformat(),
+		"inspector_id": inspector.user_id,
+		"inspector_username": inspector.username,
+		"target_user_id": target_user.user_id,
+		"target_username": target_user.username,
+		"amount": amount,
+		"old_balance": old_balance,
+		"new_balance": target_user.wallet_balance,
+		"reason": reason or "No reason provided",
+	}
+	
+	# Save to audit log
+	audit_log_path = BASE_DIR / "data" / "inspector_coin_additions.json"
+	audit_log = []
+	if audit_log_path.exists() and audit_log_path.stat().st_size > 0:
+		with open(audit_log_path, 'r') as f:
+			audit_log = json.load(f)
+	
+	audit_log.append(log_entry)
+	
+	with open(audit_log_path, 'w') as f:
+		json.dump(audit_log, f, indent=2)
+	
+	request.session['flash'] = (
+		"success", 
+		f"Successfully added {amount:,.2f} PCS to {target_user.username}'s account. New balance: {target_user.wallet_balance:,.2f} PCS"
+	)
+	return RedirectResponse("/inspector/add-coins", status_code=303)
 
 
 @app.get("/inspector/export", response_class=HTMLResponse)

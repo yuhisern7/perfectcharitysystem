@@ -200,8 +200,39 @@ Receiver gets monthly credit refills to continue helping others
 - **Ban management** - Inspectors can block fraudulent users
 - **Geographic tracking** - Monitor distribution by country/state
 - **User management** - Complete oversight of all accounts
+- **AI Security Monitoring Dashboard** - Real-time threat visualization
+  - Live threat statistics and blocked IP tracking
+  - Attack type breakdown (SQL injection, XSS, DDoS, etc.)
+  - Failed login attempt monitoring
+  - Comprehensive threat event log with severity levels
+  - Auto-refresh every 30 seconds for real-time updates
+- **Manual Coin Addition** - Inspector intervention capabilities
+  - Add PCS coins to receiver/charity accounts for emergency relief
+  - Amount validation (0.01 - 1,000,000 PCS per transaction)
+  - Mandatory reason documentation for all additions
+  - Complete audit trail logged to `data/inspector_coin_additions.json`
+  - Prevents additions to banned accounts for fraud prevention
+  - Success/error feedback with transaction confirmation
 
-**Accountability:** Ensures system integrity and legal compliance.
+**Inspector Coin Addition Workflow:**
+```
+1. Inspector logs in and navigates to "Add PCS Coins"
+2. Searches and selects target receiver/charity account
+3. Enters amount (validated: 0.01 - 1,000,000 PCS)
+4. Provides mandatory reason for the addition
+5. Confirms transaction
+6. System validates:
+   - User role (must be receiver or charity_org)
+   - Account status (not banned)
+   - Amount range (within limits)
+7. Coins added to account + Blockchain record created
+8. Audit log entry saved with:
+   - Timestamp, Inspector ID, Target user
+   - Amount, Old/New balance, Reason
+9. Success message displayed with new balance
+```
+
+**Accountability:** Ensures system integrity, legal compliance, and emergency response capabilities with complete transparency.
 
 ---
 
@@ -389,6 +420,9 @@ PLUS:
 | **Transparency** | Quarterly reports | Real-time blockchain |
 | **Donor to Recipient** | 60-85% | 100% |
 | **Fraud Prevention** | Manual audits | AI + Inspector oversight + Attack blocking |
+| **Security Monitoring** | Periodic reviews | Real-time AI dashboard with auto-refresh |
+| **Emergency Response** | Slow/bureaucratic | Inspector coin addition (instant) |
+| **Audit Trail** | Limited/delayed | Complete blockchain + Inspector logs |
 | **Global Access** | Limited | Unlimited |
 | **Currency Support** | Usually single | Any currency |
 | **Withdrawal Speed** | Days/weeks | Immediate approval |
@@ -415,9 +449,11 @@ PLUS:
 3. **Circular economy model** - Infinite value from finite tokens
 4. **Direct impact** - 100% of donations reach recipients
 5. **Global accessibility** - Works with any payment method
-6. **Law enforcement friendly** - Full inspector oversight
+6. **Law enforcement friendly** - Full inspector oversight with real-time AI monitoring
 7. **Battle-hardened AI security** - Production-grade attack detection and prevention
 8. **DISA STIG compliant** - Military-grade security
+9. **Emergency response ready** - Inspector coin addition for disaster relief
+10. **Complete accountability** - Every action logged and auditable
 
 ---
 
@@ -443,8 +479,11 @@ PLUS:
 - Verifiable impact through blockchain
 - Global accessibility without barriers
 - Security and fraud prevention
+- Real-time threat monitoring with AI dashboard
+- Emergency response capabilities through inspector intervention
+- Complete audit trail for all transactions and administrative actions
 
-**The result:** More money helping more people with complete accountability.
+**The result:** More money helping more people with complete accountability and military-grade security.
 
 ---
 

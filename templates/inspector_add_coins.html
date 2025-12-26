@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PCS – Inspector: Add PCS Coins</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background: #0b1020; color: #f5f7ff; }
+      header { padding: 1.5rem 2rem; background: #111727; border-bottom: 1px solid #232a3d; display: flex; justify-content: space-between; align-items: center; }
+      header h1 { margin: 0; font-size: 1.7rem; }
+      header p { margin: 0.3rem 0 0; color: #a9b3d4; font-size: 0.9rem; }
+      main { padding: 1.5rem 2rem 3rem; max-width: 1000px; margin: 0 auto; }
+      section { margin-bottom: 2rem; background: #151b2c; border-radius: 10px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); }
+      h2 { margin-top: 0; font-size: 1.3rem; color: #5fe2ff; }
+      .muted { color: #8a92b6; font-size: 0.85rem; }
+      button, .btn { padding: 0.55rem 1.2rem; border-radius: 6px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 0.9rem; cursor: pointer; text-decoration: none; display: inline-block; }
+      button:hover, .btn:hover { filter: brightness(1.05); }
+      a { color: #5fe2ff; text-decoration: none; }
+      
+      /* Form Styles */
+      .form-group { margin-bottom: 1.5rem; }
+      label { display: block; margin-bottom: 0.5rem; color: #a9b3d4; font-size: 0.9rem; font-weight: 600; }
+      input, select, textarea { width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid #232a3d; background: #1a2135; color: #f5f7ff; font-size: 0.95rem; box-sizing: border-box; }
+      input:focus, select:focus, textarea:focus { outline: none; border-color: #5fe2ff; }
+      textarea { resize: vertical; min-height: 80px; font-family: inherit; }
+      
+      /* Alert Messages */
+      .alert { padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.9rem; }
+      .alert-success { background: rgba(95, 255, 159, 0.1); border: 1px solid rgba(95, 255, 159, 0.3); color: #5fff9f; }
+      .alert-error { background: rgba(255, 95, 95, 0.1); border: 1px solid rgba(255, 95, 95, 0.3); color: #ff5f5f; }
+      
+      /* User Selection Table */
+      .user-select { max-height: 400px; overflow-y: auto; border: 1px solid #232a3d; border-radius: 6px; margin-top: 0.5rem; }
+      .user-option { padding: 0.75rem 1rem; border-bottom: 1px solid #232a3d; cursor: pointer; transition: background 0.2s; }
+      .user-option:hover { background: #1a2135; }
+      .user-option.selected { background: #2a4f5f; border-left: 3px solid #5fe2ff; }
+      .user-info { display: flex; justify-content: space-between; align-items: center; }
+      .user-name { font-weight: 600; color: #fff; }
+      .user-role { font-size: 0.8rem; color: #a9b3d4; margin-top: 0.25rem; }
+      .user-balance { color: #5fe2ff; font-weight: 600; }
+      
+      /* Warning Box */
+      .warning-box { background: rgba(255, 185, 95, 0.1); border: 2px solid rgba(255, 185, 95, 0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; }
+      .warning-box h3 { margin: 0 0 0.5rem; color: #ffb85f; font-size: 1rem; }
+      
+      @media (max-width: 768px) {
+        header { padding: 1rem; flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+        header h1 { font-size: 1.4rem; }
+        main { padding: 1rem; }
+        section { padding: 1.25rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>💰 Add PCS Coins</h1>
+        <p class="muted">Law Enforcement Override • Manual Coin Addition</p>
+      </div>
+      <div style="display: flex; gap: 0.75rem;">
+        <a href="/profile" class="btn">← Back to Dashboard</a>
+      </div>
+    </header>
+
+    <main>
+      {% if flash_message %}
+        {% set flash_type, flash_msg = flash_message %}
+        <div class="alert alert-{{ flash_type }}">
+          {{ flash_msg }}
+        </div>
+      {% endif %}
+
+      <section>
+        <h2>⚠️ Manual Coin Addition</h2>
+        <div class="warning-box">
+          <h3>⚡ Inspector Authority Required</h3>
+          <p class="muted" style="margin: 0;">
+            This action manually adds PCS cryptocurrency to user accounts. Use this function only for:
+            <br>• Emergency relief funding
+            <br>• Correcting system errors
+            <br>• Law enforcement authorized distributions
+            <br>• All actions are permanently logged and auditable
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Select Recipient</h2>
+        <form method="POST" action="/inspector/add-coins" id="addCoinsForm">
+          <div class="form-group">
+            <label>Search and Select User</label>
+            <input type="text" id="searchUser" placeholder="Search by username, email, or country..." style="margin-bottom: 0.5rem;">
+            <input type="hidden" name="user_id" id="selectedUserId" required>
+            
+            <div class="user-select" id="userList">
+              {% if eligible_users %}
+                {% for user in eligible_users %}
+                  <div class="user-option" data-user-id="{{ user.user_id }}" 
+                       data-search="{{ (user.username + ' ' + user.email + ' ' + user.country + ' ' + user.role).lower() }}">
+                    <div class="user-info">
+                      <div>
+                        <div class="user-name">{{ user.username }}</div>
+                        <div class="user-role">
+                          {% if user.role == 'receiver' %}
+                            🎯 Individual Receiver • {{ user.country }}
+                          {% else %}
+                            🏛️ Charity Organization • {{ user.country }}
+                          {% endif %}
+                        </div>
+                      </div>
+                      <div class="user-balance">{{ "{:,.2f}".format(user.wallet_balance) }} PCS</div>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div style="padding: 2rem; text-align: center; color: #8a92b6;">
+                  No eligible users found. Only receivers and charity organizations can receive manual coin additions.
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="amount">Amount (PCS) *</label>
+            <input type="number" name="amount" id="amount" step="0.01" min="0.01" max="1000000" 
+                   placeholder="Enter amount (e.g., 10000)" required>
+            <p class="muted" style="margin-top: 0.5rem;">Maximum: 1,000,000 PCS per transaction</p>
+          </div>
+
+          <div class="form-group">
+            <label for="reason">Reason for Addition *</label>
+            <textarea name="reason" id="reason" placeholder="Explain why PCS coins are being added to this account..." required></textarea>
+            <p class="muted" style="margin-top: 0.5rem;">This reason will be permanently logged in the audit trail</p>
+          </div>
+
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <button type="submit" style="flex: 1; min-width: 200px;">
+              ✅ Add PCS Coins
+            </button>
+            <a href="/profile" class="btn" style="background: #232a3d; flex: 1; min-width: 200px; text-align: center;">
+              Cancel
+            </a>
+          </div>
+        </form>
+      </section>
+
+      <section>
+        <h2>ℹ️ Important Notes</h2>
+        <ul class="muted" style="line-height: 1.8; margin-left: 1.5rem;">
+          <li><strong>Audit Trail:</strong> All coin additions are permanently logged with timestamp, inspector ID, amount, and reason</li>
+          <li><strong>Eligible Recipients:</strong> Only verified receivers and charity organizations can receive manual additions</li>
+          <li><strong>Banned Accounts:</strong> Cannot add coins to banned or suspended accounts</li>
+          <li><strong>Transaction Limits:</strong> Maximum 1,000,000 PCS per single transaction</li>
+          <li><strong>Blockchain Compatibility:</strong> Manual additions integrate seamlessly with the existing PCS blockchain</li>
+          <li><strong>Monthly Credits:</strong> Manual additions are separate from automatic monthly credits</li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      // User selection functionality
+      const userOptions = document.querySelectorAll('.user-option');
+      const selectedUserIdInput = document.getElementById('selectedUserId');
+      const searchInput = document.getElementById('searchUser');
+
+      userOptions.forEach(option => {
+        option.addEventListener('click', () => {
+          // Remove previous selection
+          userOptions.forEach(opt => opt.classList.remove('selected'));
+          
+          // Select this option
+          option.classList.add('selected');
+          selectedUserIdInput.value = option.dataset.userId;
+        });
+      });
+
+      // Search functionality
+      searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        
+        userOptions.forEach(option => {
+          const searchData = option.dataset.search;
+          if (searchData.includes(searchTerm)) {
+            option.style.display = 'block';
+          } else {
+            option.style.display = 'none';
+          }
+        });
+      });
+
+      // Form validation
+      document.getElementById('addCoinsForm').addEventListener('submit', (e) => {
+        if (!selectedUserIdInput.value) {
+          e.preventDefault();
+          alert('Please select a user from the list');
+          return false;
+        }
+
+        const amount = parseFloat(document.getElementById('amount').value);
+        if (isNaN(amount) || amount <= 0) {
+          e.preventDefault();
+          alert('Please enter a valid positive amount');
+          return false;
+        }
+
+        if (amount > 1000000) {
+          e.preventDefault();
+          alert('Amount cannot exceed 1,000,000 PCS');
+          return false;
+        }
+
+        const reason = document.getElementById('reason').value.trim();
+        if (!reason) {
+          e.preventDefault();
+          alert('Please provide a reason for this coin addition');
+          return false;
+        }
+
+        // Confirm action
+        const confirmed = confirm(
+          `Are you sure you want to add ${amount.toLocaleString()} PCS?\n\n` +
+          `This action will be permanently logged and cannot be undone.`
+        );
+        
+        if (!confirmed) {
+          e.preventDefault();
+          return false;
+        }
+      });
+    </script>
+  </body>
+</html>
