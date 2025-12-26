@@ -55,6 +55,7 @@ python3 pcs-website.py
 
 ### **Access the Application:**
 - **URL:** http://localhost:8000
+- **Windows users:** If localhost doesn't work, use http://127.0.0.1:8000
 - **Default Admin Login:** `admin` / `admin`
 
 ### **Stop the Server:**
