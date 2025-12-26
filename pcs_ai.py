@@ -63,6 +63,9 @@ class SecurityAssessment:
 _THREAT_LOG_FILE = "data/threat_log.json"
 _BLOCKED_IPS_FILE = "data/blocked_ips.json"
 
+# Whitelist for localhost/development (never block these IPs)
+_WHITELISTED_IPS = {"127.0.0.1", "localhost", "::1"}
+
 # In-memory threat tracking (in production, use Redis or database)
 _failed_login_tracker: Dict[str, List[datetime]] = defaultdict(list)
 _request_tracker: Dict[str, List[datetime]] = defaultdict(list)
@@ -240,6 +243,15 @@ def assess_login_attempt(
     """
     threats: list[str] = []
     
+    # Whitelist check - never block localhost/development IPs
+    if ip_address in _WHITELISTED_IPS:
+        return SecurityAssessment(
+            level=ThreatLevel.SAFE,
+            threats=[],
+            should_block=False,
+            ip_address=ip_address,
+        )
+    
     # Check if IP is already blocked
     if ip_address in _blocked_ips:
         return SecurityAssessment(
@@ -256,9 +268,9 @@ def assess_login_attempt(
     if not success:
         _failed_login_tracker[ip_address].append(datetime.utcnow())
     
-    # Check for brute force attack (5+ failed attempts in 30 minutes)
+    # Check for brute force attack (10+ failed attempts in 30 minutes - increased threshold)
     failed_count = len(_failed_login_tracker.get(ip_address, []))
-    if failed_count >= 5:
+    if failed_count >= 10:
         _block_ip(ip_address)
         _save_blocked_ips()  # Persist to disk
         _log_threat(
@@ -274,7 +286,7 @@ def assess_login_attempt(
             should_block=True,
             ip_address=ip_address,
         )
-    elif failed_count >= 3:
+    elif failed_count >= 5:
         threats.append(f"Multiple failed login attempts detected: {failed_count} attempts")
         _log_threat(
             ip_address=ip_address,
@@ -366,6 +378,15 @@ def assess_request_pattern(
     """
     threats: list[str] = []
     
+    # Whitelist check - never block localhost/development IPs
+    if ip_address in _WHITELISTED_IPS:
+        return SecurityAssessment(
+            level=ThreatLevel.SAFE,
+            threats=[],
+            should_block=False,
+            ip_address=ip_address,
+        )
+    
     # Check if IP is blocked
     if ip_address in _blocked_ips:
         return SecurityAssessment(
@@ -397,7 +418,7 @@ def assess_request_pattern(
         # Command injection
         'commix', 'shellnoob',
         # Crawlers/spiders (malicious)
-        'scrapy', 'httrack', 'wget', 'curl/7', 'python-requests',
+        'scrapy', 'httrack', 'wget', 'python-requests',
         # Automated attack tools
         'hydra', 'medusa', 'patator', 'brutus', 'crowbar',
         # Other reconnaissance
@@ -428,9 +449,9 @@ def assess_request_pattern(
     # Track request
     _request_tracker[ip_address].append(datetime.utcnow())
     
-    # Check for DDoS (more than 100 requests in 5 minutes)
+    # Check for DDoS (more than 500 requests in 5 minutes)
     request_count = len(_request_tracker.get(ip_address, []))
-    if request_count > 100:
+    if request_count > 500:
         _block_ip(ip_address)
         _log_threat(
             ip_address=ip_address,
@@ -445,7 +466,7 @@ def assess_request_pattern(
             should_block=True,
             ip_address=ip_address,
         )
-    elif request_count > 50:
+    elif request_count > 200:
         threats.append(f"High request rate detected: {request_count} requests in 5 minutes")
         _log_threat(
             ip_address=ip_address,
