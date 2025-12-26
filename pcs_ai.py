@@ -309,7 +309,7 @@ def assess_login_attempt(
         'acunetix', 'netsparker', 'w3af', 'webscarab', 'paros',
         'skipfish', 'wapiti', 'arachni', 'vega', 'zap',
         # Command-line tools
-        'curl', 'wget', 'httpie', 'lwp', 'libwww',
+        'wget', 'httpie', 'lwp', 'libwww',
         # Programming libraries
         'python-requests', 'scrapy', 'mechanize', 'urllib',
         'go-http-client', 'java/', 'okhttp',
