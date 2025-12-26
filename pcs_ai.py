@@ -33,6 +33,10 @@ Defense Mechanisms:
 
 from __future__ import annotations
 
+import json
+import os
+import urllib.request
+import urllib.error
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
@@ -55,6 +59,10 @@ class SecurityAssessment:
     ip_address: str
 
 
+# Persistent storage paths
+_THREAT_LOG_FILE = "data/threat_log.json"
+_BLOCKED_IPS_FILE = "data/blocked_ips.json"
+
 # In-memory threat tracking (in production, use Redis or database)
 _failed_login_tracker: Dict[str, List[datetime]] = defaultdict(list)
 _request_tracker: Dict[str, List[datetime]] = defaultdict(list)
@@ -62,8 +70,110 @@ _blocked_ips: set[str] = set()
 _threat_log: List[Dict] = []  # Log of all security events
 
 
+def _save_threat_log() -> None:
+    """Save threat log to persistent storage."""
+    try:
+        os.makedirs("data", exist_ok=True)
+        with open(_THREAT_LOG_FILE, 'w') as f:
+            json.dump(_threat_log, f, indent=2)
+    except Exception as e:
+        print(f"[WARNING] Failed to save threat log: {e}")
+
+
+def _save_blocked_ips() -> None:
+    """Save blocked IPs to persistent storage."""
+    try:
+        os.makedirs("data", exist_ok=True)
+        with open(_BLOCKED_IPS_FILE, 'w') as f:
+            json.dump(list(_blocked_ips), f, indent=2)
+    except Exception as e:
+        print(f"[WARNING] Failed to save blocked IPs: {e}")
+
+
+def _load_threat_data() -> None:
+    """Load threat log and blocked IPs from persistent storage."""
+    global _threat_log, _blocked_ips
+    
+    # Load threat log
+    try:
+        if os.path.exists(_THREAT_LOG_FILE):
+            with open(_THREAT_LOG_FILE, 'r') as f:
+                _threat_log = json.load(f)
+            print(f"[SECURITY] Loaded {len(_threat_log)} threat events from disk")
+    except Exception as e:
+        print(f"[WARNING] Failed to load threat log: {e}")
+    
+    # Load blocked IPs
+    try:
+        if os.path.exists(_BLOCKED_IPS_FILE):
+            with open(_BLOCKED_IPS_FILE, 'r') as f:
+                _blocked_ips = set(json.load(f))
+            print(f"[SECURITY] Loaded {len(_blocked_ips)} blocked IPs from disk")
+    except Exception as e:
+        print(f"[WARNING] Failed to load blocked IPs: {e}")
+
+
+def _get_geolocation(ip_address: str) -> dict:
+    """Get geolocation data for an IP address for law enforcement tracking.
+    
+    Uses ip-api.com free API with maximum detail for attacker identification.
+    Returns location data including: country, region, city, lat/lon, ISP, org.
+    """
+    # Skip for localhost/private IPs
+    if ip_address in ['127.0.0.1', 'localhost'] or ip_address.startswith('192.168.') or ip_address.startswith('10.'):
+        return {
+            "country": "Local",
+            "regionName": "localhost",
+            "city": "localhost",
+            "isp": "Local Network",
+            "org": "Private Network",
+            "lat": 0.0,
+            "lon": 0.0,
+            "timezone": "UTC",
+            "as": "Private",
+            "query": ip_address
+        }
+    
+    try:
+        # Use ip-api.com with fields for maximum tracking detail
+        url = f"http://ip-api.com/json/{ip_address}?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query"
+        
+        with urllib.request.urlopen(url, timeout=3) as response:
+            data = json.loads(response.read().decode())
+            
+            if data.get('status') == 'success':
+                return {
+                    "country": data.get('country', 'Unknown'),
+                    "countryCode": data.get('countryCode', 'XX'),
+                    "region": data.get('region', 'Unknown'),
+                    "regionName": data.get('regionName', 'Unknown'),
+                    "city": data.get('city', 'Unknown'),
+                    "zip": data.get('zip', 'Unknown'),
+                    "lat": data.get('lat', 0.0),
+                    "lon": data.get('lon', 0.0),
+                    "timezone": data.get('timezone', 'Unknown'),
+                    "isp": data.get('isp', 'Unknown'),
+                    "org": data.get('org', 'Unknown'),
+                    "as": data.get('as', 'Unknown'),
+                    "query": data.get('query', ip_address)
+                }
+    except Exception as e:
+        print(f"[GEO] Failed to get location for {ip_address}: {e}")
+    
+    # Fallback if geolocation fails
+    return {
+        "country": "Unknown",
+        "city": "Unknown",
+        "isp": "Unknown",
+        "query": ip_address
+    }
+
+
 def _log_threat(ip_address: str, threat_type: str, details: str, level: ThreatLevel, action: str = "monitored") -> None:
-    """Log a security threat event."""
+    """Log a security threat event with geolocation for law enforcement."""
+    # Get geolocation BEFORE blocking for tracking
+    geo_data = _get_geolocation(ip_address)
+    
     event = {
         "timestamp": datetime.utcnow().isoformat(),
         "ip_address": ip_address,
@@ -71,11 +181,35 @@ def _log_threat(ip_address: str, threat_type: str, details: str, level: ThreatLe
         "details": details,
         "level": level.value,
         "action": action,  # monitored, blocked, dropped
+        # Law enforcement geolocation tracking
+        "geolocation": {
+            "country": geo_data.get('country', 'Unknown'),
+            "region": geo_data.get('regionName', 'Unknown'),
+            "city": geo_data.get('city', 'Unknown'),
+            "coordinates": f"{geo_data.get('lat', 0.0)}, {geo_data.get('lon', 0.0)}",
+            "isp": geo_data.get('isp', 'Unknown'),
+            "organization": geo_data.get('org', 'Unknown'),
+            "asn": geo_data.get('as', 'Unknown'),
+            "timezone": geo_data.get('timezone', 'Unknown'),
+        }
     }
+    
+    # Log for law enforcement with full tracking data
+    print(f"[LAW ENFORCEMENT TRACKING] {threat_type} from {ip_address} | Location: {geo_data.get('city')}, {geo_data.get('regionName')}, {geo_data.get('country')} | ISP: {geo_data.get('isp')} | Coordinates: {geo_data.get('lat')}, {geo_data.get('lon')}")
+    
     _threat_log.append(event)
     # Keep only last 1000 events to prevent memory overflow
     if len(_threat_log) > 1000:
         _threat_log.pop(0)
+    
+    # Save to disk for persistence
+    _save_threat_log()
+
+
+def _block_ip(ip_address: str) -> None:
+    """Block an IP address and save to persistent storage."""
+    _blocked_ips.add(ip_address)
+    _save_blocked_ips()
 
 
 def _clean_old_records(ip: str, tracker: Dict[str, List[datetime]], minutes: int = 60) -> None:
@@ -125,7 +259,8 @@ def assess_login_attempt(
     # Check for brute force attack (5+ failed attempts in 30 minutes)
     failed_count = len(_failed_login_tracker.get(ip_address, []))
     if failed_count >= 5:
-        _blocked_ips.add(ip_address)
+        _block_ip(ip_address)
+        _save_blocked_ips()  # Persist to disk
         _log_threat(
             ip_address=ip_address,
             threat_type="Brute Force Attack",
@@ -206,6 +341,7 @@ def assess_request_pattern(
     ip_address: str,
     endpoint: str,
     method: str = "GET",
+    user_agent: str = "",
 ) -> SecurityAssessment:
     """Assess security risk based on request patterns.
     
@@ -214,12 +350,15 @@ def assess_request_pattern(
     - Port scanning patterns
     - Directory traversal attempts
     - SQL injection patterns in URLs
+    - Security scanner tools
+    - Malicious user agents
     
     Parameters
     ----------
     ip_address: IP address of the request
-    endpoint: Request endpoint/path
+    endpoint: Request endpoint/path (full URL with query params)
     method: HTTP method
+    user_agent: User-Agent header
     
     Returns
     -------
@@ -236,6 +375,53 @@ def assess_request_pattern(
             ip_address=ip_address,
         )
     
+    # Check for malicious security scanner tools in User-Agent - BLOCK IMMEDIATELY
+    scanner_patterns = [
+        # SQL injection tools
+        'sqlmap', 'havij', 'pangolin', 'sqlninja', 'jsql', 'safe3',
+        # Web vulnerability scanners
+        'nikto', 'acunetix', 'nessus', 'openvas', 'w3af', 'webscarab',
+        'skipfish', 'arachni', 'vega', 'wapiti', 'nuclei',
+        # Proxy/intercepting tools
+        'burp', 'paros', 'zap', 'owasp', 'beef',
+        # Directory/file brute forcing
+        'dirbuster', 'gobuster', 'ffuf', 'wfuzz', 'dirb', 'feroxbuster',
+        # Network scanners - CRITICAL
+        'nmap', 'masscan', 'zmap', 'unicornscan', 'hping', 'angry ip',
+        'ncat', 'netcat', 'nc.exe', 'nc.traditional', 'ncat.exe',
+        'zenmap', 'nmapfe', 'xnmap',
+        # Exploitation frameworks
+        'metasploit', 'msfconsole', 'exploit', 'shellshock',
+        # XSS tools
+        'xsser', 'xsstrike', 'dalfox', 'xsscrapy',
+        # Command injection
+        'commix', 'shellnoob',
+        # Crawlers/spiders (malicious)
+        'scrapy', 'httrack', 'wget', 'curl/7', 'python-requests',
+        # Automated attack tools
+        'hydra', 'medusa', 'patator', 'brutus', 'crowbar',
+        # Other reconnaissance
+        'shodan', 'censys', 'whatweb', 'wpscan', 'joomscan',
+    ]
+    user_agent_lower = user_agent.lower()
+    for scanner in scanner_patterns:
+        if scanner in user_agent_lower:
+            # BLOCK IP PERMANENTLY
+            _block_ip(ip_address)
+            _log_threat(
+                ip_address=ip_address,
+                threat_type="Security Scanner Detected",
+                details=f"Malicious scanner tool detected: {user_agent[:150]} | Tool: {scanner.upper()}",
+                level=ThreatLevel.CRITICAL,
+                action="BLOCKED"
+            )
+            return SecurityAssessment(
+                level=ThreatLevel.CRITICAL,
+                threats=[f"Security scanner detected and BLOCKED: {scanner.upper()}"],
+                should_block=True,
+                ip_address=ip_address,
+            )
+    
     # Clean old records (last 5 minutes for request rate limiting)
     _clean_old_records(ip_address, _request_tracker, minutes=5)
     
@@ -245,7 +431,7 @@ def assess_request_pattern(
     # Check for DDoS (more than 100 requests in 5 minutes)
     request_count = len(_request_tracker.get(ip_address, []))
     if request_count > 100:
-        _blocked_ips.add(ip_address)
+        _block_ip(ip_address)
         _log_threat(
             ip_address=ip_address,
             threat_type="DDoS Attack",
@@ -268,6 +454,11 @@ def assess_request_pattern(
             level=ThreatLevel.SUSPICIOUS,
             action="monitored"
         )
+    
+    # URL decode for better pattern matching
+    from urllib.parse import unquote
+    endpoint_decoded = unquote(endpoint)
+    endpoint_lower = endpoint_decoded.lower()
     
     # Check for SQL injection patterns (comprehensive real-world attack signatures)
     sql_patterns = [
@@ -296,35 +487,37 @@ def assess_request_pattern(
         # File operations
         'load_file', 'into outfile', 'into dumpfile',
     ]
-    if any(pattern in endpoint.lower() for pattern in sql_patterns):
-        threats.append(f"SQL injection attempt detected in endpoint: {endpoint[:50]}")
+    if any(pattern in endpoint_lower for pattern in sql_patterns):
+        # BLOCK IP for SQL injection attempts
+        _block_ip(ip_address)
         _log_threat(
             ip_address=ip_address,
-            threat_type="SQL Injection",
-            details=f"SQL injection pattern in endpoint: {endpoint[:100]}",
-            level=ThreatLevel.DANGEROUS,
-            action="blocked"
+            threat_type="SQL Injection Attack",
+            details=f"SQL injection pattern detected in URL: {endpoint_decoded[:200]} | Matched pattern: {[p for p in sql_patterns if p in endpoint_lower][:3]}",
+            level=ThreatLevel.CRITICAL,
+            action="BLOCKED"
         )
         return SecurityAssessment(
-            level=ThreatLevel.DANGEROUS,
-            threats=threats,
+            level=ThreatLevel.CRITICAL,
+            threats=["SQL injection attack detected and BLOCKED"],
             should_block=True,
             ip_address=ip_address,
         )
     
-    # Check for directory traversal
-    if '../' in endpoint or '..\\' in endpoint:
-        threats.append("Directory traversal attempt detected")
+    # Check for directory traversal - BLOCK IMMEDIATELY
+    if '../' in endpoint_decoded or '..\\' in endpoint_decoded:
+        # BLOCK IP for path traversal attempts
+        _block_ip(ip_address)
         _log_threat(
             ip_address=ip_address,
-            threat_type="Directory Traversal",
-            details=f"Path traversal in endpoint: {endpoint[:100]}",
-            level=ThreatLevel.DANGEROUS,
-            action="blocked"
+            threat_type="Directory Traversal Attack",
+            details=f"Path traversal detected in URL: {endpoint_decoded[:200]}",
+            level=ThreatLevel.CRITICAL,
+            action="BLOCKED"
         )
         return SecurityAssessment(
-            level=ThreatLevel.DANGEROUS,
-            threats=threats,
+            level=ThreatLevel.CRITICAL,
+            threats=["Directory traversal attack detected and BLOCKED"],
             should_block=True,
             ip_address=ip_address,
         )
@@ -349,18 +542,19 @@ def assess_request_pattern(
         # Template injection
         '{{', '}}', '{%', '%}',
     ]
-    if any(pattern in endpoint.lower() for pattern in xss_patterns):
-        threats.append("XSS attempt detected")
+    if any(pattern in endpoint_lower for pattern in xss_patterns):
+        # BLOCK IP for XSS attempts
+        _block_ip(ip_address)
         _log_threat(
             ip_address=ip_address,
             threat_type="XSS Attack",
-            details=f"XSS pattern in endpoint: {endpoint[:100]}",
-            level=ThreatLevel.DANGEROUS,
-            action="blocked"
+            details=f"XSS pattern detected in URL: {endpoint_decoded[:200]} | Matched pattern: {[p for p in xss_patterns if p in endpoint_lower][:3]}",
+            level=ThreatLevel.CRITICAL,
+            action="BLOCKED"
         )
         return SecurityAssessment(
-            level=ThreatLevel.DANGEROUS,
-            threats=threats,
+            level=ThreatLevel.CRITICAL,
+            threats=["XSS attack detected and BLOCKED"],
             should_block=True,
             ip_address=ip_address,
         )
@@ -374,58 +568,63 @@ def assess_request_pattern(
             ip_address=ip_address,
         )
     
-    # Advanced attack pattern detection
-    endpoint_lower = endpoint.lower()
+    # Advanced attack pattern detection (use decoded endpoint)
     
-    # Command injection detection
+    # Command injection detection (exclude common URL characters)
     cmd_injection_patterns = [
-        ';', '|', '&&', '||', '`', '$(', '${',
-        'bash', 'sh', '/bin/', 'cmd.exe', 'powershell',
-        'nc ', 'netcat', 'telnet', 'wget ', 'curl ',
+        'bash', 'sh -c', '/bin/', 'cmd.exe', 'powershell',
+        'nc -', 'netcat', 'telnet', 'wget http', 'curl http',
+        '`cat', '$(cat', '${IFS}',
     ]
     if any(pattern in endpoint_lower for pattern in cmd_injection_patterns):
+        # BLOCK IP for command injection attempts
+        _block_ip(ip_address)
         _log_threat(
             ip_address=ip_address,
-            threat_type="Command Injection",
-            details=f"Command injection pattern detected: {endpoint[:100]}",
-            level=ThreatLevel.DANGEROUS,
-            action="blocked"
+            threat_type="Command Injection Attack",
+            details=f"Command injection pattern detected: {endpoint_decoded[:200]} | Matched: {[p for p in cmd_injection_patterns if p in endpoint_lower][:2]}",
+            level=ThreatLevel.CRITICAL,
+            action="BLOCKED"
         )
         return SecurityAssessment(
-            level=ThreatLevel.DANGEROUS,
-            threats=["Command injection attempt detected"],
+            level=ThreatLevel.CRITICAL,
+            threats=["Command injection attack detected and BLOCKED"],
             should_block=True,
             ip_address=ip_address,
         )
     
-    # LDAP injection
-    if any(p in endpoint for p in ['*)(', ')(', '*)*', '(*)']):
+    # LDAP injection - BLOCK IMMEDIATELY
+    if any(p in endpoint_decoded for p in ['*)(', ')(', '*)*', '(*)']):
+        # BLOCK IP for LDAP injection attempts
+        _block_ip(ip_address)
         _log_threat(
             ip_address=ip_address,
-            threat_type="LDAP Injection",
-            details=f"LDAP injection pattern: {endpoint[:100]}",
-            level=ThreatLevel.DANGEROUS,
-            action="blocked"
+            threat_type="LDAP Injection Attack",
+            details=f"LDAP injection pattern detected: {endpoint_decoded[:200]}",
+            level=ThreatLevel.CRITICAL,
+            action="BLOCKED"
         )
         return SecurityAssessment(
-            level=ThreatLevel.DANGEROUS,
-            threats=["LDAP injection attempt detected"],
+            level=ThreatLevel.CRITICAL,
+            threats=["LDAP injection attack detected and BLOCKED"],
             should_block=True,
             ip_address=ip_address,
         )
     
-    # XML injection / XXE
+    # XML injection / XXE - BLOCK IMMEDIATELY
     if any(p in endpoint_lower for p in ['<!entity', '<!doctype', 'system "', 'public "file://']):
+        # BLOCK IP for XML/XXE attempts
+        _block_ip(ip_address)
         _log_threat(
             ip_address=ip_address,
-            threat_type="XML/XXE Injection",
-            details=f"XML external entity attack: {endpoint[:100]}",
-            level=ThreatLevel.DANGEROUS,
-            action="blocked"
+            threat_type="XML/XXE Injection Attack",
+            details=f"XML external entity attack detected: {endpoint_decoded[:200]}",
+            level=ThreatLevel.CRITICAL,
+            action="BLOCKED"
         )
         return SecurityAssessment(
-            level=ThreatLevel.DANGEROUS,
-            threats=["XML/XXE injection attempt detected"],
+            level=ThreatLevel.CRITICAL,
+            threats=["XML/XXE injection attack detected and BLOCKED"],
             should_block=True,
             ip_address=ip_address,
         )
@@ -509,7 +708,7 @@ def get_blocked_ips() -> list[str]:
 
 
 def get_threat_statistics() -> dict:
-    """Get statistics about detected threats."""
+    """Get comprehensive statistics about detected threats and attacks."""
     # Count threats by type
     threat_counts = defaultdict(int)
     for log in _threat_log:
@@ -519,6 +718,14 @@ def get_threat_statistics() -> dict:
     action_counts = defaultdict(int)
     for log in _threat_log:
         action_counts[log['action']] += 1
+    
+    # Count severity levels
+    severity_counts = defaultdict(int)
+    for log in _threat_log:
+        severity_counts[log['level']] += 1
+    
+    # Get unique attacker IPs
+    unique_attackers = set(log['ip_address'] for log in _threat_log)
     
     return {
         "blocked_ips_count": len(_blocked_ips),
@@ -530,8 +737,11 @@ def get_threat_statistics() -> dict:
             if attempts
         },
         "total_threats_detected": len(_threat_log),
+        "unique_attackers": len(unique_attackers),
         "threats_by_type": dict(threat_counts),
         "actions_taken": dict(action_counts),
+        "severity_breakdown": dict(severity_counts),
+        "attack_summary": dict(threat_counts),  # For dashboard display
         "recent_threats": _threat_log[-10:] if _threat_log else [],  # Last 10 threats
     }
 
@@ -613,7 +823,7 @@ def is_credential_stuffing(username: str, ip_address: str) -> bool:
             level=ThreatLevel.CRITICAL,
             action="blocked"
         )
-        _blocked_ips.add(ip_address)
+        _block_ip(ip_address)
         return True
     
     return False
@@ -699,3 +909,7 @@ def update_config(key: str, value: int) -> bool:
         CONFIG[key] = value
         return True
     return False
+
+
+# Load persistent threat data on module import
+_load_threat_data()

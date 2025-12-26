@@ -132,14 +132,25 @@ Receiver gets monthly credit refills to continue helping others
 - **Request timing analysis** - Detects automated bot patterns
 - **User-Agent fingerprinting** - Identifies suspicious tools
 - **Header anomaly detection** - Protocol violation monitoring
-- **Geo-location tracking** - IP-based threat correlation
+- **Geo-location tracking** - IP-based threat correlation with law enforcement tracking
+  - Pre-blocking geolocation lookup via ip-api.com
+  - Captures: Country, Region, City, GPS coordinates
+  - ISP and organization identification
+  - ASN (Autonomous System Number) tracking
+  - Timezone data for temporal correlation
+  - All data logged BEFORE IP blocking for law enforcement traceability
 - **Pattern recognition** - Machine learning-ready architecture
 
 **Real-Time Defense Mechanisms:**
-- **Automatic IP blocking** - Permanent ban for critical threats
+- **Law enforcement geolocation tracking** - Attacker location captured BEFORE blocking
+  - Query ip-api.com API with maximum detail fields
+  - Console logging with [LAW ENFORCEMENT TRACKING] prefix
+  - Full location data stored in persistent threat log
+  - Geographic coordinates, ISP, organization, and ASN captured
+- **Automatic IP blocking** - Permanent ban for critical threats (AFTER geolocation capture)
 - **Connection dropping** - Instant termination of malicious requests
 - **Rate limiting** - Exponential backoff for repeat offenders
-- **Threat intelligence logging** - Comprehensive event correlation
+- **Threat intelligence logging** - Comprehensive event correlation with geolocation
 - **Dynamic configuration** - Tunable thresholds per threat type
 
 **Protection:** Military-grade defense against cyber attacks, hackers, and automated exploitation tools.
@@ -205,6 +216,11 @@ Receiver gets monthly credit refills to continue helping others
   - Attack type breakdown (SQL injection, XSS, DDoS, etc.)
   - Failed login attempt monitoring
   - Comprehensive threat event log with severity levels
+  - **Geolocation tracking display** - Law enforcement intelligence
+    - City, Region, Country for each attack
+    - ISP and organization identification
+    - GPS coordinates for mapping
+    - ASN and timezone data
   - Auto-refresh every 30 seconds for real-time updates
 - **Manual Coin Addition** - Inspector intervention capabilities
   - Add PCS coins to receiver/charity accounts for emergency relief
@@ -232,7 +248,7 @@ Receiver gets monthly credit refills to continue helping others
 9. Success message displayed with new balance
 ```
 
-**Accountability:** Ensures system integrity, legal compliance, and emergency response capabilities with complete transparency.
+**Accountability:** Ensures system integrity, legal compliance, emergency response capabilities, and law enforcement cooperation with complete transparency and attacker geolocation tracking.
 
 ---
 

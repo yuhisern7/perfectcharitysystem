@@ -80,25 +80,45 @@
     <main>
       <!-- Overview Statistics -->
       <section>
-        <h2>📊 Security Overview</h2>
+        <h2>📊 Security Overview - Live Statistics</h2>
         <div class="stats-grid">
           <div class="stat-card critical">
-            <div class="stat-label">🚫 Blocked IPs</div>
+            <div class="stat-label">🚫 BLOCKED IPs</div>
             <div class="stat-value">{{ stats.blocked_ips_count }}</div>
-            <div class="muted">IP addresses permanently blocked</div>
+            <div class="muted">Permanently banned attackers</div>
           </div>
           
           <div class="stat-card warning">
-            <div class="stat-label">⚠️ Total Threats</div>
+            <div class="stat-label">⚠️ TOTAL ATTACKS</div>
             <div class="stat-value">{{ stats.total_threats_detected }}</div>
-            <div class="muted">Security events detected</div>
+            <div class="muted">Security events logged</div>
+          </div>
+          
+          <div class="stat-card warning">
+            <div class="stat-label">👤 UNIQUE ATTACKERS</div>
+            <div class="stat-value">{{ stats.get('unique_attackers', 0) }}</div>
+            <div class="muted">Different IP addresses</div>
           </div>
           
           <div class="stat-card">
-            <div class="stat-label">👁️ Monitored IPs</div>
+            <div class="stat-label">👁️ MONITORED IPs</div>
             <div class="stat-value">{{ stats.tracked_ips_count }}</div>
             <div class="muted">Currently under surveillance</div>
           </div>
+          
+          <div class="stat-card success">
+            <div class="stat-label">🛡️ PROTECTION STATUS</div>
+            <div class="stat-value" style="font-size: 1.5rem;">ACTIVE</div>
+            <div class="muted">AI monitoring all traffic</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-label">⏱️ AUTO-REFRESH</div>
+            <div class="stat-value" style="font-size: 1.5rem;">30s</div>
+            <div class="muted">Real-time updates enabled</div>
+          </div>
+        </div>
+      </section>
           
           <div class="stat-card success">
             <div class="stat-label">✅ Actions Taken</div>
@@ -176,55 +196,157 @@
 
       <!-- Recent Threat Log -->
       <section>
-        <h2>📝 Recent Security Events (Last 100)</h2>
+        <h2>📝 Live Threat Monitor - Real-Time Attack Logs</h2>
+        <p class="muted" style="margin-bottom: 1rem;">
+          🔴 Live monitoring of all security events | Auto-refreshes every 30 seconds | 
+          Showing latest 100 events sorted by timestamp (newest first) | 🌍 Geolocation tracking enabled for law enforcement
+        </p>
         {% if threat_logs %}
-          <table>
-            <thead>
-              <tr>
-                <th>Timestamp</th>
-                <th>IP Address</th>
-                <th>Threat Type</th>
-                <th>Details</th>
-                <th>Level</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for log in threat_logs %}
+          <div style="overflow-x: auto;">
+            <table>
+              <thead>
                 <tr>
-                  <td style="font-size: 0.8rem;">{{ log.timestamp[:19] }}</td>
-                  <td style="font-family: monospace;">{{ log.ip_address }}</td>
-                  <td><strong>{{ log.threat_type }}</strong></td>
-                  <td class="muted" style="max-width: 300px; overflow: hidden; text-overflow: ellipsis;">{{ log.details }}</td>
-                  <td>
-                    {% if log.level == 'CRITICAL' %}
-                      <span class="badge badge-critical">CRITICAL</span>
-                    {% elif log.level == 'DANGEROUS' %}
-                      <span class="badge badge-dangerous">DANGEROUS</span>
-                    {% elif log.level == 'SUSPICIOUS' %}
-                      <span class="badge badge-suspicious">SUSPICIOUS</span>
-                    {% else %}
-                      <span class="badge badge-safe">SAFE</span>
-                    {% endif %}
-                  </td>
-                  <td>
-                    {% if log.action == 'blocked' or log.action == 'dropped' %}
-                      <span class="badge badge-blocked">{{ log.action.upper() }}</span>
-                    {% else %}
-                      <span class="badge badge-monitored">{{ log.action.upper() }}</span>
-                    {% endif %}
-                  </td>
+                  <th>🕐 Timestamp (UTC)</th>
+                  <th>🌐 Attacker IP</th>
+                  <th>📍 Location</th>
+                  <th>⚠️ Threat Type</th>
+                  <th>📋 Attack Details</th>
+                  <th>🎯 Severity</th>
+                  <th>🛡️ Action Taken</th>
                 </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {% for log in threat_logs %}
+                  <tr style="{% if log.action == 'BLOCKED' %}background: rgba(255, 95, 95, 0.05);{% endif %}">
+                    <td style="font-size: 0.8rem; font-family: monospace; white-space: nowrap;">
+                      {{ log.timestamp[:19].replace('T', ' ') }}
+                    </td>
+                    <td style="font-family: monospace; color: #ff5f5f; font-weight: 600;">
+                      {{ log.ip_address }}
+                    </td>
+                    <td style="font-size: 0.75rem; line-height: 1.3;">
+                      {% if log.get('geolocation') %}
+                        <div style="color: #5fe2ff;">📍 {{ log.geolocation.city }}, {{ log.geolocation.region }}</div>
+                        <div style="color: #a9b3d4;">🌍 {{ log.geolocation.country }}</div>
+                        <div style="color: #8a92b6; font-size: 0.7rem;">🏢 {{ log.geolocation.isp }}</div>
+                      {% else %}
+                        <span class="muted">No geo data</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <strong style="color: #ffb85f;">{{ log.threat_type }}</strong>
+                    </td>
+                    <td class="muted" style="max-width: 400px; font-size: 0.85rem; line-height: 1.4;">
+                      {{ log.details }}
+                    </td>
+                    <td>
+                      {% if log.level == 'CRITICAL' %}
+                        <span class="badge badge-critical">🔴 CRITICAL</span>
+                      {% elif log.level == 'DANGEROUS' %}
+                        <span class="badge badge-dangerous">🟠 DANGEROUS</span>
+                      {% elif log.level == 'SUSPICIOUS' %}
+                        <span class="badge badge-suspicious">🟡 SUSPICIOUS</span>
+                      {% else %}
+                        <span class="badge badge-safe">🟢 SAFE</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if log.action == 'BLOCKED' or log.action == 'blocked' or log.action == 'dropped' %}
+                        <span class="badge badge-blocked">🚫 {{ log.action.upper() }}</span>
+                      {% else %}
+                        <span class="badge badge-monitored">👁️ {{ log.action.upper() }}</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         {% else %}
-          <p class="muted">No security events logged yet. AI is actively monitoring all traffic...</p>
+          <div style="padding: 2rem; text-align: center; background: rgba(255, 184, 95, 0.1); border-radius: 8px; border: 1px dashed #ffb85f;">
+            <p style="font-size: 1.1rem; margin: 0;">
+              ✅ No security threats detected yet
+            </p>
+            <p class="muted" style="margin: 0.5rem 0 0;">
+              AI monitoring is ACTIVE and scanning all incoming traffic in real-time. 
+              Any attacks will be logged here instantly with IP, timestamp, and full details.
+            </p>
+          </div>
         {% endif %}
       </section>
 
+      <!-- Attack Type Statistics -->
+      {% if stats.get('attack_summary') %}
+      <section>
+        <h2>📈 Attack Type Breakdown</h2>
+        <div class="threat-breakdown">
+          {% for attack_type, count in stats.attack_summary.items() %}
+          <div class="threat-item">
+            <div class="threat-item-name">{{ attack_type }}</div>
+            <div class="threat-item-count">{{ count }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
       <!-- Information Panel -->
       <section>
+        <h2>ℹ️ AI Security Monitoring - How It Works</h2>
+        <div style="line-height: 1.8;">
+          <p class="muted"><strong>🛡️ Real-Time Protection Against:</strong></p>
+          <ul class="muted" style="margin-left: 1.5rem; line-height: 2;">
+            <li><strong>🔓 Brute Force Attacks:</strong> Multiple failed login attempts → Account lockout + IP block after 3 attempts</li>
+            <li><strong>⚡ DDoS Protection:</strong> Excessive request rates → Auto-block at >100 requests/5 minutes</li>
+            <li><strong>💉 SQL Injection:</strong> Malicious database queries → Instant IP ban + Attack logged</li>
+            <li><strong>⚠️ XSS Attacks:</strong> Cross-site scripting patterns → Immediate blocking + Alert</li>
+            <li><strong>📁 Directory Traversal:</strong> File system access attempts → Block + Log attacker</li>
+            <li><strong>🔍 Security Scanners:</strong> sqlmap, nikto, nmap, burp, etc. → Instant permanent IP ban</li>
+            <li><strong>💻 Command Injection:</strong> Shell command attempts → Block + Critical alert</li>
+            <li><strong>🌐 LDAP/XML Injection:</strong> Advanced injection attacks → Block + Log</li>
+          </ul>
+          
+          <p class="muted" style="margin-top: 1.5rem;"><strong>🚨 Automatic Response Actions:</strong></p>
+          <ul class="muted" style="margin-left: 1.5rem; line-height: 2;">
+            <li>✅ <strong>All attacks are LOGGED</strong> with IP address, timestamp, attack type, and full details</li>
+            <li>🚫 <strong>Attacker IPs are PERMANENTLY BLOCKED</strong> from accessing the system</li>
+            <li>📊 <strong>Real-time statistics</strong> updated every 30 seconds on this dashboard</li>
+            <li>🔔 <strong>Threat intelligence</strong> correlation for pattern analysis</li>
+            <li>⏱️ <strong>Rate limiting</strong> with exponential backoff for repeat offenders</li>
+          </ul>
+          
+          <p class="muted" style="margin-top: 1.5rem;"><strong>📋 Log Data Captured:</strong></p>
+          <ul class="muted" style="margin-left: 1.5rem;">
+            <li>🕐 Precise timestamp (UTC) of each attack</li>
+            <li>🌐 Complete IP address of the attacker</li>
+            <li>⚠️ Detailed attack type classification</li>
+            <li>📝 Full attack payload and pattern details</li>
+            <li>🎯 Threat severity level (Critical/Dangerous/Suspicious)</li>
+            <li>🛡️ Action taken (Blocked/Monitored/Dropped)</li>
+          </ul>
+        </div>
+      </section>
+
+      <section style="background: linear-gradient(135deg, #1a2135, #0d1221); border: 1px solid #5fe2ff;">
+        <h2>🎯 System Status</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+          <div>
+            <p class="muted">Monitoring Status</p>
+            <p style="font-size: 1.2rem; color: #5fff9f; font-weight: 600;">🟢 ACTIVE</p>
+          </div>
+          <div>
+            <p class="muted">Auto-Refresh Rate</p>
+            <p style="font-size: 1.2rem; color: #5fe2ff; font-weight: 600;">⏱️ 30 Seconds</p>
+          </div>
+          <div>
+            <p class="muted">Protection Level</p>
+            <p style="font-size: 1.2rem; color: #ff5fff; font-weight: 600;">🛡️ MAXIMUM</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Information Panel -->
+      <section style="display: none;">
         <h2>ℹ️ About AI Security Monitoring</h2>
         <div style="line-height: 1.8;">
           <p class="muted"><strong>What the AI monitors:</strong></p>

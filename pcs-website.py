@@ -67,19 +67,29 @@ async def add_security_headers(request: Request, call_next):
 	client_ip = request.client.host if request.client else "unknown"
 	user_agent = request.headers.get("user-agent", "")
 	
-	# Check request pattern for attacks
-	security_check = pcs_ai.assess_request_pattern(
-		ip_address=client_ip,
-		endpoint=str(request.url.path),
-		method=request.method,
-	)
+	# Check request pattern for attacks (include full URL with query params)
+	full_url = str(request.url)
 	
-	# Block malicious requests immediately (OWASP A05:2021 - Security Misconfiguration)
-	if security_check.should_block:
-		raise HTTPException(
-			status_code=403,
-			detail="Access denied - Security threat detected"
+	try:
+		security_check = pcs_ai.assess_request_pattern(
+			ip_address=client_ip,
+			endpoint=full_url,
+			method=request.method,
+			user_agent=user_agent,
 		)
+		
+		# Block malicious requests immediately (OWASP A05:2021 - Security Misconfiguration)
+		if security_check.should_block:
+			from fastapi.responses import JSONResponse
+			return JSONResponse(
+				status_code=403,
+				content={"detail": "Access denied - Security threat detected", "threat": security_check.threats}
+			)
+	except Exception as e:
+		# Log error but don't block request if security check fails
+		print(f"[SECURITY ERROR] Failed to assess request: {e}")
+		import traceback
+		traceback.print_exc()
 	
 	response = await call_next(request)
 	
