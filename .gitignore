@@ -63,6 +63,8 @@ Thumbs.db
 # Project specific
 data/*.json
 !data/.gitkeep
+uploads/*
+!uploads/.gitkeep
 *.log
 *.db
 *.sqlite3
