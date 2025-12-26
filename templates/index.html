@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Perfect Charity System (PCS)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { 
+        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif; 
+        margin: 0; padding: 0; 
+        background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
+        color: #f5f7ff;
+        min-height: 100vh;
+      }
+      header { 
+        padding: 1.5rem 2rem; 
+        background: rgba(17, 23, 39, 0.9);
+        border-bottom: 1px solid rgba(94, 226, 255, 0.2);
+        backdrop-filter: blur(10px);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      header h1 { 
+        margin: 0; 
+        font-size: 2rem; 
+        background: linear-gradient(135deg, #5fe2ff, #4f9cff);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 700;
+      }
+      header p { margin: 0.3rem 0 0; color: #a9b3d4; font-size: 0.95rem; }
+      main { padding: 2rem 2rem 3rem; max-width: 1200px; margin: 0 auto; }
+      section { 
+        margin-bottom: 2rem; 
+        background: rgba(21, 27, 44, 0.7);
+        border-radius: 16px; 
+        padding: 2rem; 
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(79, 156, 255, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      section:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 25px 60px rgba(94, 226, 255, 0.15);
+      }
+      h2 { margin-top: 0; font-size: 1.6rem; color: #fff; font-weight: 600; }
+      label { display: block; margin-bottom: 0.5rem; font-size: 0.95rem; color: #c4cbea; font-weight: 500; }
+      input, textarea, select { 
+        width: 100%; 
+        padding: 0.75rem 1rem; 
+        margin-bottom: 1rem; 
+        border-radius: 8px; 
+        border: 1px solid rgba(79, 156, 255, 0.3); 
+        background: rgba(14, 20, 36, 0.8); 
+        color: #f5f7ff; 
+        font-size: 0.95rem; 
+        transition: all 0.3s ease;
+      }
+      input:focus, textarea:focus, select:focus { 
+        outline: none; 
+        border-color: #5fe2ff; 
+        box-shadow: 0 0 0 3px rgba(94, 226, 255, 0.2);
+        background: rgba(14, 20, 36, 1);
+      }
+      button { 
+        padding: 0.75rem 1.5rem; 
+        border-radius: 8px; 
+        border: none; 
+        background: linear-gradient(135deg, #4f9cff, #5fe2ff); 
+        color: #050814; 
+        font-weight: 600; 
+        font-size: 0.95rem; 
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(94, 226, 255, 0.3);
+      }
+      button:hover { 
+        transform: translateY(-2px);
+        box-shadow: 0 6px 25px rgba(94, 226, 255, 0.5);
+      }
+      a.btn { 
+        display:inline-block; 
+        padding: 0.75rem 1.5rem; 
+        border-radius: 8px; 
+        border: none; 
+        background: linear-gradient(135deg, #4f9cff, #5fe2ff); 
+        color: #050814; 
+        font-weight: 600; 
+        font-size: 0.95rem; 
+        text-decoration:none;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(94, 226, 255, 0.3);
+      }
+      a.btn:hover { 
+        transform: translateY(-2px);
+        box-shadow: 0 6px 25px rgba(94, 226, 255, 0.5);
+      }
+      table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.9rem; }
+      th, td { padding: 0.75rem; border-bottom: 1px solid rgba(38, 45, 65, 0.5); text-align: left; }
+      th { color: #5fe2ff; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; }
+      tr:last-child td { border-bottom: none; }
+      tr:hover { background: rgba(94, 226, 255, 0.05); }
+      .tag { 
+        display: inline-block; 
+        padding: 0.25rem 0.75rem; 
+        border-radius: 20px; 
+        font-size: 0.75rem; 
+        text-transform: uppercase; 
+        letter-spacing: 0.06em; 
+        background: linear-gradient(135deg, rgba(79, 156, 255, 0.2), rgba(94, 226, 255, 0.2));
+        border: 1px solid rgba(94, 226, 255, 0.3);
+        color: #5fe2ff;
+        font-weight: 600;
+      }
+      .muted { color: #a9b3d4; font-size: 0.9rem; line-height: 1.6; }
+      .pill { 
+        display: inline-block; 
+        padding: 0.4rem 0.9rem; 
+        border-radius: 20px; 
+        background: linear-gradient(135deg, rgba(79, 156, 255, 0.2), rgba(94, 226, 255, 0.2)); 
+        color: #5fe2ff; 
+        font-size: 0.85rem; 
+        border: 1px solid rgba(94, 226, 255, 0.3);
+        font-weight: 500;
+      }
+
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        header { padding: 1rem 1rem; }
+        main { padding: 1rem; }
+        section { padding: 1.25rem; }
+        header h1 { font-size: 1.5rem; }
+        header p { font-size: 0.85rem; }
+        h2 { font-size: 1.3rem; }
+        /* Stack header content on small screens */
+        header > div { flex-direction: column; align-items: flex-start !important; gap: 0.75rem; }
+        header > div > div { width: 100%; display: flex; flex-direction: column; gap: 0.5rem; }
+        header .btn, header button { width: 100%; text-align: center; margin: 0 !important; }
+        header .muted { margin-right: 0 !important; margin-bottom: 0.5rem; }
+      }
+
+      @media (max-width: 480px) {
+        header { padding: 0.75rem; }
+        main { padding: 0.75rem; }
+        section { margin-bottom: 1rem; padding: 1rem; }
+        header h1 { font-size: 1.25rem; }
+        h2 { font-size: 1.15rem; }
+        table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; font-size: 0.85rem; }
+        th, td { padding: 0.5rem; }
+        .tag { font-size: 0.7rem; padding: 0.2rem 0.6rem; }
+        .pill { font-size: 0.75rem; padding: 0.3rem 0.7rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+        <div>
+          <h1>Perfect Charity System</h1>
+          <p>World's first non-profiting charity • Internal coin: <strong>{{ coin_name }}</strong></p>
+        </div>
+        <div>
+          {% if current_user %}
+          <span class="muted" style="margin-right:0.75rem;">Signed in as <strong>{{ current_user.username }}</strong> ({{ current_user.role }})</span>
+          <a href="/profile" class="btn" style="margin-right:0.5rem;">My profile</a>
+          <a href="/logout" class="btn">Logout</a>
+          {% else %}
+          <a href="/login" class="btn" style="margin-right:0.5rem;">Login</a>
+          <a href="/register" class="btn">Register</a>
+          {% endif %}
+        </div>
+      </div>
+    </header>
+    <main>
+      <section>
+        <span class="tag">Introduction</span>
+        <h2>Welcome to Perfect Charity System</h2>
+        <p class="muted">
+          "This is the World's 1st non profiting charity system, Perfect Charity System organization never profits from any donations, there are no salaries, no transaction fees, no hidden fees, no commisions, no advertisements, each donations are directed towards real verified individuals of your choices.
+        </p>
+        <p class="muted" style="margin-top:0.75rem;">
+          Donors could choose to donate to PCS internal operations or external operations, or donate directly towards individuals of your choice, or donate directly to existing Charity organizations. Users are able to track the donations using blockchain technology to aid law-enforcements if required. This currency is not traded on any exchange and has no monetary value outside of the Perfect Charity System platform.
+        </p>
+      </section>
+
+      <section>
+        <span class="tag">Operations</span>
+        <h2>Internal operations:</h2>
+        <p class="muted">
+          The donation money is not used to pay for the expenses in PCS internal operations, the donations are separated, it mostly consist of volunteers. For workers such as IT staffs their full details and salaries are visible to the public in their PCS profiles through our blockchain system.
+        </p>
+      </section>
+
+      <section>
+        <h2>External operations:</h2>
+        <p class="muted">
+          These are for those that seek to physically help the suffering poor, volunteer or seek to get paid via projects, their contributions will be recorded in their profiles.
+        </p>
+      </section>
+
+      <section>
+        <span class="tag">Key Advantages</span>
+        <h2>Why Choose PCS?</h2>
+        <p class="muted">
+          PCS is the world's first non-profiting charity system with zero transaction fees and complete transparency through blockchain technology.
+        </p>
+
+        <h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #5fe2ff; font-size: 1.3rem;">🎯 Core Advantages</h3>
+        
+        <div style="margin-bottom: 2rem;">
+          <h4 style="color: #fff; margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1.1rem;">1. Zero Transaction Fees (100% Direct Impact)</h4>
+          <ul class="muted" style="margin-left: 1.5rem; line-height: 1.8;">
+            <li><strong>No payment processing fees</strong> - Traditional charities lose 2-5% to credit card processors</li>
+            <li><strong>No platform fees</strong> - Unlike GoFundMe (2.9% + $0.30), PCS charges 0%</li>
+            <li><strong>No administrative overhead</strong> - Every dollar donated reaches the intended recipient</li>
+            <li><strong>Direct peer-to-peer transfers</strong> - No intermediaries taking cuts</li>
+          </ul>
+          <p class="muted" style="margin-top: 0.75rem;"><strong>Impact:</strong> If you donate $1,000, the recipient receives the full $1,000 worth of value.</p>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+          <h4 style="color: #fff; margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1.1rem;">2. Complete Blockchain Transparency</h4>
+          <ul class="muted" style="margin-left: 1.5rem; line-height: 1.8;">
+            <li><strong>Immutable audit trail</strong> - Every transaction permanently recorded</li>
+            <li><strong>Public blockchain explorer</strong> - Anyone can verify where money went</li>
+            <li><strong>Real-time tracking</strong> - Donors see their impact immediately</li>
+            <li><strong>Law enforcement access</strong> - Inspectors can audit all transactions</li>
+            <li><strong>No hidden costs</strong> - All expenses visible on the blockchain</li>
+          </ul>
+          <p class="muted" style="margin-top: 0.75rem;"><strong>Benefit:</strong> Donors gain confidence knowing exactly where their contributions go.</p>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+          <h4 style="color: #fff; margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1.1rem;">3. "Dead Coin" Design (Anti-Speculation)</h4>
+          <p class="muted">PCS cryptocurrency is designed to have <strong>zero external value</strong>:</p>
+          <ul class="muted" style="margin-left: 1.5rem; line-height: 1.8;">
+            <li>❌ Cannot be traded on exchanges</li>
+            <li>❌ Cannot be withdrawn to external wallets</li>
+            <li>❌ No market speculation or price volatility</li>
+            <li>✅ Only purpose: Track charitable giving</li>
+            <li>✅ Pure utility token for transparency</li>
+          </ul>
+          <p class="muted" style="margin-top: 0.75rem;"><strong>Result:</strong> Eliminates fraud, market manipulation, and speculation - focusing solely on charity.</p>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+          <h4 style="color: #fff; margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1.1rem;">4. Monthly Credit System</h4>
+          <ul class="muted" style="margin-left: 1.5rem; line-height: 1.8;">
+            <li><strong>Receivers & Charities:</strong> Automatically receive $10,000 PCS/month</li>
+            <li><strong>No upfront capital needed</strong> - Start helping immediately</li>
+            <li><strong>Guaranteed liquidity</strong> - Always have "inventory" to sell</li>
+            <li><strong>Circular economy</strong> - PCS can be sold, donated, and resold infinitely</li>
+          </ul>
+          <p class="muted" style="margin-top: 0.75rem;"><strong>Advantage:</strong> Creates a sustainable, self-replenishing donation ecosystem.</p>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+          <h4 style="color: #fff; margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1.1rem;">5. Gamified Donor Recognition System</h4>
+          <ul class="muted" style="margin-left: 1.5rem; line-height: 1.8;">
+            <li><strong>Country & Worldwide Rankings</strong> - Top 1000 donors recognized in each category</li>
+            <li><strong>Merit-based revelation</strong> - Rankings only shown after first successful donation</li>
+            <li><strong>Visual achievement badges</strong> - 🥇🥈🥉 medals for top 3 positions</li>
+            <li><strong>Anti-gaming protection</strong> - Only active donors with real contributions are ranked</li>
+            <li><strong>Privacy protection</strong> - Ranks beyond top 1000 are hidden</li>
+            <li><strong>Stable sorting algorithm</strong> - Mathematically sound ranking with tie-breaking</li>
+          </ul>
+          <p class="muted" style="margin-top: 0.75rem;"><strong>Benefits:</strong> Encourages charitable giving through recognition while maintaining exclusivity and protecting privacy of smaller contributors.</p>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+          <h4 style="color: #fff; margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1.1rem;">6. AI-Powered Fraud Prevention</h4>
+          <ul class="muted" style="margin-left: 1.5rem; line-height: 1.8;">
+            <li><strong>Risk assessment</strong> for every donation (LOW/MEDIUM/HIGH)</li>
+            <li><strong>Pattern detection</strong> - Identifies suspicious behavior</li>
+            <li><strong>Amount-based alerts</strong> - Flags unusually large transactions</li>
+            <li><strong>Frequency monitoring</strong> - Detects rapid donation patterns</li>
+            <li><strong>Automatic logging</strong> - All assessments recorded for review</li>
+          </ul>
+          <p class="muted" style="margin-top: 0.75rem;"><strong>Protection:</strong> Safeguards both donors and recipients from fraud.</p>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+          <h4 style="color: #fff; margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1.1rem;">7. Inspector Oversight (Law Enforcement Integration)</h4>
+          <p class="muted"><strong>DISA STIG Level 3 Security Implementation:</strong></p>
+          <ul class="muted" style="margin-left: 1.5rem; line-height: 1.8;">
+            <li><strong>Account lockout</strong> after 3 failed login attempts</li>
+            <li><strong>Session timeouts</strong> for security</li>
+            <li><strong>Security event logging</strong> - Full audit trail</li>
+            <li><strong>Ban management</strong> - Inspectors can block fraudulent users</li>
+            <li><strong>Geographic tracking</strong> - Monitor distribution by country/state</li>
+            <li><strong>User management</strong> - Complete oversight of all accounts</li>
+          </ul>
+          <p class="muted" style="margin-top: 0.75rem;"><strong>Accountability:</strong> Ensures system integrity and legal compliance.</p>
+        </div>
+
+        <h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #5fe2ff; font-size: 1.3rem;">💡 Real-World Comparison</h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem;">
+          <div style="background: rgba(255, 95, 95, 0.1); padding: 1.5rem; border-radius: 10px; border: 1px solid rgba(255, 95, 95, 0.3);">
+            <h4 style="color: #ff9f9f; margin-top: 0; margin-bottom: 1rem;">Traditional Charity: $1,000</h4>
+            <p class="muted" style="margin-bottom: 0.5rem;">$1,000 donation</p>
+            <p class="muted" style="margin-bottom: 0.5rem;">- $30 (Credit card fee)</p>
+            <p class="muted" style="margin-bottom: 0.5rem;">- $50 (Platform fee)</p>
+            <p class="muted" style="margin-bottom: 0.5rem;">- $200 (Charity overhead)</p>
+            <hr style="border: none; border-top: 1px solid rgba(255, 95, 95, 0.3); margin: 0.75rem 0;">
+            <p style="color: #ff9f9f; font-weight: 600; margin: 0;">= $720 reaches recipient (72%)</p>
+          </div>
+          
+          <div style="background: rgba(94, 226, 255, 0.1); padding: 1.5rem; border-radius: 10px; border: 1px solid rgba(94, 226, 255, 0.3);">
+            <h4 style="color: #5fe2ff; margin-top: 0; margin-bottom: 1rem;">PCS Donation: $1,000</h4>
+            <p class="muted" style="margin-bottom: 0.5rem;">$1,000 sent to receiver</p>
+            <p class="muted" style="margin-bottom: 0.5rem;">- $0 (No fees)</p>
+            <p class="muted" style="margin-bottom: 0.5rem;">- $0 (No platform charges)</p>
+            <p class="muted" style="margin-bottom: 0.5rem;">- $0 (No overhead)</p>
+            <hr style="border: none; border-top: 1px solid rgba(94, 226, 255, 0.3); margin: 0.75rem 0;">
+            <p style="color: #5fe2ff; font-weight: 600; margin-bottom: 0.75rem;">= $1,000 reaches recipient (100%)</p>
+            <p class="muted" style="font-size: 0.85rem; margin: 0;">
+              <strong>PLUS:</strong> ✓ Blockchain record ✓ PCS can be re-sold ✓ Complete transparency
+            </p>
+          </div>
+        </div>
+
+        <h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #5fe2ff; font-size: 1.3rem;">📊 Key Metrics</h3>
+        
+        <div style="overflow-x: auto;">
+          <table style="margin-top: 1rem;">
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>Traditional Charity</th>
+                <th>PCS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Transaction Fees</strong></td>
+                <td>2-5%</td>
+                <td style="color: #5fe2ff; font-weight: 600;">0%</td>
+              </tr>
+              <tr>
+                <td><strong>Platform Fees</strong></td>
+                <td>3-8%</td>
+                <td style="color: #5fe2ff; font-weight: 600;">0%</td>
+              </tr>
+              <tr>
+                <td><strong>Transparency</strong></td>
+                <td>Quarterly reports</td>
+                <td style="color: #5fe2ff; font-weight: 600;">Real-time blockchain</td>
+              </tr>
+              <tr>
+                <td><strong>Donor to Recipient</strong></td>
+                <td>60-85%</td>
+                <td style="color: #5fe2ff; font-weight: 600;">100%</td>
+              </tr>
+              <tr>
+                <td><strong>Fraud Prevention</strong></td>
+                <td>Manual audits</td>
+                <td style="color: #5fe2ff; font-weight: 600;">AI + Inspector oversight</td>
+              </tr>
+              <tr>
+                <td><strong>Global Access</strong></td>
+                <td>Limited</td>
+                <td style="color: #5fe2ff; font-weight: 600;">Unlimited</td>
+              </tr>
+              <tr>
+                <td><strong>Currency Support</strong></td>
+                <td>Usually single</td>
+                <td style="color: #5fe2ff; font-weight: 600;">Any currency</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #5fe2ff; font-size: 1.3rem;">💪 Bottom Line</h3>
+        <p class="muted">
+          <strong>PCS delivers what traditional charities promise but rarely achieve:</strong>
+        </p>
+        <ul class="muted" style="margin-left: 1.5rem; line-height: 1.8; margin-top: 0.75rem;">
+          <li>100% of donations reaching those in need</li>
+          <li>Complete transparency of every transaction</li>
+          <li>Zero fees or hidden costs</li>
+          <li>Verifiable impact through blockchain</li>
+          <li>Global accessibility without barriers</li>
+          <li>Security and fraud prevention</li>
+        </ul>
+        <p class="muted" style="margin-top: 1rem; font-style: italic;">
+          <strong>The result:</strong> More money helping more people with complete accountability.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

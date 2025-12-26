@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PCS – Search users</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background: #0b1020; color: #f5f7ff; }
+      header { padding: 1.5rem 2rem; background: #111727; border-bottom: 1px solid #232a3d; }
+      header h1 { margin: 0; font-size: 1.7rem; }
+      main { padding: 1.5rem 2rem 3rem; max-width: 960px; margin: 0 auto; }
+      section { margin-bottom: 2rem; background: #151b2c; border-radius: 10px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); }
+      h2 { margin-top: 0; font-size: 1.3rem; }
+      label { display: block; margin-bottom: 0.35rem; font-size: 0.9rem; color: #c4cbea; }
+      select { width: 100%; max-width: 260px; padding: 0.55rem 0.7rem; margin-bottom: 0.9rem; border-radius: 6px; border: 1px solid #313a55; background: #0e1424; color: #f5f7ff; font-size: 0.9rem; box-sizing: border-box; }
+      input[type="text"] { width: 100%; max-width: 260px; padding: 0.55rem 0.7rem; margin-bottom: 0.9rem; border-radius: 6px; border: 1px solid #313a55; background: #0e1424; color: #f5f7ff; font-size: 0.9rem; box-sizing: border-box; }
+      select:focus { outline: none; border-color: #4f9cff; box-shadow: 0 0 0 1px rgba(79, 156, 255, 0.4); }
+      button { padding: 0.55rem 1.2rem; border-radius: 6px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+      button:hover { filter: brightness(1.05); }
+      a.btn { display:inline-block; padding: 0.55rem 1.2rem; border-radius: 6px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 0.9rem; text-decoration:none; }
+      a.btn:hover { filter: brightness(1.05); }
+      table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.9rem; }
+      th, td { padding: 0.5rem; border-bottom: 1px solid #262d41; text-align: left; }
+      th { color: #a9b3d4; font-weight: 500; }
+      tr:last-child td { border-bottom: none; }
+      .pill { display: inline-block; padding: 0.25rem 0.7rem; border-radius: 999px; background: #111727; color: #e1e6ff; font-size: 0.8rem; border: 1px solid #272f47; }
+      .muted { color: #8a92b6; font-size: 0.85rem; }
+      a { color: #5fe2ff; text-decoration: none; }
+      
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        header { padding: 1rem; }
+        header h1 { font-size: 1.4rem; }
+        header > div { flex-direction: column; gap: 0.75rem; align-items: flex-start !important; }
+        header > div > div { width: 100%; display: flex; gap: 0.5rem; }
+        header .btn { flex: 1; text-align: center; margin: 0 !important; }
+        main { padding: 1rem; }
+        section { padding: 1.25rem; margin-bottom: 1.5rem; }
+        h2 { font-size: 1.15rem; }
+        h3 { font-size: 1rem; }
+        select, input[type="text"] { max-width: 100%; }
+        table { font-size: 0.85rem; }
+      }
+      
+      @media (max-width: 480px) {
+        header { padding: 0.75rem; }
+        header h1 { font-size: 1.25rem; }
+        main { padding: 0.75rem; }
+        section { padding: 1rem; }
+        table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; font-size: 0.8rem; }
+        th, td { padding: 0.4rem; }
+        h2 { font-size: 1.1rem; }
+        h3 { font-size: 0.95rem; }
+        h4 { font-size: 0.9rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+        <div>
+          <h1>Search PCS users</h1>
+          <p class="muted">Signed in as {{ current_user.username }}</p>
+        </div>
+        <div>
+          <a href="/profile" class="btn">Back to profile</a>
+          <a href="/logout" class="btn" style="margin-left:0.5rem;">Logout</a>
+        </div>
+      </div>
+    </header>
+    <main>
+      <section>
+        <h2>Filters</h2>
+        <form method="get" action="/search">
+          <label for="role">Show</label>
+          <select id="role" name="role">
+            <option value="" {% if not role_filter %}selected{% endif %}>All users</option>
+            <option value="donor" {% if role_filter == 'donor' %}selected{% endif %}>Donors</option>
+            <option value="receiver" {% if role_filter == 'receiver' %}selected{% endif %}>Receivers</option>
+            <option value="charity_org" {% if role_filter == 'charity_org' %}selected{% endif %}>Charity Organizations</option>
+          </select>
+
+          <label for="country">Country</label>
+          <select id="country" name="country">
+            <option value="" {% if not country_filter %}selected{% endif %}>All countries</option>
+            <option value="singapore" {% if country_filter == 'singapore' %}selected{% endif %}>Singapore</option>
+            <option value="malaysia" {% if country_filter == 'malaysia' %}selected{% endif %}>Malaysia</option>
+            <option value="indonesia" {% if country_filter == 'indonesia' %}selected{% endif %}>Indonesia</option>
+            <option value="philippines" {% if country_filter == 'philippines' %}selected{% endif %}>Philippines</option>
+            <option value="thailand" {% if country_filter == 'thailand' %}selected{% endif %}>Thailand</option>
+            <option value="vietnam" {% if country_filter == 'vietnam' %}selected{% endif %}>Vietnam</option>
+            <option value="india" {% if country_filter == 'india' %}selected{% endif %}>India</option>
+            <option value="china" {% if country_filter == 'china' %}selected{% endif %}>China</option>
+            <option value="japan" {% if country_filter == 'japan' %}selected{% endif %}>Japan</option>
+            <option value="australia" {% if country_filter == 'australia' %}selected{% endif %}>Australia</option>
+            <option value="new zealand" {% if country_filter == 'new zealand' %}selected{% endif %}>New Zealand</option>
+            <option value="united states" {% if country_filter == 'united states' %}selected{% endif %}>United States</option>
+            <option value="canada" {% if country_filter == 'canada' %}selected{% endif %}>Canada</option>
+            <option value="united kingdom" {% if country_filter == 'united kingdom' %}selected{% endif %}>United Kingdom</option>
+            <option value="germany" {% if country_filter == 'germany' %}selected{% endif %}>Germany</option>
+            <option value="france" {% if country_filter == 'france' %}selected{% endif %}>France</option>
+            <option value="other" {% if country_filter == 'other' %}selected{% endif %}>Other</option>
+          </select>
+
+          <label for="state">State</label>
+          <select id="state" name="state">
+            <option value="" {% if not state_filter %}selected{% endif %}>Any state</option>
+            <option value="central" {% if state_filter == 'central' %}selected{% endif %}>Central / City</option>
+            <option value="north" {% if state_filter == 'north' %}selected{% endif %}>North</option>
+            <option value="south" {% if state_filter == 'south' %}selected{% endif %}>South</option>
+            <option value="east" {% if state_filter == 'east' %}selected{% endif %}>East</option>
+            <option value="west" {% if state_filter == 'west' %}selected{% endif %}>West</option>
+          </select>
+
+          <label for="q">Username</label>
+          <input id="q" name="q" type="text" placeholder="Search username" value="{{ query or '' }}" />
+
+          <label for="email">Email</label>
+          <input id="email" name="email" type="text" placeholder="Search email" value="{{ email_filter or '' }}" />
+
+          <label for="phone">Phone number</label>
+          <input id="phone" name="phone" type="text" placeholder="Search phone number" value="{{ phone_filter or '' }}" />
+
+          <div style="margin-top:0.25rem;">
+            <button type="submit">Apply</button>
+          </div>
+        </form>
+      </section>
+
+      <section>
+        <h2>Results</h2>
+        {% if results %}
+        <div style="max-height:500px;overflow-y:auto;border:1px solid #313a55;border-radius:8px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Type</th>
+              <th>Country</th>
+              <th>Wallet</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in results %}
+            <tr>
+              <td>
+                <a href="/user/{{ u.user_id }}">{{ u.username }}</a>
+                {% if u.role == 'donor' and u.user_id in user_rankings %}
+                  {% set ranks = user_rankings[u.user_id] %}
+                  {% if ranks.country_rank > 0 or ranks.worldwide_rank > 0 %}
+                  <div style="font-size:0.75rem;color:#ffd700;margin-top:0.2rem;">
+                    {% if ranks.country_rank > 0 %}
+                      {% if ranks.country_rank == 1 %}🥇
+                      {% elif ranks.country_rank == 2 %}🥈
+                      {% elif ranks.country_rank == 3 %}🥉
+                      {% else %}#{{ ranks.country_rank }}{% endif %} in {{ u.country }}
+                    {% endif %}
+                    {% if ranks.worldwide_rank > 0 %}
+                      {% if ranks.country_rank > 0 %} • {% endif %}
+                      {% if ranks.worldwide_rank == 1 %}🥇
+                      {% elif ranks.worldwide_rank == 2 %}🥈
+                      {% elif ranks.worldwide_rank == 3 %}🥉
+                      {% else %}#{{ ranks.worldwide_rank }}{% endif %} worldwide
+                    {% endif %}
+                  </div>
+                  {% endif %}
+                {% endif %}
+              </td>
+              <td><span class="pill">{{ u.role }}</span></td>
+              <td class="muted">{{ u.country if u.country else '-' }}</td>
+              <td class="muted">{{ u.wallet_id }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        </div>
+        {% else %}
+        <p class="muted">No users match this filter yet.</p>
+        {% endif %}
+      </section>
+
+      {% if current_user.role in ['donor', 'charity_org', 'receiver'] %}
+      <section>
+        <h2>PCS internal operations</h2>
+        <p class="muted">Help to maintain PCS expenses, maintenance and pay staff salaries.</p>
+        
+        <div style="margin-top:1.5rem;margin-bottom:1.5rem;">
+          <h3 style="font-size:1.1rem;margin-bottom:0.75rem;color:#5fe2ff;">👥 PCS Employees</h3>
+          <table style="margin-top:0.5rem;">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Salary/Month</th>
+                <th>Profile</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="muted">Coming soon</td>
+                <td class="muted">-</td>
+                <td class="muted">-</td>
+                <td class="muted">-</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="muted" style="margin-top:0.5rem;font-size:0.8rem;">Employee information will be added as PCS grows. All salaries are transparent and visible to donors.</p>
+        </div>
+
+        <div style="margin-top:1.5rem;margin-bottom:1.5rem;">
+          <h3 style="font-size:1.1rem;margin-bottom:0.75rem;color:#5fe2ff;">💰 Realistic monthly costs (private VPS)</h3>
+          
+          <div style="background:#0e1424;border:1px solid #313a55;border-radius:8px;padding:1rem;margin-bottom:0.75rem;">
+            <h4 style="margin:0 0 0.5rem 0;font-size:0.95rem;">1️⃣ VPS hosting</h4>
+            <p class="muted" style="margin:0 0 0.4rem 0;font-size:0.85rem;">Depends on provider & specs.</p>
+            <p class="muted" style="margin:0 0 0.4rem 0;font-size:0.85rem;">Typical charity-safe VPS:</p>
+            <ul class="muted" style="margin:0 0 0.5rem 0;padding-left:1.5rem;font-size:0.83rem;">
+              <li>1–2 vCPU</li>
+              <li>2–4 GB RAM</li>
+              <li>40–80 GB SSD</li>
+            </ul>
+            <p style="margin:0;font-size:0.88rem;">Cost:<br>➡️ <strong>$10 – $30 / month</strong></p>
+          </div>
+
+          <div style="background:#0e1424;border:1px solid #313a55;border-radius:8px;padding:1rem;margin-bottom:0.75rem;">
+            <h4 style="margin:0 0 0.5rem 0;font-size:0.95rem;">2️⃣ Paid SSL certificate</h4>
+            <p class="muted" style="margin:0 0 0.4rem 0;font-size:0.85rem;">(annual cost averaged monthly)</p>
+            <ul style="margin:0 0 0.5rem 0;padding-left:1.5rem;font-size:0.83rem;">
+              <li>DV SSL ($50/year): ~$4 / month</li>
+              <li>OV SSL ($100–150/year): ~$8 – $12 / month</li>
+              <li>EV SSL ($200+/year): ~$17+ / month</li>
+            </ul>
+            <p style="margin:0;font-size:0.88rem;">➡️ <strong>Most charities choose OV SSL</strong></p>
+          </div>
+
+          <div style="background:#0e1424;border:1px solid #313a55;border-radius:8px;padding:1rem;margin-bottom:0.75rem;">
+            <h4 style="margin:0 0 0.5rem 0;font-size:0.95rem;">3️⃣ Domain name</h4>
+            <p style="margin:0;font-size:0.88rem;">$10 – $20 / year<br>➡️ <strong>~$1 – $2 / month</strong></p>
+          </div>
+
+          <div style="background:#0e1424;border:1px solid #313a55;border-radius:8px;padding:1rem;margin-bottom:0.75rem;">
+            <h4 style="margin:0 0 0.5rem 0;font-size:0.95rem;">4️⃣ Server security & basics</h4>
+            <p class="muted" style="margin:0 0 0.4rem 0;font-size:0.85rem;">Since it's a private VPS, you must cover:</p>
+            <ul style="margin:0;padding-left:1.5rem;font-size:0.83rem;">
+              <li>Firewall (UFW / iptables): $0</li>
+              <li>Fail2ban: $0</li>
+              <li>SSH hardening: $0</li>
+              <li>Basic monitoring: $0 – $10 / month</li>
+            </ul>
+          </div>
+
+          <div style="background:#0e1424;border:1px solid #313a55;border-radius:8px;padding:1rem;margin-bottom:0.75rem;">
+            <h4 style="margin:0 0 0.5rem 0;font-size:0.95rem;">5️⃣ Backups (important)</h4>
+            <p class="muted" style="margin:0 0 0.4rem 0;font-size:0.85rem;">VPS snapshots or offsite backups</p>
+            <p style="margin:0;font-size:0.88rem;"><strong>$5 – $15 / month</strong></p>
+          </div>
+
+          <div style="background:#0e1424;border:1px solid #313a55;border-radius:8px;padding:1rem;margin-bottom:0.75rem;">
+            <h4 style="margin:0 0 0.5rem 0;font-size:0.95rem;">6️⃣ Maintenance / IT time</h4>
+            <p class="muted" style="margin:0 0 0.4rem 0;font-size:0.85rem;">Depends if you do it yourself.</p>
+            <ul style="margin:0;padding-left:1.5rem;font-size:0.83rem;">
+              <li>Self-managed: <strong>$0</strong></li>
+              <li>Occasional paid help: <strong>$50 – $200 / month</strong></li>
+            </ul>
+          </div>
+
+          <div style="background:#111727;border:2px solid #5fe2ff;border-radius:8px;padding:1.25rem;margin-top:1.5rem;">
+            <h3 style="margin:0 0 0.75rem 0;font-size:1.05rem;color:#5fe2ff;">📊 Total monthly cost (private VPS)</h3>
+            
+            <div style="background:#0e1424;border:1px solid #313a55;border-radius:6px;padding:0.9rem;margin-bottom:0.75rem;">
+              <h4 style="margin:0 0 0.5rem 0;font-size:0.93rem;color:#5fe2ff;">🔹 Minimum (self-managed)</h4>
+              <ul style="margin:0;padding-left:1.5rem;font-size:0.85rem;">
+                <li>VPS: $20</li>
+                <li>Paid SSL (OV): $10</li>
+                <li>Domain: $2</li>
+                <li>Backups: $10</li>
+              </ul>
+              <p style="margin:0.75rem 0 0 0;font-size:0.95rem;font-weight:600;">👉 <strong style="color:#5fe2ff;">~$40 – $45 / month</strong></p>
+            </div>
+
+            <div style="background:#0e1424;border:1px solid #313a55;border-radius:6px;padding:0.9rem;">
+              <h4 style="margin:0 0 0.5rem 0;font-size:0.93rem;color:#5fe2ff;">🔹 Safer & more stable</h4>
+              <ul style="margin:0;padding-left:1.5rem;font-size:0.85rem;">
+                <li>VPS: $30</li>
+                <li>Paid SSL (OV): $10</li>
+                <li>Backups: $15</li>
+                <li>Occasional IT help: $100</li>
+              </ul>
+              <p style="margin:0.75rem 0 0 0;font-size:0.95rem;font-weight:600;">👉 <strong style="color:#5fe2ff;">~$150 – $160 / month</strong></p>
+            </div>
+          </div>
+        </div>
+
+        <a href="#" class="btn" style="margin-top:0.5rem;">Support PCS</a>
+      </section>
+
+      <section>
+        <h2>PCS external services</h2>
+        <p class="muted">Search for physical charity projects.</p>
+        <a href="/projects" class="btn" style="margin-top:0.5rem;">Search for projects</a>
+      </section>
+      {% endif %}
+    </main>
+  </body>
+</html>

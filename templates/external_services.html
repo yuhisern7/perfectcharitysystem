@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>External Services - PCS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%); color: #f5f7ff; min-height: 100vh; }
+    header { padding: 1.5rem 2rem; background: rgba(14, 20, 36, 0.9); border-bottom: 1px solid rgba(94, 226, 255, 0.2); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; }
+    header h1 { margin: 0; font-size: 1.8rem; background: linear-gradient(135deg, #5fe2ff, #4f9cff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    header p { margin: 0.3rem 0 0; color: #a9b3d4; font-size: 0.9rem; }
+    .container { max-width: 900px; margin: 2rem auto; padding: 0 2rem; }
+    .back-link { display: inline-block; margin-bottom: 1.5rem; color: #5fe2ff; text-decoration: none; font-size: 0.9rem; }
+    .back-link:hover { text-decoration: underline; }
+    section { margin-bottom: 2rem; background: rgba(21, 27, 44, 0.7); border: 1px solid rgba(79, 156, 255, 0.2); border-radius: 12px; padding: 1.5rem; }
+    h2 { margin-top: 0; font-size: 1.3rem; color: #fff; }
+    .muted { color: #a9b3d4; font-size: 0.85rem; }
+    label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #c4cbea; font-weight: 500; }
+    textarea { width: 100%; height: 400px; padding: 1rem; border-radius: 8px; border: 1px solid #313a55; background: #0e1424; color: #f5f7ff; font-size: 0.95rem; font-family: inherit; box-sizing: border-box; resize: vertical; line-height: 1.6; }
+    textarea:focus { outline: none; border-color: #4f9cff; box-shadow: 0 0 0 2px rgba(79, 156, 255, 0.2); }
+    input[type="file"] { display: block; width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #313a55; background: #0e1424; color: #f5f7ff; font-size: 0.9rem; margin-top: 0.5rem; }
+    input[type="file"]:focus { outline: none; border-color: #4f9cff; }
+    button { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s ease; margin-top: 1rem; }
+    button:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .file-hint { margin-top: 0.5rem; font-size: 0.8rem; color: #8a92b6; }
+    a.btn { display: inline-block; padding: 0.65rem 1.3rem; border-radius: 6px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+      header { padding: 1rem; }
+      header h1 { font-size: 1.5rem; }
+      .container { padding: 0 1rem; margin: 1.5rem auto; }
+      section { padding: 1.25rem; }
+      h2 { font-size: 1.15rem; }
+      textarea { height: 300px; padding: 0.85rem; font-size: 0.9rem; }
+    }
+    
+    @media (max-width: 480px) {
+      header { padding: 0.75rem; }
+      header h1 { font-size: 1.25rem; }
+      header p { font-size: 0.85rem; }
+      .container { padding: 0 0.75rem; }
+      section { padding: 1rem; }
+      textarea { height: 250px; padding: 0.75rem; font-size: 0.85rem; }
+      button { padding: 0.65rem 1.2rem; font-size: 0.9rem; }
+      input[type="file"] { padding: 0.6rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>External services</h1>
+    <p>Submit your volunteering project or physical charity initiative</p>
+  </header>
+
+  <div class="container">
+    <a href="/profile" class="back-link">← Back to Profile</a>
+
+    <section>
+      <h2>Project Description</h2>
+      <p class="muted">Describe your project in detail. Explain how you wish to contribute physically, through volunteering, or how your project would benefit those in need.</p>
+      
+      <form method="post" action="/external-services" enctype="multipart/form-data">
+        <label for="project_name">Project Name</label>
+        <input type="text" id="project_name" name="project_name" placeholder="Enter your project name" style="width:100%;max-width:500px;padding:0.75rem;border-radius:8px;border:1px solid #313a55;background:#0e1424;color:#f5f7ff;font-size:0.95rem;box-sizing:border-box;margin-bottom:1.5rem;" value="{{ user.project_name if user.project_name else '' }}" required>
+
+        <label for="project_description">Your Project</label>
+        <textarea id="project_description" name="project_description" placeholder="Write your project description here. Include details about your goals, how you plan to help, who will benefit, and any resources you need..." required>{{ user.project_description }}</textarea>
+
+        <label for="project_files" style="margin-top: 1.5rem;">Supporting Files</label>
+        <p class="muted" style="margin-bottom: 0.5rem;">Upload images, videos, or documents to support your project proposal.</p>
+        <input type="file" id="project_files" name="project_files" multiple accept="image/*,video/*,.pdf,.doc,.docx,.txt">
+        <p class="file-hint">You can select multiple files. Accepted formats: Images (JPG, PNG, etc.), Videos (MP4, etc.), Documents (PDF, DOC, TXT)</p>
+
+        {% if user.project_files %}
+        <div style="margin-top: 1rem;">
+          <p class="muted" style="margin-bottom: 0.5rem;">Currently uploaded files:</p>
+          <ul style="color: #a9b3d4; font-size: 0.85rem;">
+            {% for file in user.project_files %}
+            <li>{{ file }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        <button type="submit">Save request</button>
+      </form>
+    </section>
+
+    <section style="background: rgba(31, 37, 54, 0.5); border-color: rgba(94, 226, 255, 0.15);">
+      <h2 style="font-size: 1.1rem;">📋 Guidelines</h2>
+      <ul class="muted" style="line-height: 1.8; margin: 0.5rem 0 0 1.2rem;">
+        <li>Be clear and specific about your project goals</li>
+        <li>Explain who will benefit from your initiative</li>
+        <li>Include any relevant experience or qualifications</li>
+        <li>Your project will be publicly visible once saved</li>
+        <li>Upload supporting documents to strengthen your proposal</li>
+      </ul>
+    </section>
+  </div>
+</body>
+</html>

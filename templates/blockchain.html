@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PCS Blockchain Explorer</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Inter', system-ui, sans-serif; 
+      background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
+      color: #dfe6f5; 
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    nav { 
+      padding: 1.5rem 2rem; 
+      background: rgba(14, 20, 36, 0.9);
+      border-bottom: 1px solid rgba(94, 226, 255, 0.2);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    nav a { 
+      margin-right: 1.5rem; 
+      color: #a9b3d4; 
+      font-weight: 500;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+    nav a:hover { color: #5fe2ff; }
+    nav a.active { color: #5fe2ff; }
+    .container { max-width: 1400px; margin: 3rem auto; padding: 0 2rem; }
+    h1 { 
+      font-size: 2.5rem; 
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #5fe2ff, #4f9cff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    .stat-card {
+      background: rgba(21, 27, 44, 0.7);
+      border: 1px solid rgba(79, 156, 255, 0.2);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(94, 226, 255, 0.2);
+      border-color: rgba(94, 226, 255, 0.5);
+    }
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #5fe2ff;
+      margin-bottom: 0.5rem;
+    }
+    .stat-label {
+      color: #a9b3d4;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 500;
+    }
+    .tx-container {
+      background: rgba(21, 27, 44, 0.7);
+      border: 1px solid rgba(79, 156, 255, 0.1);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-top: 2rem;
+    }
+    .tx-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(94, 226, 255, 0.2);
+    }
+    .tx-card {
+      background: rgba(14, 20, 36, 0.8);
+      border: 1px solid rgba(79, 156, 255, 0.2);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      transition: all 0.3s ease;
+    }
+    .tx-card:hover {
+      transform: translateX(4px);
+      border-color: rgba(94, 226, 255, 0.5);
+      box-shadow: 0 4px 20px rgba(94, 226, 255, 0.15);
+    }
+    .tx-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .tx-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .tx-label {
+      color: #a9b3d4;
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .tx-value {
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      word-break: break-all;
+    }
+    .tx-amount {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #5fe2ff;
+    }
+    .tx-hash {
+      background: rgba(94, 226, 255, 0.1);
+      border: 1px solid rgba(94, 226, 255, 0.3);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      color: #5fe2ff;
+      word-break: break-all;
+    }
+    .tx-message {
+      background: rgba(79, 156, 255, 0.1);
+      border-left: 3px solid #5fe2ff;
+      padding: 0.75rem 1rem;
+      margin-top: 0.5rem;
+      border-radius: 4px;
+      font-style: italic;
+      color: #c4cbea;
+    }
+    .block-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, rgba(79, 156, 255, 0.2), rgba(94, 226, 255, 0.2));
+      border: 1px solid rgba(94, 226, 255, 0.3);
+      color: #5fe2ff;
+      padding: 0.4rem 0.9rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #a9b3d4;
+    }
+    .empty-state h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: #fff;
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+      nav { padding: 1rem; }
+      nav a { margin-right: 0.75rem; font-size: 0.9rem; }
+      .container { padding: 0 1rem; margin: 2rem auto; }
+      h1 { font-size: 1.8rem; }
+      .stats-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
+      .stat-card { padding: 1.25rem; }
+      .stat-value { font-size: 2rem; }
+      .tx-grid { grid-template-columns: 1fr; }
+      .tx-container { padding: 1.5rem; }
+      .tx-card { padding: 1.25rem; }
+    }
+    
+    @media (max-width: 480px) {
+      nav { padding: 0.75rem; }
+      nav a { margin-right: 0.5rem; font-size: 0.85rem; }
+      .container { padding: 0 0.75rem; margin: 1.5rem auto; }
+      h1 { font-size: 1.5rem; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .stat-value { font-size: 1.8rem; }
+      .tx-container { padding: 1rem; }
+      .tx-card { padding: 1rem; }
+      .tx-amount { font-size: 1.3rem; }
+      .tx-hash { padding: 0.6rem; font-size: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/">Home</a>
+    {% if current_user %}
+    <a href="/search">Search</a>
+    <a href="/profile">Profile</a>
+    <a class="active" href="/chain">Blockchain</a>
+    <a href="/logout" style="float:right;">Logout</a>
+    {% else %}
+    <a href="/login">Login</a>
+    <a href="/register">Register</a>
+    {% endif %}
+  </nav>
+
+  <div class="container">
+    <h1>🔗 PCS Blockchain Explorer</h1>
+    <p style="color:#a9b3d4;margin-top:0.5rem;font-size:1.1rem;">Immutable ledger of all cryptocurrency transactions</p>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">{{ total_blocks }}</div>
+        <div class="stat-label">Total Blocks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ transactions|length }}</div>
+        <div class="stat-label">Transactions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${{ "%.2f"|format(transactions|sum(attribute='amount')|default(0)) }}</div>
+        <div class="stat-label">Total Volume</div>
+      </div>
+    </div>
+
+    <div class="tx-container">
+      <div class="tx-header">
+        <h2 style="margin:0;font-size:1.6rem;">Transaction History</h2>
+        <span class="block-badge">Latest First</span>
+      </div>
+
+      {% if transactions %}
+        {% for tx in transactions %}
+        <div class="tx-card">
+          <div class="tx-grid">
+            <div class="tx-field">
+              <span class="tx-label">From Wallet</span>
+              <span class="tx-value">{{ tx.from_wallet }}</span>
+            </div>
+            <div class="tx-field">
+              <span class="tx-label">To Wallet</span>
+              <span class="tx-value">{{ tx.to_wallet }}</span>
+            </div>
+          </div>
+          
+          <div class="tx-grid">
+            <div class="tx-field">
+              <span class="tx-label">Amount</span>
+              <span class="tx-amount">${{ "%.2f"|format(tx.amount) }} PCS</span>
+            </div>
+            <div class="tx-field">
+              <span class="tx-label">Timestamp</span>
+              <span class="tx-value">{{ tx.timestamp }}</span>
+            </div>
+          </div>
+
+          <div class="tx-field">
+            <span class="tx-label">Block #{{ tx.block_index }}</span>
+          </div>
+
+          {% if tx.message %}
+          <div class="tx-message">
+            💬 {{ tx.message }}
+          </div>
+          {% endif %}
+
+          <div class="tx-hash">
+            <strong>Block Hash:</strong> {{ tx.block_hash }}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <h3>No Transactions Yet</h3>
+          <p>The blockchain is empty. Transactions will appear here once donations are made.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>

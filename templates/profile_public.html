@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PCS – Profile view</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background: #0b1020; color: #f5f7ff; }
+      header { padding: 1.5rem 2rem; background: #111727; border-bottom: 1px solid #232a3d; }
+      header h1 { margin: 0; font-size: 1.7rem; }
+      header p { margin: 0.3rem 0 0; color: #a9b3d4; font-size: 0.9rem; }
+      main { padding: 1.5rem 2rem 3rem; max-width: 960px; margin: 0 auto; }
+      section { margin-bottom: 2rem; background: #151b2c; border-radius: 10px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); }
+      h2 { margin-top: 0; font-size: 1.3rem; }
+      .pill { display: inline-block; padding: 0.25rem 0.7rem; border-radius: 999px; background: #111727; color: #e1e6ff; font-size: 0.8rem; border: 1px solid #272f47; }
+      .muted { color: #8a92b6; font-size: 0.85rem; }
+      .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; margin-top: 0.5rem; }
+      .media-item { background: #111727; border-radius: 8px; padding: 0.4rem; overflow: hidden; }
+      a { color: #5fe2ff; text-decoration: none; }
+      a.btn { display:inline-block; padding: 0.55rem 1.2rem; border-radius: 6px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 0.9rem; text-decoration:none; }
+      a.btn:hover { filter: brightness(1.05); }
+      
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        header { padding: 1rem; }
+        header h1 { font-size: 1.4rem; }
+        header > div { flex-direction: column; gap: 0.75rem; align-items: flex-start !important; }
+        header > div > div { width: 100%; display: flex; gap: 0.5rem; }
+        header .btn { flex: 1; text-align: center; margin: 0 !important; }
+        main { padding: 1rem; }
+        section { padding: 1.25rem; margin-bottom: 1.5rem; }
+        h2 { font-size: 1.15rem; }
+        .media-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.6rem; }
+      }
+      
+      @media (max-width: 480px) {
+        header { padding: 0.75rem; }
+        header h1 { font-size: 1.25rem; }
+        main { padding: 0.75rem; }
+        section { padding: 1rem; }
+        .media-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+        <div>
+          <h1>{{ profile_user.username }}'s PCS profile</h1>
+          <p class="muted">Viewing as {{ viewer.username }}</p>
+        </div>
+        <div>
+          <a href="/profile" class="btn">My profile</a>
+          <a href="/logout" class="btn" style="margin-left:0.5rem;">Logout</a>
+        </div>
+      </div>
+    </header>
+    <main>
+      <section>
+        <div style="display:flex;gap:1.25rem;align-items:flex-start;flex-wrap:wrap;">
+          <div style="width:144px;height:144px;border-radius:20px;background:#111727;border:1px solid #272f47;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+            {% if profile_user.avatar_files %}
+            <img src="/{{ profile_user.avatar_files[0] }}" alt="Profile picture" style="width:100%;height:100%;object-fit:cover;" />
+            {% else %}
+            <span style="font-size:0.78rem;color:#8a92b6;">No profile picture</span>
+            {% endif %}
+          </div>
+          <div style="flex:1;min-width:220px;">
+            <h2 style="margin-top:0;">
+              {{ profile_user.username }}
+              {% if profile_user.role == 'donor' and (country_rank > 0 or worldwide_rank > 0) %}
+              <br>
+              <span style="font-size:1.2rem;color:#ffd700;font-weight:normal;display:inline-block;margin-top:0.5rem;">
+                {% if country_rank > 0 %}
+                  {% if country_rank == 1 %}<span style="font-size:1.5em;">🥇</span>
+                  {% elif country_rank == 2 %}<span style="font-size:1.5em;">🥈</span>
+                  {% elif country_rank == 3 %}<span style="font-size:1.5em;">🥉</span>
+                  {% else %}#{{ country_rank }}{% endif %} in {{ profile_user.country }}
+                {% endif %}
+                {% if worldwide_rank > 0 %}
+                  {% if country_rank > 0 %} • {% endif %}
+                  {% if worldwide_rank == 1 %}<span style="font-size:1.5em;">🥇</span>
+                  {% elif worldwide_rank == 2 %}<span style="font-size:1.5em;">🥈</span>
+                  {% elif worldwide_rank == 3 %}<span style="font-size:1.5em;">🥉</span>
+                  {% else %}#{{ worldwide_rank }}{% endif %} Worldwide
+                {% endif %}
+              </span>
+              {% endif %}
+            </h2>
+            <p class="muted" style="margin-top:0.1rem;">
+              Account type: <span class="pill">{{ profile_user.role }}</span>
+              {% if profile_user.country %}
+              &bull;
+              <span class="pill">{{ profile_user.country }}</span>
+              {% endif %}
+            </p>
+            {% if profile_user.role in ['donor', 'charity_org'] and not profile_user.is_public %}
+            <div style="margin-top:0.75rem;">
+              <p class="muted" style="margin:0;">This user has chosen a private profile. Only their name and profile picture are visible.</p>
+            </div>
+            {% else %}
+            <div style="margin-top:0.75rem;">
+              <h2 style="margin:0 0 0.25rem 0;font-size:1.05rem;">Introduction</h2>
+              {% if profile_user.intro %}
+              <p style="margin:0;white-space:pre-wrap;">{{ profile_user.intro }}</p>
+              {% else %}
+              <p class="muted" style="margin:0;">This user has not added an introduction yet.</p>
+              {% endif %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+      {% if not (profile_user.role in ['donor', 'charity_org'] and not profile_user.is_public) %}
+
+      <section>
+        <h2>Your media</h2>
+        <p class="muted">Pictures and short videos shared by this user.</p>
+        {% if profile_user.avatar_files|length > 1 or profile_user.gallery_files or profile_user.video_files %}
+        <div class="media-grid">
+          {% if profile_user.avatar_files|length > 1 %}
+            {% for img in profile_user.avatar_files[1:] %}
+            <div class="media-item">
+              <img src="/{{ img }}" alt="Uploaded picture" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" />
+            </div>
+            {% endfor %}
+          {% endif %}
+
+          {% for img in profile_user.gallery_files %}
+          <div class="media-item">
+            <img src="/{{ img }}" alt="Gallery picture" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" />
+          </div>
+          {% endfor %}
+
+          {% for vid in profile_user.video_files %}
+          <div class="media-item">
+            <video style="width:100%;border-radius:6px;background:#000;" controls>
+              <source src="/{{ vid }}" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="muted">No media has been shared yet.</p>
+        {% endif %}
+      </section>
+
+      <section>
+        <h2>Contact & social</h2>
+        {% if profile_user.social_links or (profile_user.reveal_email and profile_user.email) or (profile_user.reveal_phone and profile_user.phone) %}
+        <ul class="muted" style="list-style:none;padding-left:0;margin:0;">
+          {% for link in profile_user.social_links %}
+          <li style="margin-bottom:0.25rem;">
+            <a href="{{ link }}" target="_blank" rel="noopener noreferrer">{{ link }}</a>
+          </li>
+          {% endfor %}
+          {% if profile_user.reveal_email and profile_user.email %}
+          <li style="margin-bottom:0.25rem;">Email: <a href="mailto:{{ profile_user.email }}">{{ profile_user.email }}</a></li>
+          {% endif %}
+          {% if profile_user.reveal_phone and profile_user.phone %}
+          <li>Phone: {{ profile_user.phone }}</li>
+          {% endif %}
+        </ul>
+        {% else %}
+        <p class="muted">This user has not shared any contact information.</p>
+        {% endif %}
+      </section>
+
+      <section>
+        <h2>Wallet</h2>
+        {% if profile_user.wallet_id %}
+        <p class="muted">Internal PCS wallet ID for this user:</p>
+        <p><span class="pill">{{ profile_user.wallet_id }}</span></p>
+
+        {% if wallet_history %}
+        <div style="margin-top:1rem;">
+          <h3 style="margin:0 0 0.4rem 0;font-size:1.05rem;">Blockchain transaction history</h3>
+          <p class="muted" style="margin:0 0 0.5rem 0;">All previous donations sent from this wallet are immutable and permanent on the PCS chain.</p>
+          <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:0.35rem 0.25rem;border-bottom:1px solid #262d41;color:#a9b3d4;font-weight:500;">Date</th>
+                <th style="text-align:left;padding:0.35rem 0.25rem;border-bottom:1px solid #262d41;color:#a9b3d4;font-weight:500;">To wallet</th>
+                <th style="text-align:left;padding:0.35rem 0.25rem;border-bottom:1px solid #262d41;color:#a9b3d4;font-weight:500;">Amount (PCS)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tx in wallet_history %}
+              <tr>
+                <td style="padding:0.3rem 0.25rem;border-bottom:1px solid #1e2435;" class="muted">{{ tx.timestamp }}</td>
+                <td style="padding:0.3rem 0.25rem;border-bottom:1px solid #1e2435;" class="muted">{{ tx.to_wallet }}</td>
+                <td style="padding:0.3rem 0.25rem;border-bottom:1px solid #1e2435;">{{ '%.2f'|format(tx.amount) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div style="margin-top:0.8rem;">
+          <a href="/api/chain" target="_blank" class="btn">Blockchain transaction</a>
+          <p class="muted" style="margin-top:0.6rem;">No outgoing donations recorded yet for this wallet.</p>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <p class="muted">No wallet assigned (prototype limitation).</p>
+        {% endif %}
+      </section>
+
+      {% if profile_user.role == 'donor' %}
+      <section>
+        <h2>World Charity Achievements</h2>
+        <p class="muted" style="margin-bottom:1rem;">Impact on making the world a better place.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
+          <div style="background:#0e1424;border:1px solid #313a55;border-radius:10px;padding:1.25rem;text-align:center;">
+            <p class="muted" style="margin:0 0 0.5rem 0;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;">Total Donations</p>
+            <p style="margin:0;font-size:2rem;font-weight:700;color:#5fe2ff;">${{ "%.2f"|format(total_donations) }}</p>
+            <p class="muted" style="margin:0.25rem 0 0 0;font-size:0.85rem;">PCS Coins</p>
+          </div>
+          <div style="background:#0e1424;border:1px solid #313a55;border-radius:10px;padding:1.25rem;text-align:center;">
+            <p class="muted" style="margin:0 0 0.5rem 0;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;">Volunteering Hours</p>
+            <p style="margin:0;font-size:2rem;font-weight:700;color:#5fe2ff;">{{ volunteer_hours }}</p>
+            <p class="muted" style="margin:0.25rem 0 0 0;font-size:0.85rem;">Hours</p>
+          </div>
+        </div>
+        
+        {% if country_rank > 0 or worldwide_rank > 0 %}
+        <div style="margin-top:1.5rem;padding:1rem;background:#0e1424;border:1px solid #313a55;border-radius:10px;">
+          <h3 style="margin:0 0 0.75rem 0;font-size:1.1rem;color:#5fe2ff;">🏆 Donor Rankings</h3>
+          <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
+            {% if country_rank > 0 %}
+            <div>
+              <p class="muted" style="margin:0 0 0.25rem 0;font-size:0.75rem;">In {{ profile_user.country }}</p>
+              <p style="margin:0;font-size:1.5rem;font-weight:700;color:#ffd700;">
+                {% if country_rank == 1 %}🥇
+                {% elif country_rank == 2 %}🥈
+                {% elif country_rank == 3 %}🥉
+                {% else %}#{% endif %}{{ country_rank }}
+              </p>
+            </div>
+            {% endif %}
+            {% if worldwide_rank > 0 %}
+            <div>
+              <p class="muted" style="margin:0 0 0.25rem 0;font-size:0.75rem;">Worldwide</p>
+              <p style="margin:0;font-size:1.5rem;font-weight:700;color:#ffd700;">
+                {% if worldwide_rank == 1 %}🥇
+                {% elif worldwide_rank == 2 %}🥈
+                {% elif worldwide_rank == 3 %}🥉
+                {% else %}#{% endif %}{{ worldwide_rank }}
+              </p>
+            </div>
+            {% endif %}
+          </div>
+          <a href="/rankings" style="display:inline-block;margin-top:0.75rem;color:#5fe2ff;text-decoration:underline;font-size:0.85rem;">View full rankings →</a>
+        </div>
+        {% endif %}
+      </section>
+      {% endif %}
+
+      {% if viewer.role in ['donor', 'charity_org'] and profile_user.role in ['receiver', 'charity_org'] %}
+      <section style="text-align:center;background:#1a2233;border:2px solid #5fe2ff;">
+        <h2 style="margin:0 0 0.5rem 0;">Support {{ profile_user.username }}</h2>
+        <p class="muted" style="margin:0 0 1rem 0;">Purchase PCS cryptocurrency to support this {{ 'charity organization' if profile_user.role == 'charity_org' else 'receiver' }}</p>
+        <a href="/purchase-crypto/{{ profile_user.user_id }}" class="btn" style="font-size:1rem;padding:0.75rem 2rem;">💰 Send donations</a>
+      </section>
+      {% endif %}
+
+      {% endif %}
+    </main>
+  </body>
+</html>

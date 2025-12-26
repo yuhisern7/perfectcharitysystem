@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PCS – Sell Cryptocurrency</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <style>
+      * { margin:0; padding:0; box-sizing:border-box; }
+      body { font-family:'Inter',sans-serif; background:#0a0e1a; color:#dfe6f5; line-height:1.5; }
+      a { color:#5fe2ff; text-decoration:none; }
+      a:hover { text-decoration:underline; }
+      button, .btn { display:inline-block; padding:0.6rem 1.2rem; background:#5fe2ff; color:#0a0e1a; font-weight:600; border:none; border-radius:6px; cursor:pointer; font-size:0.95rem; transition:0.2s; }
+      button:hover, .btn:hover { background:#4ec9e6; text-decoration:none; }
+      input, select, textarea { width:100%; padding:0.65rem; background:#0e1424; color:#dfe6f5; border:1px solid #313a55; border-radius:6px; font-size:0.95rem; font-family:inherit; }
+      input::placeholder { color:#a9b3d4; opacity:0.6; }
+      label { display:block; margin:0.5rem 0 0.3rem 0; font-weight:500; }
+      nav { padding:1rem 2rem; background:#0e1424; border-bottom:1px solid #1a2233; }
+      nav a { margin-right:1.5rem; color:#a9b3d4; font-weight:500; }
+      nav a.active { color:#5fe2ff; }
+      .container { max-width:1000px; margin:3rem auto; padding:0 2rem; }
+      h1 { font-size:2rem; margin-bottom:1.5rem; }
+      h2 { font-size:1.4rem; margin:2rem 0 1rem 0; }
+      section { background:#0e1424; border:1px solid #1a2233; border-radius:10px; padding:1.5rem; margin-bottom:1.5rem; }
+      .muted { color:#a9b3d4; font-size:0.9rem; }
+      .pill { display:inline-block; padding:0.3rem 0.8rem; background:#1a2233; color:#5fe2ff; border-radius:15px; font-size:0.85rem; font-weight:500; }
+      table { width:100%; border-collapse:collapse; margin-top:0.5rem; }
+      th { text-align:left; padding:0.75rem 0.5rem; border-bottom:2px solid #262d41; color:#a9b3d4; font-weight:600; }
+      td { padding:0.75rem 0.5rem; border-bottom:1px solid #1a2233; }
+      .status-pending { color:#ffa726; font-weight:600; }
+      .status-approved { color:#66bb6a; font-weight:600; }
+      .status-rejected { color:#ef5350; font-weight:600; }
+      .action-buttons { display:flex; gap:0.5rem; }
+      .btn-approve { background:#66bb6a; color:#fff; padding:0.4rem 0.8rem; font-size:0.85rem; }
+      .btn-approve:hover { background:#57a65a; }
+      .btn-reject { background:#ef5350; color:#fff; padding:0.4rem 0.8rem; font-size:0.85rem; }
+      .btn-reject:hover { background:#d64845; }
+      .empty-state { text-align:center; padding:3rem 1rem; color:#a9b3d4; }
+      .notification-badge { display:inline-block; background:#ff5f5f; color:#fff; border-radius:50%; padding:0.15rem 0.5rem; font-size:0.75rem; font-weight:700; margin-left:0.5rem; }
+      .notification-bell { position:relative; display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:#1a2233; border-radius:50%; cursor:pointer; transition:0.2s; }
+      .notification-bell:hover { background:#262d41; }
+      .bell-icon { font-size:1.3rem; }
+      .notification-bell .notification-badge { position:absolute; top:-2px; right:-2px; min-width:18px; height:18px; padding:0 0.3rem; font-size:0.7rem; display:flex; align-items:center; justify-content:center; margin:0; }
+      
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        nav { padding: 0.75rem 1rem; }
+        nav a { margin-right: 1rem; font-size: 0.9rem; }
+        .container { padding: 0 1rem; margin: 2rem auto; }
+        h1 { font-size: 1.6rem; }
+        h2 { font-size: 1.2rem; }
+        section { padding: 1.25rem; }
+        table { font-size: 0.85rem; }
+        th, td { padding: 0.6rem 0.4rem; }
+        .action-buttons { flex-direction: column; gap: 0.4rem; }
+      }
+      
+      @media (max-width: 480px) {
+        nav { padding: 0.5rem 0.75rem; }
+        nav a { margin-right: 0.5rem; font-size: 0.85rem; display: inline-block; margin-bottom: 0.25rem; }
+        .container { padding: 0 0.75rem; margin: 1.5rem auto; }
+        h1 { font-size: 1.4rem; }
+        h2 { font-size: 1.1rem; }
+        section { padding: 1rem; }
+        table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; font-size: 0.8rem; }
+        th, td { padding: 0.5rem 0.3rem; }
+        button, .btn { padding: 0.5rem 1rem; font-size: 0.85rem; }
+        .btn-approve, .btn-reject { padding: 0.35rem 0.65rem; font-size: 0.8rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/search">Search</a>
+      <a href="/profile">Profile</a>
+      <a class="active" href="/sell-crypto">Sell Crypto{% if pending_requests|length > 0 %}<span class="notification-badge">{{ pending_requests|length }}</span>{% endif %}</a>
+      <a href="/chain">Blockchain</a>
+      <a href="/notifications" class="notification-bell" title="Notifications" style="margin-left:1rem;">
+        <span class="bell-icon">🔔</span>
+        {% if notification_count > 0 %}
+        <span class="notification-badge">{{ notification_count }}</span>
+        {% endif %}
+      </a>
+      <a href="/logout" style="float:right;">Logout</a>
+    </nav>
+
+    <div class="container">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <h1>Sell Cryptocurrency</h1>
+          <p class="muted">Manage purchase requests from donors</p>
+        </div>
+        <div>
+          <a href="/profile" class="btn">← Back to Profile</a>
+        </div>
+      </div>
+
+      {% if pending_requests|length > 0 %}
+      <section>
+        <h2>Pending Requests <span class="notification-badge">{{ pending_requests|length }}</span></h2>
+        <p class="muted">Donors who want to purchase PCS cryptocurrency from you</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Donor</th>
+              <th>Email</th>
+              <th>Amount (USD)</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in pending_requests %}
+            <tr>
+              <td>{{ req.timestamp[:10] }}</td>
+              <td><strong>{{ req.donor_username }}</strong></td>
+              <td>{{ req.donor_email }}</td>
+              <td><strong>${{ "%.2f"|format(req.amount) }}</strong></td>
+              <td>
+                {% if req.status == 'pending_approval' %}
+                <span class="status-pending">⏳ Waiting Approval</span>
+                {% elif req.status == 'awaiting_proof' %}
+                <span class="status-pending">📄 Awaiting Proof</span>
+                {% elif req.status == 'proof_submitted' %}
+                <span class="status-approved">📎 Proof Submitted</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if req.status == 'pending_approval' %}
+                <div class="action-buttons">
+                  <form method="post" action="/sell-crypto/{{ req.request_id }}/approve" style="display:inline;">
+                    <button type="submit" class="btn-approve">✓ Approve</button>
+                  </form>
+                  <form method="post" action="/sell-crypto/{{ req.request_id }}/reject" style="display:inline;">
+                    <button type="submit" class="btn-reject">✗ Reject</button>
+                  </form>
+                </div>
+                {% elif req.status == 'proof_submitted' %}
+                <div class="action-buttons">
+                  <a href="/uploads/{{ req.receipt_file }}" target="_blank" class="btn-approve" style="text-decoration:none;">👁️ View Receipt</a>
+                  <form method="post" action="/sell-crypto/{{ req.request_id }}/confirm-proof" style="display:inline;">
+                    <button type="submit" class="btn-approve">✓ Confirm Transfer</button>
+                  </form>
+                </div>
+                {% elif req.status == 'awaiting_proof' %}
+                <span class="muted">Waiting for donor</span>
+                {% else %}
+                <span class="muted">Waiting for donor</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+      {% else %}
+      <section>
+        <div class="empty-state">
+          <h2 style="margin:0 0 0.5rem 0;">No Pending Requests</h2>
+          <p class="muted">You currently have no pending purchase requests from donors.</p>
+        </div>
+      </section>
+      {% endif %}
+
+      {% if all_requests|length > 0 %}
+      <section>
+        <h2>All Requests History</h2>
+        <p class="muted">Complete history of all purchase requests</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Donor</th>
+              <th>Email</th>
+              <th>Amount (USD)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in all_requests|reverse %}
+            <tr>
+              <td>{{ req.timestamp[:10] }}</td>
+              <td><strong>{{ req.donor_username }}</strong></td>
+              <td>{{ req.donor_email }}</td>
+              <td><strong>${{ "%.2f"|format(req.amount) }}</strong></td>
+              <td>
+                {% if req.status == 'pending_approval' %}
+                <span class="status-pending">⏳ Pending Approval</span>
+                {% elif req.status == 'awaiting_proof' %}
+                <span class="status-pending">📄 Awaiting Proof</span>
+                {% elif req.status == 'proof_submitted' %}
+                <span class="status-pending">📎 Proof Submitted</span>
+                {% elif req.status == 'approved' %}
+                <span class="status-approved">✓ Approved</span>
+                {% elif req.status == 'completed' %}
+                <span class="status-approved">✓ Completed</span>
+                {% elif req.status == 'rejected' %}
+                <span class="status-rejected">✗ Rejected</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+      {% endif %}
+
+      <section>
+        <h2>How It Works</h2>
+        <ol style="margin-left:1.5rem;color:#a9b3d4;">
+          <li style="margin-bottom:0.5rem;">Donors submit purchase requests by entering the amount they want to buy</li>
+          <li style="margin-bottom:0.5rem;">Review and approve/reject the purchase request</li>
+          <li style="margin-bottom:0.5rem;">If approved, donor transfers fiat currency to your bank account</li>
+          <li style="margin-bottom:0.5rem;">Donor uploads receipt proof of the bank transfer</li>
+          <li style="margin-bottom:0.5rem;">Review the receipt and confirm to complete the transaction</li>
+          <li style="margin-bottom:0.5rem;">Upon confirmation, crypto balance is transferred from your wallet to donor's wallet</li>
+        </ol>
+      </section>
+    </div>
+  </body>
+</html>

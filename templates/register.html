@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PCS – Register</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background: #0b1020; color: #f5f7ff; }
+      header { padding: 1.5rem 2rem; background: #111727; border-bottom: 1px solid #232a3d; }
+      header h1 { margin: 0; font-size: 1.7rem; }
+      main { padding: 1.5rem 2rem 3rem; max-width: 460px; margin: 0 auto; }
+      section { background: #151b2c; border-radius: 10px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); }
+      label { display: block; margin-bottom: 0.35rem; font-size: 0.9rem; color: #c4cbea; }
+      input, select { width: 100%; padding: 0.55rem 0.7rem; margin-bottom: 0.9rem; border-radius: 6px; border: 1px solid #313a55; background: #0e1424; color: #f5f7ff; font-size: 0.9rem; box-sizing: border-box; }
+      input:focus, select:focus { outline: none; border-color: #4f9cff; box-shadow: 0 0 0 1px rgba(79, 156, 255, 0.4); }
+      button { padding: 0.55rem 1.2rem; border-radius: 6px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 0.9rem; cursor: pointer; width: 100%; }
+      button:hover { filter: brightness(1.05); }
+      .muted { color: #8a92b6; font-size: 0.85rem; margin-top: 0.75rem; text-align: center; }
+      .social-btn { width: 100%; margin-bottom: 0.6rem; padding: 0.55rem 1.2rem; border-radius: 6px; border: none; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+      .social-google { background: #ffffff; color: #202124; }
+      .social-facebook { background: #1877f2; color: #ffffff; }
+      a { color: #5fe2ff; text-decoration: none; }
+      
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        header { padding: 1rem; }
+        header h1 { font-size: 1.4rem; }
+        main { padding: 1rem 1rem 2rem; }
+        section { padding: 1.25rem; }
+      }
+      
+      @media (max-width: 480px) {
+        header { padding: 0.75rem; }
+        header h1 { font-size: 1.25rem; }
+        main { padding: 0.75rem 0.75rem 1.5rem; }
+        section { padding: 1rem; }
+        .social-btn { padding: 0.5rem 1rem; font-size: 0.85rem; }
+        button { padding: 0.5rem 1rem; font-size: 0.85rem; }
+        input, select { padding: 0.5rem 0.6rem; font-size: 0.85rem; }
+        label { font-size: 0.85rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>PCS – Create account</h1>
+    </header>
+    <main>
+      <section>
+        <p class="muted" style="margin-top:0; margin-bottom:0.75rem;">Quick start</p>
+        <!-- Social sign-up buttons are visual only for now; backend OAuth can be added later. -->
+        <button type="button" class="social-btn social-google">Sign up with Google</button>
+        <button type="button" class="social-btn social-facebook">Sign up with Facebook</button>
+        <p class="muted" style="margin:0.75rem 0 0.5rem;">or create a PCS account manually</p>
+        <form method="post" action="/register">
+          <label for="email">Email Address</label>
+          <input id="email" name="email" type="email" required placeholder="your.email@example.com" />
+
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" required placeholder="Choose a username" />
+
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" required />
+
+          <label for="confirm_password">Confirm password</label>
+          <input id="confirm_password" name="confirm_password" type="password" required />
+
+          <input type="hidden" name="role" value="donor" />
+          <p class="muted" style="margin-bottom:0.9rem;">Creating a <strong>Donor</strong> account. Receiver and Charity Organization accounts are created by inspectors.</p>
+
+          <label for="country">Country <span style="color:#ff5f5f;">*</span></label>
+          <select id="country" name="country" required style="width:100%;padding:0.55rem 0.7rem;margin-bottom:0.9rem;border-radius:6px;border:1px solid #313a55;background:#0e1424;color:#f5f7ff;font-size:0.9rem;box-sizing:border-box;">
+            <option value="">Select your country...</option>
+            <optgroup label="Asia">
+              <option value="Afghanistan">Afghanistan</option>
+              <option value="Bangladesh">Bangladesh</option>
+              <option value="Bhutan">Bhutan</option>
+              <option value="Brunei">Brunei</option>
+              <option value="Cambodia">Cambodia</option>
+              <option value="China">China</option>
+              <option value="India">India</option>
+              <option value="Indonesia">Indonesia</option>
+              <option value="Japan">Japan</option>
+              <option value="Kazakhstan">Kazakhstan</option>
+              <option value="Laos">Laos</option>
+              <option value="Malaysia">Malaysia</option>
+              <option value="Maldives">Maldives</option>
+              <option value="Mongolia">Mongolia</option>
+              <option value="Myanmar">Myanmar</option>
+              <option value="Nepal">Nepal</option>
+              <option value="Pakistan">Pakistan</option>
+              <option value="Philippines">Philippines</option>
+              <option value="Singapore">Singapore</option>
+              <option value="South Korea">South Korea</option>
+              <option value="Sri Lanka">Sri Lanka</option>
+              <option value="Taiwan">Taiwan</option>
+              <option value="Thailand">Thailand</option>
+              <option value="Vietnam">Vietnam</option>
+            </optgroup>
+            <optgroup label="Middle East">
+              <option value="Bahrain">Bahrain</option>
+              <option value="Iran">Iran</option>
+              <option value="Iraq">Iraq</option>
+              <option value="Israel">Israel</option>
+              <option value="Jordan">Jordan</option>
+              <option value="Kuwait">Kuwait</option>
+              <option value="Lebanon">Lebanon</option>
+              <option value="Oman">Oman</option>
+              <option value="Qatar">Qatar</option>
+              <option value="Saudi Arabia">Saudi Arabia</option>
+              <option value="Syria">Syria</option>
+              <option value="Turkey">Turkey</option>
+              <option value="United Arab Emirates">United Arab Emirates</option>
+              <option value="Yemen">Yemen</option>
+            </optgroup>
+            <optgroup label="Europe">
+              <option value="Austria">Austria</option>
+              <option value="Belgium">Belgium</option>
+              <option value="Bulgaria">Bulgaria</option>
+              <option value="Croatia">Croatia</option>
+              <option value="Cyprus">Cyprus</option>
+              <option value="Czech Republic">Czech Republic</option>
+              <option value="Denmark">Denmark</option>
+              <option value="Estonia">Estonia</option>
+              <option value="Finland">Finland</option>
+              <option value="France">France</option>
+              <option value="Germany">Germany</option>
+              <option value="Greece">Greece</option>
+              <option value="Hungary">Hungary</option>
+              <option value="Iceland">Iceland</option>
+              <option value="Ireland">Ireland</option>
+              <option value="Italy">Italy</option>
+              <option value="Latvia">Latvia</option>
+              <option value="Lithuania">Lithuania</option>
+              <option value="Luxembourg">Luxembourg</option>
+              <option value="Malta">Malta</option>
+              <option value="Netherlands">Netherlands</option>
+              <option value="Norway">Norway</option>
+              <option value="Poland">Poland</option>
+              <option value="Portugal">Portugal</option>
+              <option value="Romania">Romania</option>
+              <option value="Russia">Russia</option>
+              <option value="Serbia">Serbia</option>
+              <option value="Slovakia">Slovakia</option>
+              <option value="Slovenia">Slovenia</option>
+              <option value="Spain">Spain</option>
+              <option value="Sweden">Sweden</option>
+              <option value="Switzerland">Switzerland</option>
+              <option value="Ukraine">Ukraine</option>
+              <option value="United Kingdom">United Kingdom</option>
+            </optgroup>
+            <optgroup label="North America">
+              <option value="Canada">Canada</option>
+              <option value="Mexico">Mexico</option>
+              <option value="United States">United States</option>
+            </optgroup>
+            <optgroup label="South America">
+              <option value="Argentina">Argentina</option>
+              <option value="Bolivia">Bolivia</option>
+              <option value="Brazil">Brazil</option>
+              <option value="Chile">Chile</option>
+              <option value="Colombia">Colombia</option>
+              <option value="Ecuador">Ecuador</option>
+              <option value="Paraguay">Paraguay</option>
+              <option value="Peru">Peru</option>
+              <option value="Uruguay">Uruguay</option>
+              <option value="Venezuela">Venezuela</option>
+            </optgroup>
+            <optgroup label="Africa">
+              <option value="Algeria">Algeria</option>
+              <option value="Angola">Angola</option>
+              <option value="Benin">Benin</option>
+              <option value="Botswana">Botswana</option>
+              <option value="Cameroon">Cameroon</option>
+              <option value="Egypt">Egypt</option>
+              <option value="Ethiopia">Ethiopia</option>
+              <option value="Ghana">Ghana</option>
+              <option value="Kenya">Kenya</option>
+              <option value="Libya">Libya</option>
+              <option value="Morocco">Morocco</option>
+              <option value="Nigeria">Nigeria</option>
+              <option value="Senegal">Senegal</option>
+              <option value="South Africa">South Africa</option>
+              <option value="Sudan">Sudan</option>
+              <option value="Tanzania">Tanzania</option>
+              <option value="Tunisia">Tunisia</option>
+              <option value="Uganda">Uganda</option>
+              <option value="Zambia">Zambia</option>
+              <option value="Zimbabwe">Zimbabwe</option>
+            </optgroup>
+            <optgroup label="Oceania">
+              <option value="Australia">Australia</option>
+              <option value="Fiji">Fiji</option>
+              <option value="New Zealand">New Zealand</option>
+              <option value="Papua New Guinea">Papua New Guinea</option>
+              <option value="Samoa">Samoa</option>
+            </optgroup>
+            <option value="Other">Other / Not Listed</option>
+          </select>
+
+          <label for="state">State/Province <span style="color:#ff5f5f;">*</span></label>
+          <select id="state" name="state" required style="width:100%;padding:0.55rem 0.7rem;margin-bottom:0.9rem;border-radius:6px;border:1px solid #313a55;background:#0e1424;color:#f5f7ff;font-size:0.9rem;box-sizing:border-box;">
+            <option value="">Select state...</option>
+            <option value="central">Central / City</option>
+            <option value="north">North</option>
+            <option value="south">South</option>
+            <option value="east">East</option>
+            <option value="west">West</option>
+          </select>
+
+          <label for="city">City (optional)</label>
+          <input id="city" name="city" type="text" placeholder="e.g., Los Angeles" />
+
+          <button type="submit">Create account</button>
+        </form>
+        <p class="muted">Already have an account? <a href="/login">Login here</a>.</p>
+        <p class="muted"><a href="/">Back to home</a></p>
+      </section>
+    </main>
+  </body>
+</html>

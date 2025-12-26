@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PCS – My Purchase Requests</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <style>
+      * { margin:0; padding:0; box-sizing:border-box; }
+      body { font-family:'Inter',sans-serif; background:#0a0e1a; color:#dfe6f5; line-height:1.5; }
+      a { color:#5fe2ff; text-decoration:none; }
+      a:hover { text-decoration:underline; }
+      button, .btn { display:inline-block; padding:0.6rem 1.2rem; background:#5fe2ff; color:#0a0e1a; font-weight:600; border:none; border-radius:6px; cursor:pointer; font-size:0.95rem; transition:0.2s; }
+      button:hover, .btn:hover { background:#4ec9e6; text-decoration:none; }
+      input, select, textarea { width:100%; padding:0.65rem; background:#0e1424; color:#dfe6f5; border:1px solid #313a55; border-radius:6px; font-size:0.95rem; font-family:inherit; }
+      input::placeholder { color:#a9b3d4; opacity:0.6; }
+      label { display:block; margin:0.5rem 0 0.3rem 0; font-weight:500; }
+      nav { padding:1rem 2rem; background:#0e1424; border-bottom:1px solid #1a2233; }
+      nav a { margin-right:1.5rem; color:#a9b3d4; font-weight:500; }
+      nav a.active { color:#5fe2ff; }
+      .container { max-width:1200px; margin:3rem auto; padding:0 2rem; }
+      h1 { font-size:2rem; margin-bottom:1.5rem; }
+      h2 { font-size:1.4rem; margin:2rem 0 1rem 0; }
+      section { background:#0e1424; border:1px solid #1a2233; border-radius:10px; padding:1.5rem; margin-bottom:1.5rem; }
+      .muted { color:#a9b3d4; font-size:0.9rem; }
+      .pill { display:inline-block; padding:0.3rem 0.8rem; background:#1a2233; color:#5fe2ff; border-radius:15px; font-size:0.85rem; font-weight:500; }
+      table { width:100%; border-collapse:collapse; margin-top:0.5rem; }
+      th { text-align:left; padding:0.75rem 0.5rem; border-bottom:2px solid #262d41; color:#a9b3d4; font-weight:600; font-size:0.85rem; }
+      td { padding:0.75rem 0.5rem; border-bottom:1px solid #1a2233; }
+      .status-pending { color:#ffa726; font-weight:600; font-size:0.85rem; }
+      .status-approved { color:#66bb6a; font-weight:600; font-size:0.85rem; }
+      .status-rejected { color:#ef5350; font-weight:600; font-size:0.85rem; }
+      .status-info { color:#5fe2ff; font-weight:600; font-size:0.85rem; }
+      .upload-form { display:inline-block; }
+      .btn-upload { background:#66bb6a; color:#fff; padding:0.5rem 1rem; font-size:0.85rem; cursor:pointer; }
+      .btn-upload:hover { background:#57a65a; }
+      .empty-state { text-align:center; padding:3rem 1rem; color:#a9b3d4; }
+      .notification-badge { display:inline-block; background:#ff5f5f; color:#fff; border-radius:50%; padding:0.15rem 0.5rem; font-size:0.75rem; font-weight:700; margin-left:0.5rem; }
+      .alert { padding:1rem; background:#1a2233; border-left:4px solid #5fe2ff; border-radius:6px; margin-bottom:1rem; }
+      .alert-success { border-left-color:#66bb6a; background:#0e1e0f; }
+      .alert-warning { border-left-color:#ffa726; background:#1e1609; }
+      .alert-error { border-left-color:#ef5350; background:#1e0a0a; }
+      
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        nav { padding: 0.75rem 1rem; }
+        nav a { margin-right: 1rem; font-size: 0.9rem; }
+        .container { padding: 0 1rem; margin: 2rem auto; }
+        h1 { font-size: 1.6rem; }
+        h2 { font-size: 1.2rem; }
+        section { padding: 1.25rem; }
+        table { font-size: 0.85rem; }
+        th, td { padding: 0.6rem 0.4rem; }
+      }
+      
+      @media (max-width: 480px) {
+        nav { padding: 0.5rem 0.75rem; }
+        nav a { margin-right: 0.5rem; font-size: 0.85rem; display: inline-block; margin-bottom: 0.25rem; }
+        .container { padding: 0 0.75rem; margin: 1.5rem auto; }
+        h1 { font-size: 1.4rem; }
+        h2 { font-size: 1.1rem; }
+        section { padding: 1rem; }
+        table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; font-size: 0.8rem; }
+        th, td { padding: 0.5rem 0.3rem; }
+        button, .btn { padding: 0.5rem 1rem; font-size: 0.85rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/search">Search</a>
+      <a href="/profile">Profile</a>
+      <a href="/purchase-crypto">Purchase Crypto</a>
+      <a class="active" href="/my-purchases">My Requests{% if pending_requests|length > 0 %}<span class="notification-badge">{{ pending_requests|length }}</span>{% endif %}</a>
+      <a href="/chain">Blockchain</a>
+      <a href="/logout" style="float:right;">Logout</a>
+    </nav>
+
+    <div class="container">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <h1>My Purchase Requests</h1>
+          <p class="muted">Track your cryptocurrency purchase requests</p>
+        </div>
+        <div>
+          <a href="/purchase-crypto" class="btn">+ New Purchase</a>
+        </div>
+      </div>
+
+      {% if pending_requests|length > 0 %}
+      <section>
+        <h2>Active Requests <span class="notification-badge">{{ pending_requests|length }}</span></h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Receiver</th>
+              <th>Amount (USD)</th>
+              <th>Status</th>
+              <th>Action Required</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in pending_requests %}
+            <tr>
+              <td>{{ req.timestamp[:10] }}</td>
+              <td><strong>{{ req.receiver_username }}</strong></td>
+              <td><strong>${{ "%.2f"|format(req.amount) }}</strong></td>
+              <td>
+                {% if req.status == 'pending_approval' %}
+                <span class="status-pending">⏳ Waiting for Receiver Approval</span>
+                {% elif req.status == 'awaiting_proof' %}
+                <span class="status-approved">✓ Approved - Upload Proof Required</span>
+                {% elif req.status == 'proof_submitted' %}
+                <span class="status-info">📎 Proof Submitted - Awaiting Verification</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if req.status == 'pending_approval' %}
+                <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                  <span class="muted" style="font-size:0.85rem;">Waiting for receiver...</span>
+                  <form method="post" action="/my-purchases/{{ req.request_id }}/cancel" style="display:inline;">
+                    <button type="submit" style="background:#ef5350;padding:0.4rem 0.8rem;font-size:0.8rem;" onclick="return confirm('Are you sure you want to cancel this purchase request?')">❌ Cancel</button>
+                  </form>
+                </div>
+                {% elif req.status == 'awaiting_proof' %}
+                <div class="upload-form">
+                  <form method="post" action="/my-purchases/{{ req.request_id }}/upload-proof" enctype="multipart/form-data" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-bottom:0.5rem;">
+                    <input type="file" name="receipt" accept="image/*,.pdf" required style="width:auto;padding:0.4rem;font-size:0.85rem;" />
+                    <button type="submit" class="btn-upload">📤 Upload Receipt</button>
+                  </form>
+                  <form method="post" action="/my-purchases/{{ req.request_id }}/cancel" style="display:inline;">
+                    <button type="submit" style="background:#ef5350;padding:0.4rem 0.8rem;font-size:0.8rem;" onclick="return confirm('Are you sure you want to cancel this purchase request?')">❌ Cancel</button>
+                  </form>
+                </div>
+                {% elif req.status == 'proof_submitted' %}
+                <div>
+                  <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.75rem;">
+                    <a href="/uploads/{{ req.receipt_file }}" target="_blank" style="font-size:0.85rem;">📎 View Uploaded Receipt</a>
+                  </div>
+                  <form action="/my-purchases/{{ req.request_id }}/upload-proof" method="post" enctype="multipart/form-data" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-bottom:0.5rem;">
+                    <input type="file" name="receipt" accept="image/*,.pdf" required style="width:auto;padding:0.4rem;font-size:0.8rem;" />
+                    <button type="submit" class="btn-upload" style="padding:0.4rem 0.8rem;font-size:0.8rem;">🔄 Re-upload Receipt</button>
+                  </form>
+                  <form method="post" action="/my-purchases/{{ req.request_id }}/cancel" style="display:inline;">
+                    <button type="submit" style="background:#ef5350;padding:0.4rem 0.8rem;font-size:0.8rem;" onclick="return confirm('Are you sure you want to cancel this purchase request?')">❌ Cancel</button>
+                  </form>
+                  <p class="muted" style="margin:0.3rem 0 0 0;font-size:0.75rem;">You can re-upload if you made a mistake</p>
+                </div>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        
+        <div class="alert" style="margin-top:1.5rem;">
+          <strong>💡 Next Steps:</strong>
+          <ul style="margin:0.5rem 0 0 1.5rem;">
+            {% if pending_requests|selectattr('status', 'equalto', 'pending_approval')|list|length > 0 %}
+            <li>Wait for the receiver to approve your purchase request</li>
+            {% endif %}
+            {% if pending_requests|selectattr('status', 'equalto', 'awaiting_proof')|list|length > 0 %}
+            <li><strong>Transfer the funds to the receiver's bank account</strong> (check receiver's profile for bank details)</li>
+            <li>Upload the bank transfer receipt as proof</li>
+            {% endif %}
+            {% if pending_requests|selectattr('status', 'equalto', 'proof_submitted')|list|length > 0 %}
+            <li>Wait for receiver to verify your receipt and complete the transaction</li>
+            {% endif %}
+          </ul>
+        </div>
+      </section>
+      {% else %}
+      <section>
+        <div class="empty-state">
+          <h2 style="margin:0 0 0.5rem 0;">No Active Requests</h2>
+          <p class="muted">You don't have any pending purchase requests.</p>
+          <p style="margin-top:1rem;">
+            <a href="/purchase-crypto" class="btn">Browse Receivers</a>
+          </p>
+        </div>
+      </section>
+      {% endif %}
+
+      {% if rejected_requests|length > 0 %}
+      <section>
+        <h2>Rejected Requests</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Receiver</th>
+              <th>Amount (USD)</th>
+              <th>Status</th>
+              <th>Rejected On</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in rejected_requests|reverse %}
+            <tr>
+              <td>{{ req.timestamp[:10] }}</td>
+              <td><strong>{{ req.receiver_username }}</strong></td>
+              <td><strong>${{ "%.2f"|format(req.amount) }}</strong></td>
+              <td><span class="status-rejected">✗ Rejected</span></td>
+              <td>{{ req.rejected_timestamp[:10] if req.rejected_timestamp else '-' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+      {% endif %}
+
+      {% if completed_requests|length > 0 %}
+      <section>
+        <h2>Completed Purchases</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Receiver</th>
+              <th>Amount (USD)</th>
+              <th>Status</th>
+              <th>Completed On</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in completed_requests|reverse %}
+            <tr>
+              <td>{{ req.timestamp[:10] }}</td>
+              <td><strong>{{ req.receiver_username }}</strong></td>
+              <td><strong>${{ "%.2f"|format(req.amount) }}</strong></td>
+              <td><span class="status-approved">✓ Completed</span></td>
+              <td>{{ req.completed_timestamp[:10] if req.completed_timestamp else '-' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+      {% endif %}
+
+      <section>
+        <h2>How It Works</h2>
+        <ol style="margin-left:1.5rem;color:#a9b3d4;">
+          <li style="margin-bottom:0.5rem;"><strong>Submit Request:</strong> Select a receiver and enter the amount you want to purchase</li>
+          <li style="margin-bottom:0.5rem;"><strong>Wait for Approval:</strong> Receiver reviews and approves/rejects your request</li>
+          <li style="margin-bottom:0.5rem;"><strong>Transfer Funds:</strong> If approved, transfer the funds to receiver's bank account</li>
+          <li style="margin-bottom:0.5rem;"><strong>Upload Proof:</strong> Upload your bank transfer receipt or screenshot</li>
+          <li style="margin-bottom:0.5rem;"><strong>Verification:</strong> Receiver confirms the receipt and completes the transaction</li>
+          <li style="margin-bottom:0.5rem;"><strong>Receive Crypto:</strong> PCS cryptocurrency is transferred to your wallet</li>
+        </ol>
+      </section>
+    </div>
+  </body>
+</html>

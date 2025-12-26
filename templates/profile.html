@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PCS – Profile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background: #0b1020; color: #f5f7ff; }
+      header { padding: 1.5rem 2rem; background: #111727; border-bottom: 1px solid #232a3d; }
+      header h1 { margin: 0; font-size: 1.7rem; }
+      header p { margin: 0.3rem 0 0; color: #a9b3d4; font-size: 0.9rem; }
+      main { padding: 1.5rem 2rem 3rem; max-width: 960px; margin: 0 auto; }
+      section { margin-bottom: 2rem; background: #151b2c; border-radius: 10px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); }
+      h2 { margin-top: 0; font-size: 1.3rem; }
+      label { display: block; margin-bottom: 0.35rem; font-size: 0.9rem; color: #c4cbea; }
+      input, textarea, select { width: 100%; padding: 0.55rem 0.7rem; margin-bottom: 0.9rem; border-radius: 6px; border: 1px solid #313a55; background: #0e1424; color: #f5f7ff; font-size: 0.9rem; box-sizing: border-box; }
+      input:focus, textarea:focus, select:focus { outline: none; border-color: #4f9cff; box-shadow: 0 0 0 1px rgba(79, 156, 255, 0.4); }
+      button { padding: 0.55rem 1.2rem; border-radius: 6px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+      button:hover { filter: brightness(1.05); }
+      a.btn { display:inline-block; padding: 0.55rem 1.2rem; border-radius: 6px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 0.9rem; text-decoration:none; }
+      a.btn:hover { filter: brightness(1.05); }
+      .pill { display: inline-block; padding: 0.25rem 0.7rem; border-radius: 999px; background: #111727; color: #e1e6ff; font-size: 0.8rem; border: 1px solid #272f47; }
+      .muted { color: #8a92b6; font-size: 0.85rem; }
+      .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; margin-top: 0.5rem; }
+      .media-item { position: relative; background: #111727; border-radius: 8px; padding: 0.4rem; font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .delete-badge { position: absolute; top: 6px; right: 6px; padding: 0.15rem 0.35rem; font-size: 0.7rem; border-radius: 999px; border: none; background: rgba(15, 23, 42, 0.85); color: #f97373; cursor: pointer; opacity: 0; transition: opacity 0.15s ease-in-out; }
+      .media-item:hover .delete-badge { opacity: 1; }
+      a { color: #5fe2ff; text-decoration: none; }
+      .notification-bell { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #1a2233; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; text-decoration: none; }
+      .notification-bell:hover { background: #232d47; transform: translateY(-1px); }
+      .notification-badge { position: absolute; top: -4px; right: -4px; background: linear-gradient(135deg, #ff5f5f, #ff8f8f); color: #fff; border-radius: 50%; min-width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; border: 2px solid #0b1020; padding: 0 4px; }
+      .bell-icon { font-size: 1.2rem; }
+      
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        header { padding: 1rem; }
+        header h1 { font-size: 1.4rem; }
+        header > div > div { flex-direction: column; gap: 0.5rem; }
+        header .btn { width: 100%; text-align: center; margin: 0 !important; }
+        main { padding: 1rem; }
+        section { padding: 1.25rem; margin-bottom: 1.5rem; }
+        h2 { font-size: 1.15rem; }
+        .media-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.6rem; }
+      }
+      
+      @media (max-width: 480px) {
+        header { padding: 0.75rem; }
+        header h1 { font-size: 1.25rem; }
+        main { padding: 0.75rem; }
+        section { padding: 1rem; }
+        .media-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+        .notification-bell { width: 36px; height: 36px; }
+        .notification-badge { min-width: 18px; height: 18px; font-size: 0.65rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+        <div>
+          <h1>My PCS profile</h1>
+          <p>{{ user.username }} • <span class="pill">{{ user.role }}</span></p>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          {% if user.role in ['donor', 'receiver', 'charity_org'] %}
+          <a href="/notifications" class="notification-bell" title="Notifications">
+            <span class="bell-icon">🔔</span>
+            {% if notification_count > 0 %}
+            <span class="notification-badge">{{ notification_count }}</span>
+            {% endif %}
+          </a>
+          {% endif %}
+          <a href="/search" class="btn">Search</a>
+          <a href="/rankings" class="btn">🏆 Rankings</a>
+          <a href="/" class="btn">Home</a>
+          <a href="/logout" class="btn" style="margin-left:0.5rem;">Logout</a>
+        </div>
+      </div>
+    </header>
+    <main>
+      <section>
+        <div style="display:flex;gap:1.25rem;align-items:flex-start;flex-wrap:wrap;">
+          <!-- Profile picture (larger, like a social profile) -->
+          <div style="width:144px;height:144px;border-radius:20px;background:#111727;border:1px solid #272f47;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+            {% if user.avatar_files %}
+            <img src="/{{ user.avatar_files[0] }}" alt="Profile picture" style="width:100%;height:100%;object-fit:cover;" />
+            {% else %}
+            <span style="font-size:0.78rem;color:#8a92b6;">Add profile picture</span>
+            {% endif %}
+          </div>
+          <!-- Name, role, and intro display -->
+          <div style="flex:1;min-width:220px;">
+            <h2 style="margin-top:0;">
+              {{ user.username }}
+              {% if user.role == 'donor' and (country_rank > 0 or worldwide_rank > 0) %}
+              <br>
+              <span style="font-size:1.2rem;color:#ffd700;font-weight:normal;display:inline-block;margin-top:0.5rem;">
+                {% if country_rank > 0 %}
+                  {% if country_rank == 1 %}<span style="font-size:1.5em;">🥇</span>
+                  {% elif country_rank == 2 %}<span style="font-size:1.5em;">🥈</span>
+                  {% elif country_rank == 3 %}<span style="font-size:1.5em;">🥉</span>
+                  {% else %}#{{ country_rank }}{% endif %} in {{ user.country }}
+                {% endif %}
+                {% if worldwide_rank > 0 %}
+                  {% if country_rank > 0 %} • {% endif %}
+                  {% if worldwide_rank == 1 %}<span style="font-size:1.5em;">🥇</span>
+                  {% elif worldwide_rank == 2 %}<span style="font-size:1.5em;">🥈</span>
+                  {% elif worldwide_rank == 3 %}<span style="font-size:1.5em;">🥉</span>
+                  {% else %}#{{ worldwide_rank }}{% endif %} Worldwide
+                {% endif %}
+              </span>
+              {% endif %}
+            </h2>
+            <p class="muted" style="margin-top:0.1rem;">
+              Account type: <span class="pill">{{ user.role }}</span>
+              {% if user.role == 'donor' %}
+              &bull;
+              <span class="pill">{% if user.is_public %}Public{% else %}Private{% endif %}</span>
+              {% if user.country %}
+              &bull;
+              <span class="pill">{{ user.country }}</span>
+              {% endif %}
+              {% endif %}
+            </p>
+          </div>
+        </div>
+
+        <div style="margin-top:1.2rem;display:flex;flex-wrap:wrap;gap:0.75rem;">
+          <a href="/profile/picture" class="btn">Upload profile picture</a>
+          <a href="/profile/media" class="btn">Upload other media</a>
+        </div>
+
+        <div style="margin-top:1.5rem;">
+          <div>
+            <h2 style="margin-top:0;">Your media</h2>
+            <p class="muted" style="margin-top:0.2rem;">Recently uploaded pictures and short videos related to your story.</p>
+          </div>
+          <div class="media-grid">
+            {% if user.avatar_files|length > 1 %}
+              {% for img in user.avatar_files[1:] %}
+              <div class="media-item">
+                <img src="/{{ img }}" alt="Uploaded picture" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" />
+                <form method="post" action="/profile/media/delete" style="position:absolute;top:6px;right:6px;margin:0;">
+                  <input type="hidden" name="kind" value="avatar" />
+                  <input type="hidden" name="path" value="{{ img }}" />
+                  <button type="submit" class="delete-badge">delete</button>
+                </form>
+              </div>
+              {% endfor %}
+            {% endif %}
+
+            {% for img in user.gallery_files %}
+            <div class="media-item">
+              <img src="/{{ img }}" alt="Gallery picture" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" />
+              <form method="post" action="/profile/media/delete" style="position:absolute;top:6px;right:6px;margin:0;">
+                <input type="hidden" name="kind" value="gallery" />
+                <input type="hidden" name="path" value="{{ img }}" />
+                <button type="submit" class="delete-badge">delete</button>
+              </form>
+            </div>
+            {% endfor %}
+
+            {% for vid in user.video_files %}
+            <div class="media-item">
+              <video style="width:100%;border-radius:6px;background:#000;" controls>
+                <source src="/{{ vid }}" />
+                Your browser does not support the video tag.
+              </video>
+              <form method="post" action="/profile/media/delete" style="position:absolute;top:6px;right:6px;margin:0;">
+                <input type="hidden" name="kind" value="video" />
+                <input type="hidden" name="path" value="{{ vid }}" />
+                <button type="submit" class="delete-badge">delete</button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+          <div style="margin-top:1.5rem;">
+            <h2 style="margin-top:0;">Introduction</h2>
+            {% if user.intro %}
+            <p style="margin:0;white-space:pre-wrap;">{{ user.intro }}</p>
+            {% else %}
+            <p class="muted" style="margin:0;">Add a short story about yourself.</p>
+            {% endif %}
+          </div>
+
+        <div style="margin-top:1.5rem;">
+          <h2 style="margin-top:0;">Edit introduction</h2>
+          <p class="muted">Update the text that appears in your profile introduction above.</p>
+          <form method="post" action="/profile/intro">
+            <label for="intro">Intro text</label>
+            <textarea id="intro" name="intro" rows="3">{{ user.intro }}</textarea>
+            <button type="submit" style="margin-top:0.4rem;">Save intro</button>
+          </form>
+        </div>
+      </section>
+
+      <section>
+        <h2>Wallet</h2>
+        {% if user.wallet_id %}
+        {% if user.role in ['receiver', 'charity_org'] %}
+        <div style="margin-bottom:1.5rem;">
+          <div style="text-align:center;background:#0e1424;border:1px solid #313a55;border-radius:10px;padding:1.5rem;">
+            <p class="muted" style="margin:0 0 0.5rem 0;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;">Available Balance</p>
+            <p style="margin:0;font-size:2.5rem;font-weight:700;color:#5fe2ff;">${{ "%.2f"|format(wallet_balance) }}</p>
+            <p class="muted" style="margin:0.25rem 0 0 0;font-size:0.85rem;">PCS Coins</p>
+          </div>
+        </div>
+        {% endif %}
+        <p class="muted">Your internal PCS wallet ID:</p>
+        <p><span class="pill">{{ user.wallet_id }}</span></p>
+        {% if user.role == 'charity_org' %}
+        <div style="margin-top:1rem;display:flex;gap:0.5rem;">
+          <a href="/my-purchases" class="btn" style="background:#1a2233;color:#5fe2ff;">My Requests</a>
+        </div>
+        {% endif %}
+        {% if user.role == 'donor' %}
+        <div style="margin-top:1rem;">
+          <a href="/my-purchases" class="btn" style="background:#1a2233;color:#5fe2ff;">My Requests</a>
+        </div>
+        {% endif %}
+        {% if user.role in ['receiver', 'charity_org'] %}
+        <div style="margin-top:1rem;">
+          <a href="/sell-crypto" class="btn">Sell PCS coins{% if pending_purchase_requests > 0 %} <span style="background:#ff5f5f;color:#fff;border-radius:50%;padding:0.15rem 0.5rem;font-size:0.75rem;font-weight:700;margin-left:0.3rem;">{{ pending_purchase_requests }}</span>{% endif %}</a>
+        </div>
+        {% endif %}
+        {% if user.role == 'donor' %}
+          {% if wallet_history %}
+          <div style="margin-top:1rem;">
+            <h3 style="margin:0 0 0.4rem 0;font-size:1.05rem;">Blockchain transaction history</h3>
+            <p class="muted" style="margin:0 0 0.5rem 0;">Immutable record of previous donations sent from this wallet.</p>
+            <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+              <thead>
+                <tr>
+                  <th style="text-align:left;padding:0.35rem 0.25rem;border-bottom:1px solid #262d41;color:#a9b3d4;font-weight:500;">Date</th>
+                  <th style="text-align:left;padding:0.35rem 0.25rem;border-bottom:1px solid #262d41;color:#a9b3d4;font-weight:500;">To wallet</th>
+                  <th style="text-align:left;padding:0.35rem 0.25rem;border-bottom:1px solid #262d41;color:#a9b3d4;font-weight:500;">Amount (PCS)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for tx in wallet_history %}
+                <tr>
+                  <td style="padding:0.3rem 0.25rem;border-bottom:1px solid #1e2435;" class="muted">{{ tx.timestamp }}</td>
+                  <td style="padding:0.3rem 0.25rem;border-bottom:1px solid #1e2435;" class="muted">{{ tx.to_wallet }}</td>
+                  <td style="padding:0.3rem 0.25rem;border-bottom:1px solid #1e2435;">{{ '%.2f'|format(tx.amount) }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div style="margin-top:0.8rem;">
+            <a href="/chain" target="_blank" class="btn">Blockchain transactions</a>
+          </div>
+          {% endif %}
+        {% else %}
+          <div style="margin-top:0.8rem;">
+            <a href="/chain" target="_blank" class="btn">Blockchain transactions</a>
+          </div>
+        {% endif %}
+        {% else %}
+        <p class="muted">No wallet assigned (prototype limitation).</p>
+        {% endif %}
+      </section>
+
+      {% if user.role == 'donor' %}
+      <section>
+        <h2>World Charity Achievements</h2>
+        <p class="muted" style="margin-bottom:1rem;">Your impact on making the world a better place.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
+          <div style="background:#0e1424;border:1px solid #313a55;border-radius:10px;padding:1.25rem;text-align:center;">
+            <p class="muted" style="margin:0 0 0.5rem 0;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;">Total Donations</p>
+            <p style="margin:0;font-size:2rem;font-weight:700;color:#5fe2ff;">${{ "%.2f"|format(total_donations) }}</p>
+            <p class="muted" style="margin:0.25rem 0 0 0;font-size:0.85rem;">PCS Coins</p>
+          </div>
+          <div style="background:#0e1424;border:1px solid #313a55;border-radius:10px;padding:1.25rem;text-align:center;">
+            <p class="muted" style="margin:0 0 0.5rem 0;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;">Volunteering Hours</p>
+            <p style="margin:0;font-size:2rem;font-weight:700;color:#5fe2ff;">{{ volunteer_hours }}</p>
+            <p class="muted" style="margin:0.25rem 0 0 0;font-size:0.85rem;">Hours</p>
+          </div>
+        </div>
+        
+        {% if country_rank > 0 or worldwide_rank > 0 %}
+        <div style="margin-top:1.5rem;padding:1rem;background:#0e1424;border:1px solid #313a55;border-radius:10px;">
+          <h3 style="margin:0 0 0.75rem 0;font-size:1.1rem;color:#5fe2ff;">🏆 Donor Rankings</h3>
+          <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
+            {% if country_rank > 0 %}
+            <div>
+              <p class="muted" style="margin:0 0 0.25rem 0;font-size:0.75rem;">In {{ user.country }}</p>
+              <p style="margin:0;font-size:1.5rem;font-weight:700;color:#ffd700;">
+                {% if country_rank == 1 %}🥇
+                {% elif country_rank == 2 %}🥈
+                {% elif country_rank == 3 %}🥉
+                {% else %}#{% endif %}{{ country_rank }}
+              </p>
+            </div>
+            {% endif %}
+            {% if worldwide_rank > 0 %}
+            <div>
+              <p class="muted" style="margin:0 0 0.25rem 0;font-size:0.75rem;">Worldwide</p>
+              <p style="margin:0;font-size:1.5rem;font-weight:700;color:#ffd700;">
+                {% if worldwide_rank == 1 %}🥇
+                {% elif worldwide_rank == 2 %}🥈
+                {% elif worldwide_rank == 3 %}🥉
+                {% else %}#{% endif %}{{ worldwide_rank }}
+              </p>
+            </div>
+            {% endif %}
+          </div>
+          <a href="/rankings" style="display:inline-block;margin-top:0.75rem;color:#5fe2ff;text-decoration:underline;font-size:0.85rem;">View full rankings →</a>
+        </div>
+        {% endif %}
+      </section>
+      {% endif %}
+
+      <section>
+        {% if user.role == 'donor' %}
+        <h2>Donate now</h2>
+        {% else %}
+        <h2>Find your friends</h2>
+        {% endif %}
+        <p class="muted">Search for donors or receivers and explore their profiles.</p>
+        <a href="/search" class="btn">Search users</a>
+      </section>
+
+      <section>
+        <h2>External services</h2>
+        <p class="muted">Do you wish to contribute physically, by volunteering, or submit a project that would benefit the suffering poor.</p>
+        <div style="display:flex;gap:0.5rem;margin-top:0.5rem;flex-wrap:wrap;">
+          <a href="/external-services" class="btn">Request permission</a>
+          <a href="/view-project/{{ user.user_id }}" class="btn" style="background:#1a2233;color:#5fe2ff;">View project</a>
+        </div>
+      </section>
+
+      <section>
+        <h2>Profile settings</h2>
+        <form method="post" action="/profile/settings">
+          {% if user.role == 'donor' %}
+          <div style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-bottom:1rem;">
+            <button type="submit" name="visibility" value="public">Public profile</button>
+            <button type="submit" name="visibility" value="private">Private profile</button>
+          </div>
+          {% else %}
+          <div style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-bottom:1rem;">
+            <button type="submit" name="visibility" value="public">Public profile</button>
+          </div>
+          <p class="muted" style="margin-top:0.5rem;">{% if user.role == 'charity_org' %}Charity organizations{% else %}Receivers{% endif %} are always public for transparency.</p>
+          {% endif %}
+          
+          <label for="country">Select your location</label>
+          <select id="country" name="country" required style="width:100%;max-width:400px;padding:0.55rem 0.7rem;margin-bottom:0.9rem;border-radius:6px;border:1px solid #313a55;background:#0e1424;color:#f5f7ff;font-size:0.9rem;box-sizing:border-box;">
+            <option value="">Select your country...</option>
+            <optgroup label="Asia">
+              <option value="Afghanistan" {% if user.country == 'Afghanistan' %}selected{% endif %}>Afghanistan</option>
+              <option value="Bangladesh" {% if user.country == 'Bangladesh' %}selected{% endif %}>Bangladesh</option>
+              <option value="Bhutan" {% if user.country == 'Bhutan' %}selected{% endif %}>Bhutan</option>
+              <option value="Brunei" {% if user.country == 'Brunei' %}selected{% endif %}>Brunei</option>
+              <option value="Cambodia" {% if user.country == 'Cambodia' %}selected{% endif %}>Cambodia</option>
+              <option value="China" {% if user.country == 'China' %}selected{% endif %}>China</option>
+              <option value="India" {% if user.country == 'India' %}selected{% endif %}>India</option>
+              <option value="Indonesia" {% if user.country == 'Indonesia' %}selected{% endif %}>Indonesia</option>
+              <option value="Japan" {% if user.country == 'Japan' %}selected{% endif %}>Japan</option>
+              <option value="Kazakhstan" {% if user.country == 'Kazakhstan' %}selected{% endif %}>Kazakhstan</option>
+              <option value="Laos" {% if user.country == 'Laos' %}selected{% endif %}>Laos</option>
+              <option value="Malaysia" {% if user.country == 'Malaysia' %}selected{% endif %}>Malaysia</option>
+              <option value="Maldives" {% if user.country == 'Maldives' %}selected{% endif %}>Maldives</option>
+              <option value="Mongolia" {% if user.country == 'Mongolia' %}selected{% endif %}>Mongolia</option>
+              <option value="Myanmar" {% if user.country == 'Myanmar' %}selected{% endif %}>Myanmar</option>
+              <option value="Nepal" {% if user.country == 'Nepal' %}selected{% endif %}>Nepal</option>
+              <option value="Pakistan" {% if user.country == 'Pakistan' %}selected{% endif %}>Pakistan</option>
+              <option value="Philippines" {% if user.country == 'Philippines' %}selected{% endif %}>Philippines</option>
+              <option value="Singapore" {% if user.country == 'Singapore' %}selected{% endif %}>Singapore</option>
+              <option value="South Korea" {% if user.country == 'South Korea' %}selected{% endif %}>South Korea</option>
+              <option value="Sri Lanka" {% if user.country == 'Sri Lanka' %}selected{% endif %}>Sri Lanka</option>
+              <option value="Taiwan" {% if user.country == 'Taiwan' %}selected{% endif %}>Taiwan</option>
+              <option value="Thailand" {% if user.country == 'Thailand' %}selected{% endif %}>Thailand</option>
+              <option value="Vietnam" {% if user.country == 'Vietnam' %}selected{% endif %}>Vietnam</option>
+            </optgroup>
+            <optgroup label="Middle East">
+              <option value="Bahrain" {% if user.country == 'Bahrain' %}selected{% endif %}>Bahrain</option>
+              <option value="Iran" {% if user.country == 'Iran' %}selected{% endif %}>Iran</option>
+              <option value="Iraq" {% if user.country == 'Iraq' %}selected{% endif %}>Iraq</option>
+              <option value="Israel" {% if user.country == 'Israel' %}selected{% endif %}>Israel</option>
+              <option value="Jordan" {% if user.country == 'Jordan' %}selected{% endif %}>Jordan</option>
+              <option value="Kuwait" {% if user.country == 'Kuwait' %}selected{% endif %}>Kuwait</option>
+              <option value="Lebanon" {% if user.country == 'Lebanon' %}selected{% endif %}>Lebanon</option>
+              <option value="Oman" {% if user.country == 'Oman' %}selected{% endif %}>Oman</option>
+              <option value="Qatar" {% if user.country == 'Qatar' %}selected{% endif %}>Qatar</option>
+              <option value="Saudi Arabia" {% if user.country == 'Saudi Arabia' %}selected{% endif %}>Saudi Arabia</option>
+              <option value="Syria" {% if user.country == 'Syria' %}selected{% endif %}>Syria</option>
+              <option value="Turkey" {% if user.country == 'Turkey' %}selected{% endif %}>Turkey</option>
+              <option value="United Arab Emirates" {% if user.country == 'United Arab Emirates' %}selected{% endif %}>United Arab Emirates</option>
+              <option value="Yemen" {% if user.country == 'Yemen' %}selected{% endif %}>Yemen</option>
+            </optgroup>
+            <optgroup label="Europe">
+              <option value="Austria" {% if user.country == 'Austria' %}selected{% endif %}>Austria</option>
+              <option value="Belgium" {% if user.country == 'Belgium' %}selected{% endif %}>Belgium</option>
+              <option value="Bulgaria" {% if user.country == 'Bulgaria' %}selected{% endif %}>Bulgaria</option>
+              <option value="Croatia" {% if user.country == 'Croatia' %}selected{% endif %}>Croatia</option>
+              <option value="Cyprus" {% if user.country == 'Cyprus' %}selected{% endif %}>Cyprus</option>
+              <option value="Czech Republic" {% if user.country == 'Czech Republic' %}selected{% endif %}>Czech Republic</option>
+              <option value="Denmark" {% if user.country == 'Denmark' %}selected{% endif %}>Denmark</option>
+              <option value="Estonia" {% if user.country == 'Estonia' %}selected{% endif %}>Estonia</option>
+              <option value="Finland" {% if user.country == 'Finland' %}selected{% endif %}>Finland</option>
+              <option value="France" {% if user.country == 'France' %}selected{% endif %}>France</option>
+              <option value="Germany" {% if user.country == 'Germany' %}selected{% endif %}>Germany</option>
+              <option value="Greece" {% if user.country == 'Greece' %}selected{% endif %}>Greece</option>
+              <option value="Hungary" {% if user.country == 'Hungary' %}selected{% endif %}>Hungary</option>
+              <option value="Iceland" {% if user.country == 'Iceland' %}selected{% endif %}>Iceland</option>
+              <option value="Ireland" {% if user.country == 'Ireland' %}selected{% endif %}>Ireland</option>
+              <option value="Italy" {% if user.country == 'Italy' %}selected{% endif %}>Italy</option>
+              <option value="Latvia" {% if user.country == 'Latvia' %}selected{% endif %}>Latvia</option>
+              <option value="Lithuania" {% if user.country == 'Lithuania' %}selected{% endif %}>Lithuania</option>
+              <option value="Luxembourg" {% if user.country == 'Luxembourg' %}selected{% endif %}>Luxembourg</option>
+              <option value="Malta" {% if user.country == 'Malta' %}selected{% endif %}>Malta</option>
+              <option value="Netherlands" {% if user.country == 'Netherlands' %}selected{% endif %}>Netherlands</option>
+              <option value="Norway" {% if user.country == 'Norway' %}selected{% endif %}>Norway</option>
+              <option value="Poland" {% if user.country == 'Poland' %}selected{% endif %}>Poland</option>
+              <option value="Portugal" {% if user.country == 'Portugal' %}selected{% endif %}>Portugal</option>
+              <option value="Romania" {% if user.country == 'Romania' %}selected{% endif %}>Romania</option>
+              <option value="Russia" {% if user.country == 'Russia' %}selected{% endif %}>Russia</option>
+              <option value="Serbia" {% if user.country == 'Serbia' %}selected{% endif %}>Serbia</option>
+              <option value="Slovakia" {% if user.country == 'Slovakia' %}selected{% endif %}>Slovakia</option>
+              <option value="Slovenia" {% if user.country == 'Slovenia' %}selected{% endif %}>Slovenia</option>
+              <option value="Spain" {% if user.country == 'Spain' %}selected{% endif %}>Spain</option>
+              <option value="Sweden" {% if user.country == 'Sweden' %}selected{% endif %}>Sweden</option>
+              <option value="Switzerland" {% if user.country == 'Switzerland' %}selected{% endif %}>Switzerland</option>
+              <option value="Ukraine" {% if user.country == 'Ukraine' %}selected{% endif %}>Ukraine</option>
+              <option value="United Kingdom" {% if user.country == 'United Kingdom' %}selected{% endif %}>United Kingdom</option>
+            </optgroup>
+            <optgroup label="North America">
+              <option value="Canada" {% if user.country == 'Canada' %}selected{% endif %}>Canada</option>
+              <option value="Mexico" {% if user.country == 'Mexico' %}selected{% endif %}>Mexico</option>
+              <option value="United States" {% if user.country == 'United States' %}selected{% endif %}>United States</option>
+            </optgroup>
+            <optgroup label="South America">
+              <option value="Argentina" {% if user.country == 'Argentina' %}selected{% endif %}>Argentina</option>
+              <option value="Bolivia" {% if user.country == 'Bolivia' %}selected{% endif %}>Bolivia</option>
+              <option value="Brazil" {% if user.country == 'Brazil' %}selected{% endif %}>Brazil</option>
+              <option value="Chile" {% if user.country == 'Chile' %}selected{% endif %}>Chile</option>
+              <option value="Colombia" {% if user.country == 'Colombia' %}selected{% endif %}>Colombia</option>
+              <option value="Ecuador" {% if user.country == 'Ecuador' %}selected{% endif %}>Ecuador</option>
+              <option value="Paraguay" {% if user.country == 'Paraguay' %}selected{% endif %}>Paraguay</option>
+              <option value="Peru" {% if user.country == 'Peru' %}selected{% endif %}>Peru</option>
+              <option value="Uruguay" {% if user.country == 'Uruguay' %}selected{% endif %}>Uruguay</option>
+              <option value="Venezuela" {% if user.country == 'Venezuela' %}selected{% endif %}>Venezuela</option>
+            </optgroup>
+            <optgroup label="Africa">
+              <option value="Algeria" {% if user.country == 'Algeria' %}selected{% endif %}>Algeria</option>
+              <option value="Angola" {% if user.country == 'Angola' %}selected{% endif %}>Angola</option>
+              <option value="Benin" {% if user.country == 'Benin' %}selected{% endif %}>Benin</option>
+              <option value="Botswana" {% if user.country == 'Botswana' %}selected{% endif %}>Botswana</option>
+              <option value="Cameroon" {% if user.country == 'Cameroon' %}selected{% endif %}>Cameroon</option>
+              <option value="Egypt" {% if user.country == 'Egypt' %}selected{% endif %}>Egypt</option>
+              <option value="Ethiopia" {% if user.country == 'Ethiopia' %}selected{% endif %}>Ethiopia</option>
+              <option value="Ghana" {% if user.country == 'Ghana' %}selected{% endif %}>Ghana</option>
+              <option value="Kenya" {% if user.country == 'Kenya' %}selected{% endif %}>Kenya</option>
+              <option value="Libya" {% if user.country == 'Libya' %}selected{% endif %}>Libya</option>
+              <option value="Morocco" {% if user.country == 'Morocco' %}selected{% endif %}>Morocco</option>
+              <option value="Nigeria" {% if user.country == 'Nigeria' %}selected{% endif %}>Nigeria</option>
+              <option value="Senegal" {% if user.country == 'Senegal' %}selected{% endif %}>Senegal</option>
+              <option value="South Africa" {% if user.country == 'South Africa' %}selected{% endif %}>South Africa</option>
+              <option value="Sudan" {% if user.country == 'Sudan' %}selected{% endif %}>Sudan</option>
+              <option value="Tanzania" {% if user.country == 'Tanzania' %}selected{% endif %}>Tanzania</option>
+              <option value="Tunisia" {% if user.country == 'Tunisia' %}selected{% endif %}>Tunisia</option>
+              <option value="Uganda" {% if user.country == 'Uganda' %}selected{% endif %}>Uganda</option>
+              <option value="Zambia" {% if user.country == 'Zambia' %}selected{% endif %}>Zambia</option>
+              <option value="Zimbabwe" {% if user.country == 'Zimbabwe' %}selected{% endif %}>Zimbabwe</option>
+            </optgroup>
+            <optgroup label="Oceania">
+              <option value="Australia" {% if user.country == 'Australia' %}selected{% endif %}>Australia</option>
+              <option value="Fiji" {% if user.country == 'Fiji' %}selected{% endif %}>Fiji</option>
+              <option value="New Zealand" {% if user.country == 'New Zealand' %}selected{% endif %}>New Zealand</option>
+              <option value="Papua New Guinea" {% if user.country == 'Papua New Guinea' %}selected{% endif %}>Papua New Guinea</option>
+              <option value="Samoa" {% if user.country == 'Samoa' %}selected{% endif %}>Samoa</option>
+            </optgroup>
+            <option value="Other" {% if user.country == 'Other' %}selected{% endif %}>Other / Not Listed</option>
+          </select>
+          <button type="submit" class="btn">Update settings</button>
+        </form>
+      </section>
+
+      <section>
+        <h2>Contact & social</h2>
+        <p class="muted">Share how other users can reach you. Email and phone are optional and can be hidden.</p>
+        <form method="post" action="/profile/contact">
+          <label>Social media links</label>
+          <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+            <input id="social_link1" name="social_link1" type="url" placeholder="https://social-1" value="{{ user.social_links[0] if user.social_links|length > 0 else '' }}" style="flex:1;min-width:180px;max-width:230px;" />
+            <input id="social_link2" name="social_link2" type="url" placeholder="https://social-2" value="{{ user.social_links[1] if user.social_links|length > 1 else '' }}" style="flex:1;min-width:180px;max-width:230px;" />
+            <input id="social_link3" name="social_link3" type="url" placeholder="https://social-3" value="{{ user.social_links[2] if user.social_links|length > 2 else '' }}" style="flex:1;min-width:180px;max-width:230px;" />
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem;">
+            <input id="social_link4" name="social_link4" type="url" placeholder="https://social-4" value="{{ user.social_links[3] if user.social_links|length > 3 else '' }}" style="flex:1;min-width:180px;max-width:230px;" />
+            <input id="social_link5" name="social_link5" type="url" placeholder="https://social-5" value="{{ user.social_links[4] if user.social_links|length > 4 else '' }}" style="flex:1;min-width:180px;max-width:230px;" />
+          </div>
+
+          <div style="margin-top:1rem;">
+            <label for="email">Email</label>
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+              <input id="email" name="email" type="email" placeholder="you@example.com" value="{{ user.email }}" style="flex:1;min-width:180px;max-width:260px;" />
+              <label style="display:flex;align-items:center;gap:0.3rem;margin:0;">
+                <input type="checkbox" name="reveal_email" {% if user.reveal_email %}checked{% endif %} />
+                <span class="muted">Show email</span>
+              </label>
+            </div>
+          </div>
+
+          <div style="margin-top:0.75rem;">
+            <label for="phone">WhatsApp</label>
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+              <input id="phone" name="phone" type="tel" placeholder="+1 234 567 890" value="{{ user.phone }}" style="flex:1;min-width:180px;max-width:260px;" />
+              <label style="display:flex;align-items:center;gap:0.3rem;margin:0;">
+                <input type="checkbox" name="reveal_phone" {% if user.reveal_phone %}checked{% endif %} />
+                <span class="muted">Show phone</span>
+              </label>
+            </div>
+          </div>
+
+          <div style="margin-top:0.75rem;">
+            <label for="xchat">XChat</label>
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+              <input id="xchat" name="xchat" type="text" placeholder="@username" value="{{ user.xchat if user.xchat else '' }}" style="flex:1;min-width:180px;max-width:260px;" />
+              <label style="display:flex;align-items:center;gap:0.3rem;margin:0;">
+                <input type="checkbox" name="reveal_xchat" {% if user.reveal_xchat %}checked{% endif %} />
+                <span class="muted">Show XChat</span>
+              </label>
+            </div>
+          </div>
+
+          {% if user.role in ['receiver', 'charity_org'] %}
+          <div style="margin-top:0.75rem;">
+            <label for="physical_address">Physical address</label>
+            <textarea id="physical_address" name="physical_address" rows="3" placeholder="Street address, city, postal code, country" style="width:100%;padding:0.55rem 0.7rem;border-radius:6px;border:1px solid #313a55;background:#0e1424;color:#f5f7ff;font-size:0.9rem;box-sizing:border-box;resize:vertical;">{{ user.physical_address if user.physical_address else '' }}</textarea>
+          </div>
+          {% endif %}
+
+          <button type="submit" style="margin-top:1rem;">Save contact info</button>
+        </form>
+      </section>
+
+      {% if user.role in ['receiver', 'charity_org'] %}
+      <section>
+        <h2>Bank details</h2>
+        <p class="muted">Provide your bank account information for donors who want to purchase cryptocurrency from you. This will be visible on the purchase page.</p>
+        {% if user.role == 'receiver' %}
+        <p class="muted" style="margin-top:0.5rem;"><strong>Note:</strong> Your account username was set by an inspector and cannot be changed. You can update your bank details below.</p>
+        {% endif %}
+        <form method="post" action="/profile/bank">
+          <div style="background:#0e1424;border:1px solid #313a55;border-radius:6px;padding:0.7rem;margin-bottom:0.5rem;">
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
+              <label style="margin:0;color:#a9b3d4;font-size:0.85rem;white-space:nowrap;">Bank Name:</label>
+              <input type="text" name="bank_name" value="{{ bank_fields.bank_name }}" style="width:100%;padding:0.4rem 0.5rem;border-radius:4px;border:1px solid #313a55;background:#151b2c;color:#f5f7ff;font-size:0.85rem;margin:0;" />
+            </div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
+              <label style="margin:0;color:#a9b3d4;font-size:0.85rem;white-space:nowrap;">Account Number:</label>
+              <input type="text" name="bank_account" value="{{ bank_fields.bank_account }}" style="width:100%;padding:0.4rem 0.5rem;border-radius:4px;border:1px solid #313a55;background:#151b2c;color:#f5f7ff;font-size:0.85rem;margin:0;" />
+            </div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
+              <label style="margin:0;color:#a9b3d4;font-size:0.85rem;white-space:nowrap;">Account Name:</label>
+              <input type="text" name="bank_account_name" value="{{ bank_fields.bank_account_name }}" style="width:100%;padding:0.4rem 0.5rem;border-radius:4px;border:1px solid #313a55;background:#151b2c;color:#f5f7ff;font-size:0.85rem;margin:0;" />
+            </div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:0.5rem;align-items:center;">
+              <label style="margin:0;color:#a9b3d4;font-size:0.85rem;white-space:nowrap;">Swift/Routing:</label>
+              <input type="text" name="bank_swift" value="{{ bank_fields.bank_swift }}" style="width:100%;padding:0.4rem 0.5rem;border-radius:4px;border:1px solid #313a55;background:#151b2c;color:#f5f7ff;font-size:0.85rem;margin:0;" />
+            </div>
+          </div>
+          <button type="submit" style="margin-top:0.5rem;">Save bank details</button>
+        </form>
+      </section>
+
+      <section>
+        <h2>Western Union</h2>
+        <p class="muted" style="margin-bottom:0.5rem;">
+          Recipient's details:<br>
+          First and last name<br>
+          ID type and number<br>
+          Date of birth<br>
+          Nationality and address<br>
+          Phone number
+        </p>
+        <form method="post" action="/profile/payment-gateways">
+          <label for="payment_gateways">Payment Gateway Details</label>
+          <textarea id="payment_gateways" name="payment_gateways" rows="5" placeholder="Insert details">{{ user.payment_gateways }}</textarea>
+          <button type="submit" style="margin-top:0.5rem;">Save payment gateways</button>
+        </form>
+      </section>
+
+      <section>
+        <h2>Other payment gateways</h2>
+        <form method="post" action="/profile/other-payment-gateways">
+          <label for="other_payment_gateways">Other Payment Details</label>
+          <textarea id="other_payment_gateways" name="other_payment_gateways" rows="5" placeholder="Paypal address, Cryptocurrency wallet address, other payment gateways, etc.">{{ user.other_payment_gateways }}</textarea>
+          <button type="submit" style="margin-top:0.5rem;">Save other payment gateways</button>
+        </form>
+      </section>
+      {% endif %}
+
+      {% if user.role == 'charity_org' %}
+      <section>
+        <h2>Charity Organization Verification</h2>
+        <p class="muted">Legal verification information for your charity organization. This information confirms your legitimacy to donors.</p>
+        
+        <form method="post" action="/profile/charity-verification">
+          <h3 style="margin-top:1.5rem;margin-bottom:0.5rem;font-size:1.1rem;">1️⃣ Legal Identity</h3>
+          <p class="muted" style="margin-top:0;margin-bottom:0.75rem;">👉 Confirms the charity exists legally.</p>
+          
+          <label for="charity_legal_name">Registered legal name</label>
+          <input id="charity_legal_name" name="charity_legal_name" type="text" placeholder="Full legal name of organization" value="{{ user.charity_legal_name }}" />
+          
+          <label for="charity_registration_number">Registration number</label>
+          <input id="charity_registration_number" name="charity_registration_number" type="text" placeholder="Official registration number" value="{{ user.charity_registration_number }}" />
+          
+          <label for="charity_registration_country">Country of registration</label>
+          <input id="charity_registration_country" name="charity_registration_country" type="text" placeholder="Country where registered" value="{{ user.charity_registration_country }}" />
+
+          <h3 style="margin-top:1.5rem;margin-bottom:0.5rem;font-size:1.1rem;">2️⃣ Registration Authority</h3>
+          <p class="muted" style="margin-top:0;margin-bottom:0.75rem;">👉 Confirms it is recognized by a government authority.</p>
+          
+          <label for="charity_registering_body">Name of registering body</label>
+          <input id="charity_registering_body" name="charity_registering_body" type="text" placeholder="e.g. Registry of Societies, SSM, Charity Commission" value="{{ user.charity_registering_body }}" />
+          
+          <label for="charity_active_status_proof">Proof of active status</label>
+          <textarea id="charity_active_status_proof" name="charity_active_status_proof" rows="2" placeholder="Document reference or verification details">{{ user.charity_active_status_proof }}</textarea>
+
+          <h3 style="margin-top:1.5rem;margin-bottom:0.5rem;font-size:1.1rem;">3️⃣ Bank Account (for direct donations)</h3>
+          <p class="muted" style="margin-top:0;margin-bottom:0.75rem;">👉 Ensures money goes directly to the charity, not an individual.</p>
+          
+          <label for="charity_bank_name">Bank name</label>
+          <input id="charity_bank_name" name="charity_bank_name" type="text" placeholder="Name of bank" value="{{ user.charity_bank_name }}" />
+          
+          <label for="charity_bank_account_holder">Account holder name (must exactly match charity name)</label>
+          <input id="charity_bank_account_holder" name="charity_bank_account_holder" type="text" placeholder="Exact legal name as registered" value="{{ user.charity_bank_account_holder }}" />
+          
+          <label for="charity_bank_account_number">Account number</label>
+          <input id="charity_bank_account_number" name="charity_bank_account_number" type="text" placeholder="Bank account number" value="{{ user.charity_bank_account_number }}" />
+          
+          <label for="charity_bank_country">Country of bank</label>
+          <input id="charity_bank_country" name="charity_bank_country" type="text" placeholder="Country where bank is located" value="{{ user.charity_bank_country }}" />
+
+          <h3 style="margin-top:1.5rem;margin-bottom:0.5rem;font-size:1.1rem;">4️⃣ Authorized Representative</h3>
+          <p class="muted" style="margin-top:0;margin-bottom:0.75rem;">👉 Confirms someone is legally allowed to receive funds.</p>
+          
+          <label for="charity_representative_name">Full legal name</label>
+          <input id="charity_representative_name" name="charity_representative_name" type="text" placeholder="Full name of authorized person" value="{{ user.charity_representative_name }}" />
+          
+          <label for="charity_representative_role">Role/title (director, trustee, officer)</label>
+          <input id="charity_representative_role" name="charity_representative_role" type="text" placeholder="e.g. Director, Trustee, Chairman" value="{{ user.charity_representative_role }}" />
+          
+          <label for="charity_representative_proof">Proof of authority</label>
+          <textarea id="charity_representative_proof" name="charity_representative_proof" rows="2" placeholder="Document reference or verification details">{{ user.charity_representative_proof }}</textarea>
+
+          <button type="submit" style="margin-top:1rem;">Save verification information</button>
+        </form>
+      </section>
+      {% endif %}
+    </main>
+  </body>
+</html>

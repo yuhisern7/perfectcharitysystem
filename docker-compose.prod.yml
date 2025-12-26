@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  apache:
+    image: httpd:2.4-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./apache.conf:/usr/local/apache2/conf/httpd.conf:ro
+      - ./certs:/etc/letsencrypt:ro
+      - ./uploads:/var/www/uploads:ro
+    depends_on:
+      - pcs-web
+    restart: unless-stopped
+    networks:
+      - pcs-network
+
+  pcs-web:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    expose:
+      - "8000"
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    environment:
+      - PCS_SECRET_KEY=${PCS_SECRET_KEY:?Please set PCS_SECRET_KEY environment variable}
+      - PCS_ENV=production
+      - PCS_DEBUG=false
+    restart: unless-stopped
+    networks:
+      - pcs-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  pcs-network:
+    driver: bridge

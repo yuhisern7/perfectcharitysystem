@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PCS – Inspector: Geographical Locations</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background: #0b1020; color: #f5f7ff; }
+      header { padding: 1.5rem 2rem; background: #111727; border-bottom: 1px solid #232a3d; }
+      header h1 { margin: 0; font-size: 1.7rem; }
+      header p { margin: 0.3rem 0 0; color: #a9b3d4; font-size: 0.9rem; }
+      main { padding: 1.5rem 2rem 3rem; max-width: 1200px; margin: 0 auto; }
+      section { margin-bottom: 2rem; background: #151b2c; border-radius: 10px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); }
+      h2 { margin-top: 0; font-size: 1.3rem; }
+      .muted { color: #8a92b6; font-size: 0.85rem; }
+      .btn { padding: 0.55rem 1.2rem; border-radius: 6px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 0.9rem; cursor: pointer; text-decoration: none; display: inline-block; }
+      .btn:hover { filter: brightness(1.05); }
+      a { color: #5fe2ff; text-decoration: none; }
+      .location-item { background: #1a2135; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+      .location-item h3 { margin: 0 0 0.5rem; font-size: 1.1rem; }
+      .location-item .count { font-size: 1.5rem; font-weight: 700; color: #5fe2ff; }
+      .user-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+      .user-badge { display: inline-block; padding: 0.35rem 0.75rem; background: #0b1020; border-radius: 6px; font-size: 0.85rem; }
+      .user-badge:hover { background: #232a3d; }
+      
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        header { padding: 1rem; }
+        header h1 { font-size: 1.4rem; }
+        header > div { flex-direction: column; gap: 0.75rem; align-items: flex-start !important; }
+        header > div > div { width: 100%; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        header .btn { flex: 1; text-align: center; margin: 0 !important; }
+        main { padding: 1rem; }
+        section { padding: 1.25rem; margin-bottom: 1.5rem; }
+        h2 { font-size: 1.15rem; }
+        .location-item h3 { font-size: 1rem; }
+      }
+      
+      @media (max-width: 480px) {
+        header { padding: 0.75rem; }
+        header h1 { font-size: 1.25rem; }
+        main { padding: 0.75rem; }
+        section { padding: 1rem; }
+        .location-item { padding: 0.85rem; }
+        .location-item .count { font-size: 1.3rem; }
+        .btn { padding: 0.45rem 1rem; font-size: 0.85rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+        <div>
+          <h1>Geographical Distribution</h1>
+          <p class="muted">Inspector: {{ inspector.username }}</p>
+        </div>
+        <div>
+          <a href="/profile" class="btn">Dashboard</a>
+          <a href="/inspector/users" class="btn" style="margin-left:0.5rem;">Users</a>
+          <a href="/logout" class="btn" style="margin-left:0.5rem;">Logout</a>
+        </div>
+      </div>
+    </header>
+    <main>
+      <section>
+        <h2>User Locations ({{ location_data|length }} locations)</h2>
+        <p class="muted">Geographical distribution of all users by location.</p>
+        
+        {% if location_data %}
+        <div style="margin-top:1.5rem;">
+          {% for location, users in location_data.items() %}
+          <div class="location-item">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <h3>📍 {{ location }}</h3>
+                <span class="count">{{ users|length }}</span> <span class="muted">user(s)</span>
+              </div>
+            </div>
+            <div class="user-list">
+              {% for u in users %}
+              <a href="/inspector/user/{{ u.user_id }}" class="user-badge">
+                {{ u.username }} <span class="muted">({{ u.role }})</span>
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="muted">No location data available.</p>
+        {% endif %}
+      </section>
+
+      <section>
+        <h2>Location Summary</h2>
+        <p class="muted">This view helps law enforcement identify geographical patterns and clusters of activity. In a production system, this could integrate with mapping services for visual representation.</p>
+        <div style="background:#1a2135;padding:1rem;border-radius:8px;margin-top:1rem;">
+          <h4 style="margin:0 0 0.5rem;color:#a9b3d4;">Suggested Actions</h4>
+          <ul style="margin:0.5rem 0;padding-left:1.5rem;">
+            <li class="muted">Filter users by specific countries or regions</li>
+            <li class="muted">Identify concentration areas for investigations</li>
+            <li class="muted">Cross-reference with transaction patterns</li>
+            <li class="muted">Export location data for mapping tools</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PCS – Purchase Cryptocurrency</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background: #0b1020; color: #f5f7ff; }
+      header { padding: 1.5rem 2rem; background: #111727; border-bottom: 1px solid #232a3d; }
+      header h1 { margin: 0; font-size: 1.7rem; }
+      header p { margin: 0.3rem 0 0; color: #a9b3d4; font-size: 0.9rem; }
+      main { padding: 1.5rem 2rem 3rem; max-width: 900px; margin: 0 auto; }
+      section { background: #151b2c; border-radius: 10px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); margin-bottom: 1.5rem; }
+      h2 { margin-top: 0; font-size: 1.3rem; }
+      .muted { color: #8a92b6; font-size: 0.85rem; }
+      .pill { display: inline-block; padding: 0.25rem 0.7rem; border-radius: 999px; background: #111727; color: #e1e6ff; font-size: 0.8rem; border: 1px solid #272f47; }
+      .btn { display: inline-block; padding: 0.55rem 1.2rem; border-radius: 6px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 0.9rem; cursor: pointer; text-decoration: none; }
+      .btn:hover { filter: brightness(1.05); }
+      .receiver-list { list-style: none; padding: 0; margin: 0; }
+      .receiver-item { background: #1a2137; border: 1px solid #272f47; border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 0.75rem; transition: all 0.2s; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+      .receiver-item:hover { border-color: #4f9cff; background: #1e2540; }
+      .receiver-name { font-size: 1.05rem; font-weight: 600; margin: 0 0 0.25rem 0; }
+      .receiver-location { color: #a9b3d4; font-size: 0.85rem; }
+      .receiver-balance { text-align: right; }
+      .balance-amount { font-size: 1.3rem; font-weight: 700; color: #5fe2ff; }
+      .balance-label { font-size: 0.7rem; text-transform: uppercase; color: #8a92b6; letter-spacing: 0.5px; margin-bottom: 0.15rem; }
+      .no-receivers { text-align: center; padding: 2rem; color: #8a92b6; }
+      a { color: #5fe2ff; text-decoration: none; }
+      
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        header { padding: 1rem; }
+        header h1 { font-size: 1.4rem; }
+        header > div { flex-direction: column; gap: 0.75rem; align-items: flex-start !important; }
+        header > div > div { width: 100%; display: flex; gap: 0.5rem; }
+        header .btn { flex: 1; text-align: center; margin: 0 !important; }
+        main { padding: 1rem; }
+        section { padding: 1.25rem; margin-bottom: 1.25rem; }
+        h2 { font-size: 1.15rem; }
+        .receiver-item { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+        .receiver-balance { text-align: left; }
+      }
+      
+      @media (max-width: 480px) {
+        header { padding: 0.75rem; }
+        header h1 { font-size: 1.25rem; }
+        main { padding: 0.75rem; }
+        section { padding: 1rem; }
+        .receiver-item { padding: 0.85rem; }
+        .receiver-name { font-size: 0.95rem; }
+        .balance-amount { font-size: 1.1rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+        <div>
+          <h1>Purchase Cryptocurrency</h1>
+          <p>{{ donor.username }} • <span class="pill">{{ donor.role }}</span></p>
+        </div>
+        <div>
+          <a href="/profile" class="btn">My Profile</a>
+          <a href="/" class="btn" style="margin-left:0.5rem;">Home</a>
+        </div>
+      </div>
+    </header>
+    <main>
+      <section>
+        <h2>Select a Receiver</h2>
+        <p class="muted">Choose a receiver account to view their details and purchase PCS cryptocurrency.</p>
+      </section>
+
+      {% if receivers %}
+      <section>
+        <ul class="receiver-list">
+          {% for item in receivers %}
+          <li class="receiver-item" onclick="window.location='/purchase-crypto/{{ item.user.user_id }}'">
+            <div style="flex:1;">
+              <h3 class="receiver-name">{{ item.user.username }}</h3>
+              <div class="receiver-location">
+                {% if item.user.country or item.user.state %}
+                  📍 
+                  {% if item.user.state %}{{ item.user.state }}{% endif %}
+                  {% if item.user.state and item.user.country %}, {% endif %}
+                  {% if item.user.country %}{{ item.user.country }}{% endif %}
+                {% else %}
+                  📍 Location not specified
+                {% endif %}
+              </div>
+            </div>
+            <div class="receiver-balance">
+              <div class="balance-label">Available</div>
+              <div class="balance-amount">${{ '%.2f'|format(item.balance) }}</div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% else %}
+      <section>
+        <div class="no-receivers">
+          <p style="font-size:1.1rem;">No receiver accounts available yet.</p>
+          <p class="muted">Receiver accounts can only be created by inspectors.</p>
+        </div>
+      </section>
+      {% endif %}
+
+      <section>
+        <p class="muted" style="text-align:center;margin:0;">
+          <a href="/profile">← Back to my profile</a>
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
+  </body>
+</html>

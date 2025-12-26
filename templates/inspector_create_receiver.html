@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PCS – Create Account</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background: #0b1020; color: #f5f7ff; }
+      header { padding: 1.5rem 2rem; background: #111727; border-bottom: 1px solid #232a3d; }
+      header h1 { margin: 0; font-size: 1.7rem; }
+      header p { margin: 0.3rem 0 0; color: #a9b3d4; font-size: 0.9rem; }
+      main { padding: 1.5rem 2rem 3rem; max-width: 600px; margin: 0 auto; }
+      section { background: #151b2c; border-radius: 10px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); }
+      h2 { margin-top: 0; font-size: 1.3rem; }
+      .muted { color: #8a92b6; font-size: 0.85rem; }
+      label { display: block; margin-bottom: 0.35rem; font-size: 0.9rem; color: #c4cbea; margin-top: 0.75rem; }
+      input { width: 100%; padding: 0.55rem 0.7rem; margin-bottom: 0.5rem; border-radius: 6px; border: 1px solid #313a55; background: #0e1424; color: #f5f7ff; font-size: 0.9rem; box-sizing: border-box; }
+      input:focus { outline: none; border-color: #4f9cff; box-shadow: 0 0 0 1px rgba(79, 156, 255, 0.4); }
+      button, .btn { padding: 0.55rem 1.2rem; border-radius: 6px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 0.9rem; cursor: pointer; text-decoration: none; display: inline-block; }
+      button:hover, .btn:hover { filter: brightness(1.05); }
+      button[type="submit"] { width: 100%; margin-top: 1rem; }
+      a { color: #5fe2ff; text-decoration: none; }
+      .alert { padding: 1rem; border-radius: 8px; margin-bottom: 1rem; background: #2a5f7f; border-left: 4px solid #5fe2ff; }
+      
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        header { padding: 1rem; }
+        header h1 { font-size: 1.4rem; }
+        header > div { flex-direction: column; gap: 0.75rem; align-items: flex-start !important; }
+        header > div > div { width: 100%; display: flex; gap: 0.5rem; }
+        header .btn { flex: 1; text-align: center; margin: 0 !important; }
+        main { padding: 1rem; }
+        section { padding: 1.25rem; }
+      }
+      
+      @media (max-width: 480px) {
+        header { padding: 0.75rem; }
+        header h1 { font-size: 1.25rem; }
+        main { padding: 0.75rem; }
+        section { padding: 1rem; }
+        button, .btn { padding: 0.5rem 1rem; font-size: 0.85rem; }
+        input { padding: 0.5rem 0.6rem; font-size: 0.85rem; }
+        label { font-size: 0.85rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+        <div>
+          <h1>Create Account</h1>
+          <p class="muted">Inspector: {{ inspector.username }}</p>
+        </div>
+        <div>
+          <a href="/profile" class="btn">Dashboard</a>
+          <a href="/inspector/users" class="btn" style="margin-left:0.5rem;">Users</a>
+        </div>
+      </div>
+    </header>
+    <main>
+      <section>
+        <div class="alert">
+          <strong>ℹ️ Inspector Only</strong><br>
+          <span class="muted">Only inspectors can create receiver and charity organization accounts. Regular users can only register as donors.</span>
+        </div>
+
+        <h2>New Account</h2>
+        <p class="muted">Create a verified receiver or charity organization account for charities, organizations, or individuals who will receive donations.</p>
+        
+        <form method="post" action="/inspector/create-receiver">
+          <label for="role">Account Type <span style="color:#ff5f5f;">*</span></label>
+          <select id="role" name="role" required style="width:100%;padding:0.55rem 0.7rem;margin-bottom:0.9rem;border-radius:6px;border:1px solid #313a55;background:#0e1424;color:#f5f7ff;font-size:0.9rem;box-sizing:border-box;">
+            <option value="receiver">Receiver</option>
+            <option value="charity_org">Charity Organization</option>
+          </select>
+
+          <label for="username">Username <span style="color:#ff5f5f;">*</span></label>
+          <input id="username" name="username" type="text" required placeholder="Choose a unique username" />
+
+          <label for="password">Password <span style="color:#ff5f5f;">*</span></label>
+          <input id="password" name="password" type="password" required placeholder="Set a secure password" />
+
+          <label for="confirm_password">Confirm Password <span style="color:#ff5f5f;">*</span></label>
+          <input id="confirm_password" name="confirm_password" type="password" required placeholder="Re-enter the password" />
+
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="contact@example.com" />
+
+          <label for="phone">WhatsApp</label>
+          <input id="phone" name="phone" type="tel" placeholder="+1 (555) 123-4567" />
+
+          <label for="xchat">XChat</label>
+          <input id="xchat" name="xchat" type="text" placeholder="@username" />
+
+          <label for="physical_address">Physical address</label>
+          <textarea id="physical_address" name="physical_address" rows="3" placeholder="Street address, city, postal code, country" style="width:100%;padding:0.55rem 0.7rem;margin-bottom:0.5rem;border-radius:6px;border:1px solid #313a55;background:#0e1424;color:#f5f7ff;font-size:0.9rem;box-sizing:border-box;resize:vertical;"></textarea>
+
+          <h3 style="margin-top:1.5rem;margin-bottom:0.5rem;font-size:1.1rem;">Location Information</h3>
+          <p class="muted" style="margin-top:0;margin-bottom:0.75rem;">Optional but recommended for verification and geographical tracking.</p>
+
+          <label for="country">Country</label>
+          <select id="country" name="country" style="width:100%;padding:0.55rem 0.7rem;margin-bottom:0.5rem;border-radius:6px;border:1px solid #313a55;background:#0e1424;color:#f5f7ff;font-size:0.9rem;box-sizing:border-box;">
+            <option value="">Select country...</option>
+            <option value="singapore">Singapore</option>
+            <option value="malaysia">Malaysia</option>
+            <option value="indonesia">Indonesia</option>
+            <option value="philippines">Philippines</option>
+            <option value="thailand">Thailand</option>
+            <option value="vietnam">Vietnam</option>
+            <option value="india">India</option>
+            <option value="china">China</option>
+            <option value="japan">Japan</option>
+            <option value="australia">Australia</option>
+            <option value="new zealand">New Zealand</option>
+            <option value="united states">United States</option>
+            <option value="canada">Canada</option>
+            <option value="united kingdom">United Kingdom</option>
+            <option value="germany">Germany</option>
+            <option value="france">France</option>
+            <option value="other">Other</option>
+          </select>
+
+          <label for="state">State/Province</label>
+          <select id="state" name="state" style="width:100%;padding:0.55rem 0.7rem;margin-bottom:0.5rem;border-radius:6px;border:1px solid #313a55;background:#0e1424;color:#f5f7ff;font-size:0.9rem;box-sizing:border-box;">
+            <option value="">Select state...</option>
+            <option value="central">Central / City</option>
+            <option value="north">North</option>
+            <option value="south">South</option>
+            <option value="east">East</option>
+            <option value="west">West</option>
+          </select>
+
+          <label for="city">City</label>
+          <input id="city" name="city" type="text" placeholder="e.g., Los Angeles" />
+
+          <h3 style="margin-top:1.5rem;margin-bottom:0.5rem;font-size:1.1rem;">Bank Details</h3>
+          <p class="muted" style="margin-top:0;margin-bottom:0.75rem;">Bank account information for cryptocurrency purchases (will be shown to donors).</p>
+
+          <div style="background:#0e1424;border:1px solid #313a55;border-radius:6px;padding:0.7rem;margin-bottom:0.5rem;">
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
+              <label style="margin:0;color:#a9b3d4;font-size:0.85rem;white-space:nowrap;">Bank Name:</label>
+              <input type="text" id="bank_name" name="bank_name" style="width:100%;padding:0.4rem 0.5rem;border-radius:4px;border:1px solid #313a55;background:#151b2c;color:#f5f7ff;font-size:0.85rem;margin:0;" />
+            </div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
+              <label style="margin:0;color:#a9b3d4;font-size:0.85rem;white-space:nowrap;">Account Number:</label>
+              <input type="text" id="bank_account" name="bank_account" style="width:100%;padding:0.4rem 0.5rem;border-radius:4px;border:1px solid #313a55;background:#151b2c;color:#f5f7ff;font-size:0.85rem;margin:0;" />
+            </div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
+              <label style="margin:0;color:#a9b3d4;font-size:0.85rem;white-space:nowrap;">Account Name:</label>
+              <input type="text" id="bank_account_name" name="bank_account_name" style="width:100%;padding:0.4rem 0.5rem;border-radius:4px;border:1px solid #313a55;background:#151b2c;color:#f5f7ff;font-size:0.85rem;margin:0;" />
+            </div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:0.5rem;align-items:center;">
+              <label style="margin:0;color:#a9b3d4;font-size:0.85rem;white-space:nowrap;">Swift/Routing:</label>
+              <input type="text" id="bank_swift" name="bank_swift" style="width:100%;padding:0.4rem 0.5rem;border-radius:4px;border:1px solid #313a55;background:#151b2c;color:#f5f7ff;font-size:0.85rem;margin:0;" />
+            </div>
+          </div>
+
+          <h3 style="margin-top:1.5rem;margin-bottom:0.5rem;font-size:1.1rem;">Western Union</h3>
+          <p class="muted" style="margin-top:0;margin-bottom:0.75rem;">
+            Recipient's details:<br>
+            First and last name<br>
+            ID type and number<br>
+            Date of birth<br>
+            Nationality and address<br>
+            Phone number
+          </p>
+          
+          <textarea id="payment_gateways" name="payment_gateways" rows="4" placeholder="Insert details" style="width:100%;padding:0.55rem 0.7rem;margin-bottom:0.5rem;border-radius:6px;border:1px solid #313a55;background:#0e1424;color:#f5f7ff;font-size:0.9rem;box-sizing:border-box;resize:vertical;"></textarea>
+
+          <h3 style="margin-top:1.5rem;margin-bottom:0.5rem;font-size:1.1rem;">Other payment gateways</h3>
+          <textarea id="other_payment_gateways" name="other_payment_gateways" rows="4" placeholder="Paypal address, Cryptocurrency wallet address, other payment gateways, etc." style="width:100%;padding:0.55rem 0.7rem;margin-bottom:0.5rem;border-radius:6px;border:1px solid #313a55;background:#0e1424;color:#f5f7ff;font-size:0.9rem;box-sizing:border-box;resize:vertical;"></textarea>
+
+          <div id="charity-fields" style="display:none;">
+            <h3 style="margin-top:1.5rem;margin-bottom:0.5rem;font-size:1.1rem;">1️⃣ Legal Identity</h3>
+            <p class="muted" style="margin-top:0;margin-bottom:0.75rem;">👉 Confirms the charity exists legally.</p>
+            
+            <label for="charity_legal_name">Registered legal name</label>
+            <input id="charity_legal_name" name="charity_legal_name" type="text" placeholder="Full legal name of organization" />
+            
+            <label for="charity_registration_number">Registration number</label>
+            <input id="charity_registration_number" name="charity_registration_number" type="text" placeholder="Official registration number" />
+            
+            <label for="charity_registration_country">Country of registration</label>
+            <input id="charity_registration_country" name="charity_registration_country" type="text" placeholder="Country where registered" />
+
+            <h3 style="margin-top:1.5rem;margin-bottom:0.5rem;font-size:1.1rem;">2️⃣ Registration Authority</h3>
+            <p class="muted" style="margin-top:0;margin-bottom:0.75rem;">👉 Confirms it is recognized by a government authority.</p>
+            
+            <label for="charity_registering_body">Name of registering body</label>
+            <input id="charity_registering_body" name="charity_registering_body" type="text" placeholder="e.g. Registry of Societies, SSM, Charity Commission" />
+            
+            <label for="charity_active_status_proof">Proof of active status</label>
+            <textarea id="charity_active_status_proof" name="charity_active_status_proof" rows="2" style="width:100%;padding:0.55rem 0.7rem;margin-bottom:0.5rem;border-radius:6px;border:1px solid #313a55;background:#0e1424;color:#f5f7ff;font-size:0.9rem;box-sizing:border-box;resize:vertical;" placeholder="Document reference or verification details"></textarea>
+
+            <h3 style="margin-top:1.5rem;margin-bottom:0.5rem;font-size:1.1rem;">3️⃣ Bank Account (for direct donations)</h3>
+            <p class="muted" style="margin-top:0;margin-bottom:0.75rem;">👉 Ensures money goes directly to the charity, not an individual.</p>
+            
+            <label for="charity_bank_name">Bank name</label>
+            <input id="charity_bank_name" name="charity_bank_name" type="text" placeholder="Name of bank" />
+            
+            <label for="charity_bank_account_holder">Account holder name (must exactly match charity name)</label>
+            <input id="charity_bank_account_holder" name="charity_bank_account_holder" type="text" placeholder="Exact legal name as registered" />
+            
+            <label for="charity_bank_account_number">Account number</label>
+            <input id="charity_bank_account_number" name="charity_bank_account_number" type="text" placeholder="Bank account number" />
+            
+            <label for="charity_bank_country">Country of bank</label>
+            <input id="charity_bank_country" name="charity_bank_country" type="text" placeholder="Country where bank is located" />
+
+            <h3 style="margin-top:1.5rem;margin-bottom:0.5rem;font-size:1.1rem;">4️⃣ Authorized Representative</h3>
+            <p class="muted" style="margin-top:0;margin-bottom:0.75rem;">👉 Confirms someone is legally allowed to receive funds.</p>
+            
+            <label for="charity_representative_name">Full legal name</label>
+            <input id="charity_representative_name" name="charity_representative_name" type="text" placeholder="Full name of authorized person" />
+            
+            <label for="charity_representative_role">Role/title (director, trustee, officer)</label>
+            <input id="charity_representative_role" name="charity_representative_role" type="text" placeholder="e.g. Director, Trustee, Chairman" />
+            
+            <label for="charity_representative_proof">Proof of authority</label>
+            <textarea id="charity_representative_proof" name="charity_representative_proof" rows="2" style="width:100%;padding:0.55rem 0.7rem;margin-bottom:0.5rem;border-radius:6px;border:1px solid #313a55;background:#0e1424;color:#f5f7ff;font-size:0.9rem;box-sizing:border-box;resize:vertical;" placeholder="Document reference or verification details"></textarea>
+          </div>
+
+          <script>
+            // Show/hide charity fields based on role selection
+            document.getElementById('role').addEventListener('change', function() {
+              const charityFields = document.getElementById('charity-fields');
+              if (this.value === 'charity_org') {
+                charityFields.style.display = 'block';
+              } else {
+                charityFields.style.display = 'none';
+              }
+            });
+          </script>
+
+          <button type="submit">Create Account</button>
+        </form>
+
+        <p class="muted" style="text-align:center;margin-top:1.5rem;">
+          <a href="/inspector/users">← Back to user management</a>
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

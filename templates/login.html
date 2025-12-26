@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PCS – Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background: #0b1020; color: #f5f7ff; }
+      header { padding: 1.5rem 2rem; background: #111727; border-bottom: 1px solid #232a3d; }
+      header h1 { margin: 0; font-size: 1.7rem; }
+      main { padding: 1.5rem 2rem 3rem; max-width: 420px; margin: 0 auto; }
+      section { background: #151b2c; border-radius: 10px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); }
+      label { display: block; margin-bottom: 0.35rem; font-size: 0.9rem; color: #c4cbea; }
+      input { width: 100%; padding: 0.55rem 0.7rem; margin-bottom: 0.9rem; border-radius: 6px; border: 1px solid #313a55; background: #0e1424; color: #f5f7ff; font-size: 0.9rem; box-sizing: border-box; }
+      input:focus { outline: none; border-color: #4f9cff; box-shadow: 0 0 0 1px rgba(79, 156, 255, 0.4); }
+      button { padding: 0.55rem 1.2rem; border-radius: 6px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 0.9rem; cursor: pointer; width: 100%; }
+      button:hover { filter: brightness(1.05); }
+      .muted { color: #8a92b6; font-size: 0.85rem; margin-top: 0.75rem; text-align: center; }
+      .social-btn { width: 100%; margin-bottom: 0.6rem; padding: 0.55rem 1.2rem; border-radius: 6px; border: none; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+      .social-google { background: #ffffff; color: #202124; }
+      .social-facebook { background: #1877f2; color: #ffffff; }
+      a { color: #5fe2ff; text-decoration: none; }
+      
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        header { padding: 1rem; }
+        header h1 { font-size: 1.4rem; }
+        main { padding: 1rem 1rem 2rem; }
+        section { padding: 1.25rem; }
+      }
+      
+      @media (max-width: 480px) {
+        header { padding: 0.75rem; }
+        header h1 { font-size: 1.25rem; }
+        main { padding: 0.75rem 0.75rem 1.5rem; }
+        section { padding: 1rem; }
+        .social-btn { padding: 0.5rem 1rem; font-size: 0.85rem; }
+        button { padding: 0.5rem 1rem; font-size: 0.85rem; }
+        input { padding: 0.5rem 0.6rem; font-size: 0.85rem; }
+        label { font-size: 0.85rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>PCS – Login</h1>
+    </header>
+    <main>
+      <section>
+        <p class="muted" style="margin-top:0; margin-bottom:0.75rem;">Continue with</p>
+        <!-- Social login buttons are visual only for now; backend OAuth can be added later. -->
+        <button type="button" class="social-btn social-google">Continue with Google</button>
+        <button type="button" class="social-btn social-facebook">Continue with Facebook</button>
+        <p class="muted" style="margin:0.75rem 0 0.5rem;">or login with your PCS account</p>
+        <form method="post" action="/login">
+          <label for="username">Email / Username</label>
+          <input id="username" name="username" type="text" required placeholder="your.email@example.com" />
+
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" required />
+
+          <label for="role">Account type</label>
+          <select id="role" name="role" style="width:100%; padding:0.55rem 0.7rem; margin-bottom:0.9rem; border-radius:6px; border:1px solid #313a55; background:#0e1424; color:#f5f7ff; font-size:0.9rem; box-sizing:border-box;">
+            <option value="donor">Donor</option>
+            <option value="receiver">Receiver</option>
+            <option value="charity_org">Charity Organization</option>
+            <option value="inspector">Inspector</option>
+          </select>
+
+          <button type="submit">Login</button>
+        </form>
+        <p class="muted">No account yet? <a href="/register">Register here</a>.</p>
+        <p class="muted"><a href="/">Back to home</a></p>
+      </section>
+    </main>
+  </body>
+</html>
