@@ -226,6 +226,7 @@ Donor → Receiver (100%)
 - Photo and media galleries
 - Location (country, state, city)
 - Bank account verification
+- Promotes multiple payment gateways
 - Project descriptions
 - Complete donation history
 - Blockchain transaction records
