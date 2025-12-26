@@ -67,10 +67,13 @@
         <label for="project_description">Your Project</label>
         <textarea id="project_description" name="project_description" placeholder="Write your project description here. Include details about your goals, how you plan to help, who will benefit, and any resources you need..." required>{{ user.project_description }}</textarea>
 
+        <label for="project_funding_required" style="margin-top: 1.5rem;">How much is required</label>
+        <input type="text" id="project_funding_required" name="project_funding_required" placeholder="Enter the funding amount needed (e.g., $5,000 or 10,000 PCS)" style="width:100%;max-width:500px;padding:0.75rem;border-radius:8px;border:1px solid #313a55;background:#0e1424;color:#f5f7ff;font-size:0.95rem;box-sizing:border-box;margin-bottom:1.5rem;" value="{{ user.project_funding_required if user.project_funding_required else '' }}">
+
         <label for="project_files" style="margin-top: 1.5rem;">Supporting Files</label>
-        <p class="muted" style="margin-bottom: 0.5rem;">Upload images, videos, or documents to support your project proposal.</p>
+        <p class="muted" style="margin-bottom: 0.5rem;">Upload unlimited images, videos, or documents to support your project proposal.</p>
         <input type="file" id="project_files" name="project_files" multiple accept="image/*,video/*,.pdf,.doc,.docx,.txt">
-        <p class="file-hint">You can select multiple files. Accepted formats: Images (JPG, PNG, etc.), Videos (MP4, etc.), Documents (PDF, DOC, TXT)</p>
+        <p class="file-hint">You can select multiple files. Accepted formats: Images (JPG, PNG, etc.), Videos (MP4, etc.), Documents (PDF, DOC, TXT). No limit on uploads.</p>
 
         {% if user.project_files %}
         <div style="margin-top: 1rem;">

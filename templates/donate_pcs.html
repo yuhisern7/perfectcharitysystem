@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Support PCS Internal Operations - PCS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%); color: #f5f7ff; min-height: 100vh; }
+    header { padding: 1.5rem 2rem; background: rgba(14, 20, 36, 0.9); border-bottom: 1px solid rgba(94, 226, 255, 0.2); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; }
+    header h1 { margin: 0; font-size: 1.8rem; background: linear-gradient(135deg, #5fe2ff, #4f9cff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    header p { margin: 0.3rem 0 0; color: #a9b3d4; font-size: 0.9rem; }
+    .container { max-width: 800px; margin: 2rem auto; padding: 0 2rem; }
+    .back-link { display: inline-block; margin-bottom: 1.5rem; color: #5fe2ff; text-decoration: none; font-size: 0.9rem; }
+    .back-link:hover { text-decoration: underline; }
+    section { margin-bottom: 2rem; background: rgba(21, 27, 44, 0.7); border: 1px solid rgba(79, 156, 255, 0.2); border-radius: 12px; padding: 1.5rem; }
+    h2 { margin-top: 0; font-size: 1.3rem; color: #fff; }
+    .muted { color: #a9b3d4; font-size: 0.85rem; }
+    label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #c4cbea; font-weight: 500; }
+    input[type="number"] { width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #313a55; background: #0e1424; color: #f5f7ff; font-size: 1rem; box-sizing: border-box; }
+    button { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 1rem; cursor: pointer; }
+    button:hover { opacity: 0.9; }
+    .balance-display { background: rgba(94, 226, 255, 0.1); border: 1px solid rgba(94, 226, 255, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; }
+    .balance-display strong { color: #5fe2ff; font-size: 1.2rem; }
+    .info-box { background: rgba(31, 37, 54, 0.5); border: 1px solid rgba(94, 226, 255, 0.15); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; }
+    .warning { background: rgba(255, 159, 64, 0.1); border: 1px solid rgba(255, 159, 64, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; color: #ffcf96; }
+    .success-msg { background: rgba(94, 226, 255, 0.1); border: 1px solid rgba(94, 226, 255, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; color: #5fe2ff; }
+  </style>
+</head>
+<body>
+  <header>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+      <div>
+        <h1>Support PCS Internal Operations</h1>
+        <p>Help maintain infrastructure and transparency</p>
+      </div>
+      <div>
+        <a href="/profile" style="display:inline-block;padding:0.65rem 1.3rem;border-radius:6px;border:none;background:linear-gradient(135deg,#4f9cff,#5fe2ff);color:#050814;font-weight:600;font-size:0.9rem;text-decoration:none;">My Profile</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <a href="/search" class="back-link">← Back to Search</a>
+
+    <div class="info-box">
+      <h3 style="margin:0 0 0.5rem 0;color:#5fe2ff;">🏢 About PCS Internal Operations</h3>
+      <p style="margin:0.25rem 0;color:#c4cbea;">Your donations support:</p>
+      <ul style="margin:0.5rem 0;padding-left:1.5rem;color:#c4cbea;line-height:1.8;">
+        <li>VPS hosting and infrastructure</li>
+        <li>SSL certificates for security</li>
+        <li>Domain registration</li>
+        <li>Backups and data protection</li>
+        <li>IT maintenance and monitoring</li>
+        <li>Transparent staff salaries (when applicable)</li>
+      </ul>
+      <p style="margin:0.5rem 0 0 0;" class="muted">All expenses are tracked transparently on the blockchain and visible to all users.</p>
+    </div>
+
+    <section>
+      <h2>Make a Donation</h2>
+      <p class="muted" style="margin-bottom: 1.5rem;">
+        Your donation will help keep PCS running transparently and efficiently for everyone.
+      </p>
+
+      <div class="balance-display">
+        <p class="muted" style="margin: 0 0 0.5rem 0;">Your wallet balance:</p>
+        <strong>{{ "%.2f"|format(balance) }} PCS</strong>
+      </div>
+
+      {% if balance <= 0 %}
+      <div class="warning">
+        ⚠️ You don't have any PCS in your wallet. Please <a href="/purchase-crypto" style="color: #5fe2ff; text-decoration: underline;">purchase PCS</a> first to make a donation.
+      </div>
+      {% else %}
+      
+      <form method="post" action="/donate-pcs/donate">
+        <label for="amount">Donation Amount (PCS)</label>
+        <input type="number" id="amount" name="amount" step="0.01" min="0.01" max="{{ balance }}" placeholder="Enter amount" required>
+        <p class="muted" style="margin: 0.5rem 0 1.5rem 0;">Maximum: {{ "%.2f"|format(balance) }} PCS</p>
+
+        <button type="submit">💝 Donate to PCS Operations</button>
+      </form>
+
+      <div class="success-msg" style="margin-top: 1.5rem;">
+        ✓ Your donation will be immediately recorded on the blockchain for complete transparency.
+      </div>
+      {% endif %}
+    </section>
+
+    <section style="background: rgba(31, 37, 54, 0.5); border-color: rgba(94, 226, 255, 0.15);">
+      <h2 style="font-size: 1.1rem;">💡 Why Support PCS?</h2>
+      <ul class="muted" style="line-height: 1.8; margin: 0.5rem 0 0 1.2rem;">
+        <li>100% transparency - all operational costs are public</li>
+        <li>Zero profit - PCS is a non-profit system</li>
+        <li>Every donation is tracked on the blockchain</li>
+        <li>Supports infrastructure that helps thousands donate efficiently</li>
+        <li>No hidden fees or administrative overhead</li>
+      </ul>
+    </section>
+  </div>
+</body>
+</html>

@@ -291,7 +291,9 @@
           </div>
         </div>
 
-        <a href="#" class="btn" style="margin-top:0.5rem;">Support PCS</a>
+        {% if current_user.role == 'donor' %}
+        <a href="/donate-pcs" class="btn" style="margin-top:0.5rem;">Support PCS</a>
+        {% endif %}
       </section>
 
       <section>

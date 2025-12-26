@@ -296,6 +296,16 @@
           <a href="/login" class="btn" style="font-size:1rem;padding:0.75rem 2rem;background:linear-gradient(135deg, #6b7280, #9ca3af);">Login to Donate</a>
         </div>
       </section>
+
+      {% if profile_user.project_description %}
+      <section style="background:rgba(94, 226, 255, 0.1);border:2px solid rgba(94, 226, 255, 0.3);text-align:center;">
+        <h2 style="margin:0 0 0.5rem 0;">🎯 External Service Project</h2>
+        <p class="muted" style="margin:0 0 1rem 0;">{{ profile_user.username }} is working on a physical charity initiative</p>
+        <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+          <a href="/login" class="btn" style="font-size:1rem;padding:0.75rem 2rem;">Login to View Project</a>
+        </div>
+      </section>
+      {% endif %}
       
       <section style="text-align:center;background:#0e1424;">
         <h2 style="margin:0 0 0.5rem 0;font-size:1.1rem;">🌍 About Perfect Charity System</h2>

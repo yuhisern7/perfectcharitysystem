@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PCS – Edit User</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background: #0b1020; color: #f5f7ff; }
+      header { padding: 1.5rem 2rem; background: #111727; border-bottom: 1px solid #232a3d; }
+      header h1 { margin: 0; font-size: 1.7rem; }
+      header p { margin: 0.3rem 0 0; color: #a9b3d4; font-size: 0.9rem; }
+      main { padding: 1.5rem 2rem 3rem; max-width: 600px; margin: 0 auto; }
+      section { background: #151b2c; border-radius: 10px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); }
+      h2 { margin-top: 0; font-size: 1.3rem; }
+      h3 { margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1.1rem; }
+      .muted { color: #8a92b6; font-size: 0.85rem; }
+      label { display: block; margin-bottom: 0.35rem; font-size: 0.9rem; color: #c4cbea; margin-top: 0.75rem; }
+      input, select, textarea { width: 100%; padding: 0.55rem 0.7rem; margin-bottom: 0.5rem; border-radius: 6px; border: 1px solid #313a55; background: #0e1424; color: #f5f7ff; font-size: 0.9rem; box-sizing: border-box; }
+      textarea { resize: vertical; }
+      input:focus, select:focus, textarea:focus { outline: none; border-color: #4f9cff; box-shadow: 0 0 0 1px rgba(79, 156, 255, 0.4); }
+      button, .btn { padding: 0.55rem 1.2rem; border-radius: 6px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 0.9rem; cursor: pointer; text-decoration: none; display: inline-block; }
+      button:hover, .btn:hover { filter: brightness(1.05); }
+      button[type="submit"] { width: 100%; margin-top: 1rem; }
+      a { color: #5fe2ff; text-decoration: none; }
+      .badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem; }
+      .badge-donor { background: #2a5f7f; color: #5fe2ff; }
+      .badge-receiver { background: #5f2a7f; color: #e55fff; }
+      .badge-charity_org { background: #7f5f2a; color: #ffe55f; }
+      
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        header { padding: 1rem; }
+        header h1 { font-size: 1.4rem; }
+        header > div { flex-direction: column; gap: 0.75rem; align-items: flex-start !important; }
+        header > div > div { width: 100%; display: flex; gap: 0.5rem; }
+        header .btn { flex: 1; text-align: center; margin: 0 !important; }
+        main { padding: 1rem; }
+        section { padding: 1.25rem; }
+      }
+      
+      @media (max-width: 480px) {
+        header { padding: 0.75rem; }
+        header h1 { font-size: 1.25rem; }
+        main { padding: 0.75rem; }
+        section { padding: 1rem; }
+        button, .btn { padding: 0.5rem 1rem; font-size: 0.85rem; }
+        input, select, textarea { padding: 0.5rem 0.6rem; font-size: 0.85rem; }
+        label { font-size: 0.85rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+        <div>
+          <h1>Edit User</h1>
+          <p class="muted">Inspector: {{ inspector.username }}</p>
+        </div>
+        <div>
+          <a href="/inspector/user/{{ target_user.user_id }}" class="btn">Back to User</a>
+        </div>
+      </div>
+    </header>
+    <main>
+      <section>
+        <h2>{{ target_user.username }}<span class="badge badge-{{ target_user.role }}">{{ target_user.role }}</span></h2>
+        <p class="muted">Edit account details for this user. Username and email changes will update login credentials.</p>
+        
+        <form method="post" action="/inspector/user/{{ target_user.user_id }}/edit">
+          <h3>Account Information</h3>
+          
+          <label for="username">Username <span style="color:#ff5f5f;">*</span></label>
+          <input id="username" name="username" type="text" required placeholder="Username" value="{{ target_user.username }}" />
+
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="contact@example.com" value="{{ target_user.email if target_user.email else '' }}" />
+
+          <h3>Contact Information</h3>
+
+          <label for="phone">WhatsApp</label>
+          <input id="phone" name="phone" type="tel" placeholder="+1 (555) 123-4567" value="{{ target_user.phone if target_user.phone else '' }}" />
+
+          <label for="xchat">XChat</label>
+          <input id="xchat" name="xchat" type="text" placeholder="@username" value="{{ target_user.xchat if target_user.xchat else '' }}" />
+
+          <label for="physical_address">Physical address</label>
+          <textarea id="physical_address" name="physical_address" rows="3" placeholder="Street address, city, postal code, country">{{ target_user.physical_address if target_user.physical_address else '' }}</textarea>
+
+          <h3>Location Information</h3>
+
+          <label for="country">Country</label>
+          <input id="country" name="country" type="text" placeholder="Country" value="{{ target_user.country if target_user.country else '' }}" />
+
+          <label for="state">State/Province</label>
+          <input id="state" name="state" type="text" placeholder="State/Province" value="{{ target_user.state if target_user.state else '' }}" />
+
+          <label for="city">City</label>
+          <input id="city" name="city" type="text" placeholder="City" value="{{ target_user.city if target_user.city else '' }}" />
+
+          {% if target_user.role in ['receiver', 'charity_org'] %}
+          <h3>Bank Details</h3>
+          <p class="muted" style="margin-top:0;margin-bottom:0.75rem;">Bank account information for cryptocurrency purchases.</p>
+
+          {% set bank_fields = {"bank_name": "", "bank_account": "", "bank_account_name": "", "bank_swift": ""} %}
+          {% if target_user.bank_details %}
+            {% for line in target_user.bank_details.split('\n') %}
+              {% if line.startswith("Bank Name:") %}
+                {% set _ = bank_fields.update({"bank_name": line.replace("Bank Name:", "").strip()}) %}
+              {% elif line.startswith("Account Number:") %}
+                {% set _ = bank_fields.update({"bank_account": line.replace("Account Number:", "").strip()}) %}
+              {% elif line.startswith("Account Name:") %}
+                {% set _ = bank_fields.update({"bank_account_name": line.replace("Account Name:", "").strip()}) %}
+              {% elif line.startswith("Swift/Routing:") %}
+                {% set _ = bank_fields.update({"bank_swift": line.replace("Swift/Routing:", "").strip()}) %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+
+          <label for="bank_name">Bank Name</label>
+          <input id="bank_name" name="bank_name" type="text" placeholder="Bank name" value="{{ bank_fields.bank_name }}" />
+
+          <label for="bank_account">Account Number</label>
+          <input id="bank_account" name="bank_account" type="text" placeholder="Account number" value="{{ bank_fields.bank_account }}" />
+
+          <label for="bank_account_name">Account Name</label>
+          <input id="bank_account_name" name="bank_account_name" type="text" placeholder="Account holder name" value="{{ bank_fields.bank_account_name }}" />
+
+          <label for="bank_swift">Swift/Routing</label>
+          <input id="bank_swift" name="bank_swift" type="text" placeholder="Swift/routing code" value="{{ bank_fields.bank_swift }}" />
+
+          <h3>Payment Gateways</h3>
+
+          <label for="payment_gateways">Western Union</label>
+          <textarea id="payment_gateways" name="payment_gateways" rows="4" placeholder="Western Union details">{{ target_user.payment_gateways if target_user.payment_gateways else '' }}</textarea>
+
+          <label for="other_payment_gateways">Other Payment Gateways</label>
+          <textarea id="other_payment_gateways" name="other_payment_gateways" rows="4" placeholder="PayPal, cryptocurrency wallets, etc.">{{ target_user.other_payment_gateways if target_user.other_payment_gateways else '' }}</textarea>
+          {% endif %}
+
+          <button type="submit">Save Changes</button>
+        </form>
+
+        <p class="muted" style="text-align:center;margin-top:1.5rem;">
+          <a href="/inspector/user/{{ target_user.user_id }}">← Cancel and go back</a>
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

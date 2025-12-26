@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Donate to {{ project_user.project_name or project_user.username }}'s Project - PCS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%); color: #f5f7ff; min-height: 100vh; }
+    header { padding: 1.5rem 2rem; background: rgba(14, 20, 36, 0.9); border-bottom: 1px solid rgba(94, 226, 255, 0.2); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; }
+    header h1 { margin: 0; font-size: 1.8rem; background: linear-gradient(135deg, #5fe2ff, #4f9cff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    header p { margin: 0.3rem 0 0; color: #a9b3d4; font-size: 0.9rem; }
+    .container { max-width: 800px; margin: 2rem auto; padding: 0 2rem; }
+    .back-link { display: inline-block; margin-bottom: 1.5rem; color: #5fe2ff; text-decoration: none; font-size: 0.9rem; }
+    .back-link:hover { text-decoration: underline; }
+    section { margin-bottom: 2rem; background: rgba(21, 27, 44, 0.7); border: 1px solid rgba(79, 156, 255, 0.2); border-radius: 12px; padding: 1.5rem; }
+    h2 { margin-top: 0; font-size: 1.3rem; color: #fff; }
+    .muted { color: #a9b3d4; font-size: 0.85rem; }
+    label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #c4cbea; font-weight: 500; }
+    input[type="number"] { width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #313a55; background: #0e1424; color: #f5f7ff; font-size: 1rem; box-sizing: border-box; }
+    button { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; font-size: 1rem; cursor: pointer; }
+    button:hover { opacity: 0.9; }
+    .balance-display { background: rgba(94, 226, 255, 0.1); border: 1px solid rgba(94, 226, 255, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; }
+    .balance-display strong { color: #5fe2ff; font-size: 1.2rem; }
+    .project-info { background: rgba(31, 37, 54, 0.5); border: 1px solid rgba(94, 226, 255, 0.15); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; }
+    .project-info h3 { margin: 0 0 0.5rem 0; color: #5fe2ff; font-size: 1.1rem; }
+    .project-info p { margin: 0.25rem 0; color: #c4cbea; }
+    .warning { background: rgba(255, 159, 64, 0.1); border: 1px solid rgba(255, 159, 64, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; color: #ffcf96; }
+    .success-msg { background: rgba(94, 226, 255, 0.1); border: 1px solid rgba(94, 226, 255, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; color: #5fe2ff; }
+  </style>
+</head>
+<body>
+  <header>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+      <div>
+        <h1>Donate to Project</h1>
+        <p>Support {{ project_user.username }}'s initiative</p>
+      </div>
+      <div>
+        <a href="/profile" style="display:inline-block;padding:0.65rem 1.3rem;border-radius:6px;border:none;background:linear-gradient(135deg,#4f9cff,#5fe2ff);color:#050814;font-weight:600;font-size:0.9rem;text-decoration:none;">My Profile</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <a href="/view-project/{{ project_user.user_id }}" class="back-link">← Back to Project</a>
+
+    <div class="project-info">
+      <h3>{{ project_user.project_name or "Untitled Project" }}</h3>
+      <p><strong>Creator:</strong> {{ project_user.username }}</p>
+      {% if project_user.project_funding_required %}
+      <p><strong>Funding Required:</strong> {{ project_user.project_funding_required }}</p>
+      {% endif %}
+      <p><strong>Total Raised:</strong> {{ "%.2f"|format(project_user.project_donations_received) }} PCS</p>
+    </div>
+
+    <section>
+      <h2>Make a Donation</h2>
+      <p class="muted" style="margin-bottom: 1.5rem;">
+        Your donation will directly support {{ project_user.username }}'s project and help make a difference.
+      </p>
+
+      <div class="balance-display">
+        <p class="muted" style="margin: 0 0 0.5rem 0;">Your wallet balance:</p>
+        <strong>{{ "%.2f"|format(balance) }} PCS</strong>
+      </div>
+
+      {% if balance <= 0 %}
+      <div class="warning">
+        ⚠️ You don't have any PCS in your wallet. Please <a href="/purchase-crypto" style="color: #5fe2ff; text-decoration: underline;">purchase PCS</a> first to make a donation.
+      </div>
+      {% else %}
+      
+      <form method="post" action="/donate-project/{{ project_user.user_id }}/donate">
+        <label for="amount">Donation Amount (PCS)</label>
+        <input type="number" id="amount" name="amount" step="0.01" min="0.01" max="{{ balance }}" placeholder="Enter amount" required>
+        <p class="muted" style="margin: 0.5rem 0 1.5rem 0;">Maximum: {{ "%.2f"|format(balance) }} PCS</p>
+
+        <button type="submit">🎁 Donate Now</button>
+      </form>
+
+      <div class="success-msg" style="margin-top: 1.5rem;">
+        ✓ Your donation will be immediately transferred to {{ project_user.username }}'s wallet and recorded on the blockchain.
+      </div>
+      {% endif %}
+    </section>
+
+    <section style="background: rgba(31, 37, 54, 0.5); border-color: rgba(94, 226, 255, 0.15);">
+      <h2 style="font-size: 1.1rem;">💡 About Project Donations</h2>
+      <ul class="muted" style="line-height: 1.8; margin: 0.5rem 0 0 1.2rem;">
+        <li>100% of your donation goes directly to the project creator</li>
+        <li>All transactions are recorded on the blockchain for transparency</li>
+        <li>You can view all your donations in your profile</li>
+        <li>Project creators will be notified of your contribution</li>
+        <li>No fees or commissions are deducted</li>
+      </ul>
+    </section>
+  </div>
+</body>
+</html>

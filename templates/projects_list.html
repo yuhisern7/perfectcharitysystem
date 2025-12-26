@@ -282,6 +282,16 @@
 								<span class="info-label">Location:</span>
 								<span class="info-value">{{ project.state or "N/A" }}</span>
 							</div>
+							{% if project.project_funding_required %}
+							<div class="project-info-row">
+								<span class="info-label">Funding:</span>
+								<span class="info-value" style="color: #3498db; font-weight: bold;">{{ project.project_funding_required }}</span>
+							</div>
+							{% endif %}
+							<div class="project-info-row">
+								<span class="info-label">Raised:</span>
+								<span class="info-value" style="color: #2ecc71; font-weight: bold;">{{ "%.2f"|format(project.project_donations_received) }} PCS</span>
+							</div>
 						</div>
 						
 						<a href="/view-project/{{ project.user_id }}" class="view-project-btn">View Project Details</a>

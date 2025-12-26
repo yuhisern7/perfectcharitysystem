@@ -203,6 +203,9 @@ class User:
 	project_name: str = ""
 	project_description: str = ""
 	project_files: List[str] = field(default_factory=list)
+	project_funding_required: str = ""  # Amount of funding needed for project
+	project_donations_received: float = 0.0  # Total donations received for this project
+	project_donors: List[Dict] = field(default_factory=list)  # List of donors who contributed to project
 
 
 USERS: Dict[str, User] = {}
@@ -752,8 +755,8 @@ async def register(
 	_log_security_event(user, "ACCOUNT_CREATED", f"Donor account created: {email} ({username})", request.client.host if request.client else "")
 	
 	USERS[user_id] = user
-	USERNAME_INDEX[username] = user_id  # Index by username
-	USERNAME_INDEX[email] = user_id  # Also index by email for login flexibility
+	USERNAME_INDEX[username.lower()] = user_id  # Index by username (lowercase)
+	USERNAME_INDEX[email.lower()] = user_id  # Also index by email for login flexibility (lowercase)
 	_save_users()
 
 	# OWASP A01:2021 - Broken Access Control: Secure session
@@ -775,18 +778,24 @@ async def login_page(request: Request):
 @app.post("/login", response_class=RedirectResponse)
 async def login(request: Request, username: str = Form(...), password: str = Form(...), role: str = Form(...)):
 	# OWASP A03:2021 - Injection: Sanitize inputs
-	username = _sanitize_username(username)
+	username_input = username.strip()
 	selected_role = role.strip().lower()
 	client_ip = request.client.host if request.client else "unknown"
 	user_agent = request.headers.get("user-agent", "")
 	
 	# Username can be either username or email
-	user_id = USERNAME_INDEX.get(username)
+	# Try email lookup first (case-insensitive), then username lookup
+	user_id = USERNAME_INDEX.get(username_input.lower())
+	if not user_id:
+		# Try sanitized username (removes special chars)
+		sanitized = _sanitize_username(username_input)
+		user_id = USERNAME_INDEX.get(sanitized)
+	
 	if not user_id:
 		# OWASP A07:2021 - Authentication: Log failed attempt with AI monitoring
 		security_check = pcs_ai.assess_login_attempt(
 			ip_address=client_ip,
-			username=username,
+			username=username_input,
 			success=False,
 			user_agent=user_agent,
 		)
@@ -1186,6 +1195,7 @@ async def save_external_services(
 	request: Request,
 	project_name: str = Form(""),
 	project_description: str = Form(""),
+	project_funding_required: str = Form(""),
 	project_files: List[UploadFile] = File([]),
 ):
 	"""Save external service project description and files."""
@@ -1195,8 +1205,9 @@ async def save_external_services(
 	
 	user.project_name = project_name.strip()
 	user.project_description = project_description.strip()
+	user.project_funding_required = project_funding_required.strip()
 	
-	# Handle file uploads
+	# Handle file uploads (no limit)
 	uploads_dir = BASE_DIR / "uploads"
 	uploads_dir.mkdir(exist_ok=True)
 	
@@ -1236,6 +1247,240 @@ async def view_project(request: Request, user_id: str):
 			"project_user": project_user,
 		},
 	)
+
+
+@app.get("/donate-project/{user_id}", response_class=HTMLResponse)
+async def donate_project_page(request: Request, user_id: str):
+	"""Page for donating to a user's external service project."""
+	donor = _get_current_user(request)
+	if not donor or donor.role != "donor":
+		return RedirectResponse(url="/", status_code=303)
+	
+	project_user = USERS.get(user_id)
+	if not project_user or not project_user.project_description:
+		return RedirectResponse(url="/projects", status_code=303)
+	
+	# Redirect if trying to donate to own project
+	if donor.user_id == project_user.user_id:
+		return RedirectResponse(url=f"/view-project/{user_id}", status_code=303)
+	
+	# Get donor's wallet balance
+	if donor.wallet_id:
+		balance = pcs_api.pcs_wallet.calculate_balance_for_wallet(donor.wallet_id)
+	else:
+		balance = 0.0
+	
+	# Get unread notification count
+	notification_count = _get_unread_notification_count(donor)
+	
+	return templates.TemplateResponse(
+		"donate_project.html",
+		{
+			"request": request,
+			"donor": donor,
+			"project_user": project_user,
+			"balance": balance,
+			"notification_count": notification_count,
+		},
+	)
+
+
+@app.post("/donate-project/{user_id}/donate", response_class=RedirectResponse)
+async def process_project_donation(
+	request: Request,
+	user_id: str,
+	amount: float = Form(...),
+):
+	"""Process a donation to a user's external service project."""
+	donor = _get_current_user(request)
+	if not donor or donor.role != "donor":
+		return RedirectResponse(url="/", status_code=303)
+	
+	project_user = USERS.get(user_id)
+	if not project_user or not project_user.project_description:
+		return RedirectResponse(url="/projects", status_code=303)
+	
+	# Prevent users from donating to their own projects
+	if donor.user_id == project_user.user_id:
+		return RedirectResponse(url=f"/view-project/{user_id}", status_code=303)
+	
+	if amount <= 0:
+		return RedirectResponse(url=f"/donate-project/{user_id}", status_code=303)
+	
+	# Ensure donor has a wallet
+	if not donor.wallet_id:
+		donor.wallet_id = pcs_api.pcs_wallet.create_wallet_id()
+		_save_users()
+	
+	# Check if donor has sufficient balance
+	donor_balance = pcs_api.pcs_wallet.calculate_balance_for_wallet(donor.wallet_id)
+	if donor_balance < amount:
+		return RedirectResponse(url=f"/donate-project/{user_id}", status_code=303)
+	
+	# Ensure project owner has a wallet
+	if not project_user.wallet_id:
+		project_user.wallet_id = pcs_api.pcs_wallet.create_wallet_id()
+		_save_users()
+	
+	# Create blockchain transaction for project donation
+	try:
+		block = pcs_api.blockchain.create_donation(
+			from_wallet=donor.wallet_id,
+			to_wallet=project_user.wallet_id,
+			amount=amount,
+			profile_id=project_user.user_id,
+			message=f"Project donation: {project_user.project_name or 'Untitled'}",
+		)
+		# Save blockchain to disk
+		pcs_persistence.save_blockchain(pcs_api.blockchain.to_dict())
+	except Exception as e:
+		print(f"Error creating blockchain transaction for project donation: {e}")
+		return RedirectResponse(url=f"/donate-project/{user_id}", status_code=303)
+	
+	# Record the donation
+	donation_record = {
+		"donor_id": donor.user_id,
+		"donor_username": donor.username,
+		"amount": amount,
+		"timestamp": datetime.utcnow().isoformat(),
+	}
+	project_user.project_donors.append(donation_record)
+	project_user.project_donations_received += amount
+	
+	# Create notification for project owner
+	_create_notification(
+		project_user,
+		"project_donation",
+		"Project Donation Received",
+		f"{donor.username} donated {amount:.2f} PCS to your project: {project_user.project_name or 'Untitled'}",
+		f"/view-project/{project_user.user_id}"
+	)
+	
+	_save_users()
+	
+	# Redirect to project view page
+	return RedirectResponse(url=f"/view-project/{user_id}", status_code=303)
+
+
+@app.get("/donate-pcs", response_class=HTMLResponse)
+async def donate_pcs_page(request: Request):
+	"""Page for donating to PCS internal operations."""
+	donor = _get_current_user(request)
+	if not donor or donor.role != "donor":
+		return RedirectResponse(url="/", status_code=303)
+	
+	# Get donor's wallet balance
+	if donor.wallet_id:
+		balance = pcs_api.pcs_wallet.calculate_balance_for_wallet(donor.wallet_id)
+	else:
+		balance = 0.0
+	
+	# Get unread notification count
+	notification_count = _get_unread_notification_count(donor)
+	
+	# Create or get PCS system user for receiving donations
+	pcs_system_user = None
+	for user in USERS.values():
+		if user.username == "PCS_SYSTEM":
+			pcs_system_user = user
+			break
+	
+	# Create PCS system user if doesn't exist
+	if not pcs_system_user:
+		pcs_user_id = f"user_{uuid.uuid4().hex}"
+		pcs_wallet_id = pcs_api.pcs_wallet.create_wallet_id()
+		pcs_system_user = User(
+			user_id=pcs_user_id,
+			username="PCS_SYSTEM",
+			password_hash=_hash_password(uuid.uuid4().hex),  # Random password
+			role="receiver",
+			wallet_id=pcs_wallet_id,
+			country="Global",
+			state="N/A",
+			city="N/A",
+			email="operations@perfectcharitysystem.org",
+			intro="Perfect Charity System Internal Operations Fund - Supporting infrastructure, maintenance, and staff salaries to keep PCS running transparently.",
+		)
+		USERS[pcs_user_id] = pcs_system_user
+		_save_users()
+	
+	return templates.TemplateResponse(
+		"donate_pcs.html",
+		{
+			"request": request,
+			"donor": donor,
+			"balance": balance,
+			"notification_count": notification_count,
+		},
+	)
+
+
+@app.post("/donate-pcs/donate", response_class=RedirectResponse)
+async def process_pcs_donation(
+	request: Request,
+	amount: float = Form(...),
+):
+	"""Process a donation to PCS internal operations."""
+	donor = _get_current_user(request)
+	if not donor or donor.role != "donor":
+		return RedirectResponse(url="/", status_code=303)
+	
+	if amount <= 0:
+		return RedirectResponse(url="/donate-pcs", status_code=303)
+	
+	# Ensure donor has a wallet
+	if not donor.wallet_id:
+		donor.wallet_id = pcs_api.pcs_wallet.create_wallet_id()
+		_save_users()
+	
+	# Check if donor has sufficient balance
+	donor_balance = pcs_api.pcs_wallet.calculate_balance_for_wallet(donor.wallet_id)
+	if donor_balance < amount:
+		return RedirectResponse(url="/donate-pcs", status_code=303)
+	
+	# Get or create PCS system user
+	pcs_system_user = None
+	for user in USERS.values():
+		if user.username == "PCS_SYSTEM":
+			pcs_system_user = user
+			break
+	
+	if not pcs_system_user:
+		return RedirectResponse(url="/donate-pcs", status_code=303)
+	
+	# Ensure PCS system user has a wallet
+	if not pcs_system_user.wallet_id:
+		pcs_system_user.wallet_id = pcs_api.pcs_wallet.create_wallet_id()
+		_save_users()
+	
+	# Create blockchain transaction for PCS donation
+	try:
+		block = pcs_api.blockchain.create_donation(
+			from_wallet=donor.wallet_id,
+			to_wallet=pcs_system_user.wallet_id,
+			amount=amount,
+			profile_id=pcs_system_user.user_id,
+			message=f"Donation to PCS Internal Operations",
+		)
+		# Save blockchain to disk
+		pcs_persistence.save_blockchain(pcs_api.blockchain.to_dict())
+	except Exception as e:
+		print(f"Error creating blockchain transaction for PCS donation: {e}")
+		return RedirectResponse(url="/donate-pcs", status_code=303)
+	
+	# Create notification for donor
+	_create_notification(
+		donor,
+		"pcs_donation",
+		"PCS Donation Successful",
+		f"Thank you for donating {amount:.2f} PCS to support PCS internal operations!",
+		"/donate-pcs"
+	)
+	
+	_save_users()
+	
+	# Redirect to search page
+	return RedirectResponse(url="/search", status_code=303)
 
 
 @app.get("/projects", response_class=HTMLResponse)
@@ -2356,6 +2601,113 @@ async def inspector_delete_user(request: Request, user_id: str):
 	
 	_save_users()
 	return RedirectResponse(url="/inspector/users", status_code=303)
+
+
+@app.get("/inspector/user/{user_id}/edit", response_class=HTMLResponse)
+async def inspector_edit_user_page(request: Request, user_id: str):
+	"""Edit user account details page."""
+	inspector = _require_inspector(request)
+	
+	target = USERS.get(user_id)
+	if not target:
+		return RedirectResponse(url="/inspector/users", status_code=303)
+	
+	return templates.TemplateResponse(
+		"inspector_edit_user.html",
+		{
+			"request": request,
+			"inspector": inspector,
+			"target_user": target,
+		},
+	)
+
+
+@app.post("/inspector/user/{user_id}/edit", response_class=RedirectResponse)
+async def inspector_update_user(
+	request: Request,
+	user_id: str,
+	username: str = Form(...),
+	email: str = Form(""),
+	phone: str = Form(""),
+	xchat: str = Form(""),
+	physical_address: str = Form(""),
+	country: str = Form(""),
+	state: str = Form(""),
+	city: str = Form(""),
+	bank_name: str = Form(""),
+	bank_account: str = Form(""),
+	bank_account_name: str = Form(""),
+	bank_swift: str = Form(""),
+	payment_gateways: str = Form(""),
+	other_payment_gateways: str = Form(""),
+):
+	"""Update user account details."""
+	inspector = _require_inspector(request)
+	
+	target = USERS.get(user_id)
+	if not target:
+		return RedirectResponse(url="/inspector/users", status_code=303)
+	
+	# Check if username changed and if new username is available
+	old_username = target.username
+	new_username = _sanitize_username(username.strip())
+	
+	if new_username != old_username:
+		if new_username in USERNAME_INDEX and USERNAME_INDEX[new_username] != user_id:
+			# Username already taken
+			return RedirectResponse(url=f"/inspector/user/{user_id}/edit", status_code=303)
+		
+		# Update username index
+		if old_username.lower() in USERNAME_INDEX:
+			del USERNAME_INDEX[old_username.lower()]
+		USERNAME_INDEX[new_username.lower()] = user_id
+		target.username = new_username
+	
+	# Update email in index if changed
+	if email.strip() and email.strip() != target.email:
+		old_email = target.email
+		new_email = _sanitize_email(email.strip())
+		
+		if new_email != old_email:
+			if new_email in USERNAME_INDEX and USERNAME_INDEX[new_email] != user_id:
+				# Email already taken
+				return RedirectResponse(url=f"/inspector/user/{user_id}/edit", status_code=303)
+			
+			# Update email index
+			if old_email.lower() in USERNAME_INDEX:
+				del USERNAME_INDEX[old_email.lower()]
+			if new_email:
+				USERNAME_INDEX[new_email.lower()] = user_id
+			target.email = new_email
+	
+	# Update contact information
+	target.phone = phone.strip()
+	target.xchat = xchat.strip()
+	target.physical_address = physical_address.strip()
+	
+	# Update location
+	target.country = country.strip()
+	target.state = state.strip()
+	target.city = city.strip()
+	
+	# Update bank details (for receivers and charity orgs)
+	if target.role in ["receiver", "charity_org"]:
+		bank_details_lines = []
+		if bank_name.strip():
+			bank_details_lines.append(f"Bank Name: {bank_name.strip()}")
+		if bank_account.strip():
+			bank_details_lines.append(f"Account Number: {bank_account.strip()}")
+		if bank_account_name.strip():
+			bank_details_lines.append(f"Account Name: {bank_account_name.strip()}")
+		if bank_swift.strip():
+			bank_details_lines.append(f"Swift/Routing: {bank_swift.strip()}")
+		
+		target.bank_details = "\n".join(bank_details_lines)
+		target.payment_gateways = payment_gateways.strip()
+		target.other_payment_gateways = other_payment_gateways.strip()
+	
+	_save_users()
+	return RedirectResponse(url=f"/inspector/user/{user_id}", status_code=303)
 
 
 @app.get("/inspector/create-receiver", response_class=HTMLResponse)

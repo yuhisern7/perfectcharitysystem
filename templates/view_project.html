@@ -77,6 +77,19 @@
       <div class="project-content">{{ project_user.project_description }}</div>
     </section>
 
+    {% if project_user.project_funding_required %}
+    <section style="background: rgba(94, 226, 255, 0.1); border: 2px solid rgba(94, 226, 255, 0.3);">
+      <h2 style="color: #5fe2ff;">💰 Funding Required</h2>
+      <p style="font-size: 1.5rem; font-weight: 600; margin: 0.5rem 0; color: #5fe2ff;">{{ project_user.project_funding_required }}</p>
+      <p class="muted" style="margin-bottom: 1rem;">Total raised: {{ "%.2f"|format(project_user.project_donations_received) }} PCS</p>
+      {% if viewer and viewer.role == 'donor' and viewer.user_id != project_user.user_id %}
+      <a href="/donate-project/{{ project_user.user_id }}" class="btn" style="font-size: 1rem; padding: 0.75rem 2rem;">🎁 Donate for project</a>
+      {% elif viewer and viewer.user_id == project_user.user_id %}
+      <p class="muted" style="font-style: italic;">You cannot donate to your own project</p>
+      {% endif %}
+    </section>
+    {% endif %}
+
     {% if project_user.project_files %}
     <section>
       <h2>Supporting Files</h2>

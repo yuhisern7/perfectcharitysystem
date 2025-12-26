@@ -157,6 +157,7 @@
               <td>
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
                   <a href="/inspector/user/{{ user.user_id }}" class="btn btn-sm">View</a>
+                  <a href="/inspector/user/{{ user.user_id }}/edit" class="btn btn-sm" style="background:linear-gradient(135deg, #4f9cff, #5fe2ff);">Edit</a>
                   {% if not user.is_banned %}
                   <form method="post" action="/inspector/user/{{ user.user_id }}/ban-quick" style="display:inline;">
                     <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Ban {{ user.username }}?')">Ban</button>

@@ -261,6 +261,19 @@
       </section>
       {% endif %}
 
+      {% if profile_user.project_description %}
+      <section style="background:rgba(94, 226, 255, 0.1);border:2px solid rgba(94, 226, 255, 0.3);">
+        <h2 style="margin:0 0 0.5rem 0;">🎯 External Service Project</h2>
+        <p class="muted" style="margin:0 0 1rem 0;">{{ profile_user.username }} is working on a physical charity initiative</p>
+        <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
+          <a href="/view-project/{{ profile_user.user_id }}" class="btn" style="font-size:1rem;padding:0.75rem 2rem;">View project</a>
+          {% if viewer.role == 'donor' and viewer.user_id != profile_user.user_id %}
+          <a href="/donate-project/{{ profile_user.user_id }}" class="btn" style="font-size:1rem;padding:0.75rem 2rem;background:linear-gradient(135deg, #2ecc71, #27ae60);">Donate for project</a>
+          {% endif %}
+        </div>
+      </section>
+      {% endif %}
+
       {% endif %}
     </main>
   </body>
