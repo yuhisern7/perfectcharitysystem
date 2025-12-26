@@ -29,8 +29,15 @@ A blockchain-based charity donation platform with transparent transaction tracki
    ```
 
 3. **Install dependencies:**
+   
+   **Windows:**
    ```bash
    pip install -r requirements.txt
+   ```
+   
+   **Linux/Mac:**
+   ```bash
+   pip3 install -r requirements.txt
    ```
 
 ### **Running the Server:**
