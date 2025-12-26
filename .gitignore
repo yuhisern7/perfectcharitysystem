@@ -62,7 +62,6 @@ Thumbs.db
 
 # Project specific
 data/
-uploads/
 *.log
 *.db
 *.sqlite3
