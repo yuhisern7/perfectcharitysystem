@@ -6,6 +6,35 @@ A blockchain-based charity donation platform with transparent transaction tracki
 
 ## 🚀 Quick Start - How to Run the Server
 
+### **First Time Setup:**
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yuhisern7/perfectcharitysystem.git
+   cd perfectcharitysystem
+   ```
+
+2. **Create and activate virtual environment:**
+   
+   **Windows:**
+   ```bash
+   python -m venv venv
+   venv\Scripts\activate
+   ```
+   
+   **Linux/Mac:**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### **Running the Server:**
+
 ### **Windows:**
 ```bash
 # Method 1: Using startup script (easiest)

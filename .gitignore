@@ -61,7 +61,8 @@ venv.bak/
 Thumbs.db
 
 # Project specific
-data/
+data/*.json
+!data/.gitkeep
 *.log
 *.db
 *.sqlite3
