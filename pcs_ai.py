@@ -1838,5 +1838,96 @@ def get_complete_deanonymization_payload(ip_address: str, threat_level: str = "h
     }
 
 
+def export_all_monitoring_data() -> dict:
+    """
+    Export all AI monitoring data for download/backup.
+    Returns a comprehensive snapshot of all security data.
+    """
+    return {
+        "export_timestamp": datetime.now().isoformat(),
+        "threat_log": _threat_log,
+        "blocked_ips": list(_blocked_ips),
+        "fingerprint_tracker": {
+            fp: {
+                "ips_used": list(data["ips_used"]),
+                "user_agents": list(data["user_agents"]),
+                "first_seen": data["first_seen"],
+                "total_requests": data["total_requests"]
+            }
+            for fp, data in _fingerprint_tracker.items()
+        },
+        "proxy_chain_tracker": dict(_proxy_chain_tracker),
+        "real_ip_correlation": {
+            ip: list(correlated_ips) for ip, correlated_ips in _real_ip_correlation.items()
+        },
+        "statistics": {
+            "total_threats": len(_threat_log),
+            "total_blocked_ips": len(_blocked_ips),
+            "total_fingerprints": len(_fingerprint_tracker),
+            "total_ip_correlations": len(_real_ip_correlation),
+            "total_proxy_chains": len(_proxy_chain_tracker)
+        }
+    }
+
+
+def clear_all_monitoring_data() -> dict:
+    """
+    Clear ALL AI monitoring data (threat logs, blocked IPs, tracking data).
+    WARNING: This is a destructive operation. Returns summary of cleared data.
+    """
+    global _threat_log, _blocked_ips, _fingerprint_tracker, _proxy_chain_tracker, _real_ip_correlation
+    
+    # Count before clearing
+    summary = {
+        "threats_cleared": len(_threat_log),
+        "ips_unblocked": len(_blocked_ips),
+        "fingerprints_cleared": len(_fingerprint_tracker),
+        "ip_correlations_cleared": len(_real_ip_correlation),
+        "proxy_chains_cleared": len(_proxy_chain_tracker),
+        "cleared_at": datetime.now().isoformat()
+    }
+    
+    # Clear all data structures
+    _threat_log.clear()
+    _blocked_ips.clear()
+    _fingerprint_tracker.clear()
+    _proxy_chain_tracker.clear()
+    _real_ip_correlation.clear()
+    
+    # Clear persistent storage files
+    _save_threat_log()
+    _save_blocked_ips()
+    
+    return summary
+
+
+def clear_threat_log_only() -> dict:
+    """Clear only the threat log, preserving blocked IPs and tracking data."""
+    global _threat_log
+    
+    count = len(_threat_log)
+    _threat_log.clear()
+    _save_threat_log()
+    
+    return {
+        "threats_cleared": count,
+        "cleared_at": datetime.now().isoformat()
+    }
+
+
+def clear_blocked_ips_only() -> dict:
+    """Clear only the blocked IPs list, preserving threat logs and tracking data."""
+    global _blocked_ips
+    
+    count = len(_blocked_ips)
+    _blocked_ips.clear()
+    _save_blocked_ips()
+    
+    return {
+        "ips_unblocked": count,
+        "cleared_at": datetime.now().isoformat()
+    }
+
+
 # Load persistent threat data on module import
 _load_threat_data()

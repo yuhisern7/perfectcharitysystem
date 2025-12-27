@@ -26,7 +26,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from fastapi import FastAPI, Request, Form, UploadFile, File, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse, Response
+from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse, Response, JSONResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.staticfiles import StaticFiles
@@ -2888,6 +2888,70 @@ async def inspector_ai_monitoring(request: Request):
 			"threat_logs": threat_logs[:100],  # Show latest 100 threats
 		},
 	)
+
+
+@app.get("/inspector/ai-monitoring/export")
+async def export_monitoring_data(request: Request):
+	"""Export all AI monitoring data as JSON file."""
+	inspector = _require_inspector(request)
+	
+	# Get comprehensive data export
+	export_data = pcs_ai.export_all_monitoring_data()
+	
+	# Generate filename with timestamp
+	timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+	filename = f"pcs_monitoring_export_{timestamp}.json"
+	
+	# Return as downloadable JSON file
+	return Response(
+		content=json.dumps(export_data, indent=2, default=str),
+		media_type="application/json",
+		headers={
+			"Content-Disposition": f"attachment; filename={filename}"
+		}
+	)
+
+
+@app.post("/inspector/ai-monitoring/clear-all")
+async def clear_all_data(request: Request):
+	"""Clear ALL monitoring data (destructive operation)."""
+	inspector = _require_inspector(request)
+	
+	summary = pcs_ai.clear_all_monitoring_data()
+	
+	return JSONResponse({
+		"success": True,
+		"message": "All monitoring data cleared successfully",
+		"summary": summary
+	})
+
+
+@app.post("/inspector/ai-monitoring/clear-threats")
+async def clear_threats_only(request: Request):
+	"""Clear only threat logs, preserve blocked IPs."""
+	inspector = _require_inspector(request)
+	
+	summary = pcs_ai.clear_threat_log_only()
+	
+	return JSONResponse({
+		"success": True,
+		"message": "Threat logs cleared successfully",
+		"summary": summary
+	})
+
+
+@app.post("/inspector/ai-monitoring/clear-blocked-ips")
+async def clear_blocked_ips_only(request: Request):
+	"""Clear only blocked IPs, preserve threat logs."""
+	inspector = _require_inspector(request)
+	
+	summary = pcs_ai.clear_blocked_ips_only()
+	
+	return JSONResponse({
+		"success": True,
+		"message": "Blocked IPs cleared successfully",
+		"summary": summary
+	})
 
 
 @app.get("/inspector/add-coins", response_class=HTMLResponse)

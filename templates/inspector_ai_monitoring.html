@@ -72,10 +72,35 @@
         <p class="muted">Government-Grade Threat Detection • Real IP Revelation • Law Enforcement Tracking</p>
       </div>
       <div style="display: flex; gap: 0.75rem;">
+        <button onclick="exportData()" style="background: linear-gradient(135deg, #5fff9f, #4fdd88);">💾 Export Data</button>
+        <button onclick="showClearMenu()" style="background: linear-gradient(135deg, #ff5f5f, #dd4f4f);">🗑️ Clear Data</button>
         <a href="/inspector/users" class="btn">👥 User Management</a>
         <a href="/profile" class="btn">← Back to Profile</a>
       </div>
     </header>
+    
+    <!-- Clear Data Modal -->
+    <div id="clearModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 9999; align-items: center; justify-content: center;">
+      <div style="background: #151b2c; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7); border: 2px solid #ff5f5f;">
+        <h2 style="margin-top: 0; color: #ff5f5f;">⚠️ Clear Monitoring Data</h2>
+        <p style="color: #a9b3d4; margin-bottom: 1.5rem;">Choose what data to clear. This action cannot be undone!</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <button onclick="clearData('all')" style="background: linear-gradient(135deg, #ff5f5f, #dd4f4f); width: 100%; padding: 0.75rem;">
+            🔥 Clear ALL Data (Threats + Blocked IPs + Tracking)
+          </button>
+          <button onclick="clearData('threats')" style="background: linear-gradient(135deg, #ffb85f, #dd9f4f); width: 100%; padding: 0.75rem;">
+            📋 Clear Threat Logs Only
+          </button>
+          <button onclick="clearData('blocked-ips')" style="background: linear-gradient(135deg, #5fe2ff, #4fc9dd); width: 100%; padding: 0.75rem;">
+            🚫 Clear Blocked IPs Only
+          </button>
+          <button onclick="closeClearMenu()" style="background: linear-gradient(135deg, #4a5568, #3a4558); width: 100%; padding: 0.75rem;">
+            ✖️ Cancel
+          </button>
+        </div>
+      </div>
+    </div>
 
     <main>
       <!-- VPN/Tor De-Anonymization Stats -->
@@ -471,6 +496,70 @@
           location.reload();
         }
       }, 1000);
+      
+      // Export monitoring data
+      function exportData() {
+        window.location.href = '/inspector/ai-monitoring/export';
+      }
+      
+      // Show clear data modal
+      function showClearMenu() {
+        document.getElementById('clearModal').style.display = 'flex';
+      }
+      
+      // Close clear data modal
+      function closeClearMenu() {
+        document.getElementById('clearModal').style.display = 'none';
+      }
+      
+      // Clear data based on type
+      async function clearData(type) {
+        let endpoint = '';
+        let confirmMsg = '';
+        
+        if (type === 'all') {
+          confirmMsg = 'Are you sure you want to clear ALL monitoring data? This includes:\n- All threat logs\n- All blocked IPs\n- All fingerprint tracking\n- All IP correlations\n- All proxy chain data\n\nThis action CANNOT be undone!';
+          endpoint = '/inspector/ai-monitoring/clear-all';
+        } else if (type === 'threats') {
+          confirmMsg = 'Clear all threat logs? Blocked IPs and tracking data will be preserved.\n\nThis action cannot be undone!';
+          endpoint = '/inspector/ai-monitoring/clear-threats';
+        } else if (type === 'blocked-ips') {
+          confirmMsg = 'Clear all blocked IPs? Threat logs and tracking data will be preserved.\n\nThis action cannot be undone!';
+          endpoint = '/inspector/ai-monitoring/clear-blocked-ips';
+        }
+        
+        if (!confirm(confirmMsg)) {
+          return;
+        }
+        
+        try {
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            alert('✅ ' + result.message + '\n\nSummary: ' + JSON.stringify(result.summary, null, 2));
+            closeClearMenu();
+            location.reload();
+          } else {
+            alert('❌ Error: ' + (result.message || 'Unknown error'));
+          }
+        } catch (error) {
+          alert('❌ Network error: ' + error.message);
+        }
+      }
+      
+      // Close modal when clicking outside
+      document.getElementById('clearModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeClearMenu();
+        }
+      });
     </script>
   </body>
 </html>
