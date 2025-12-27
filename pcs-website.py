@@ -34,7 +34,7 @@ from starlette.staticfiles import StaticFiles
 import perfectcharitysystem as pcs_api
 import pcs_persistence
 import pcs_ai
-import config
+from config import config
 
 
 BASE_DIR = pathlib.Path(__file__).resolve().parent
@@ -2866,6 +2866,9 @@ async def inspector_ai_monitoring(request: Request):
 	# Get AI threat statistics
 	stats = pcs_ai.get_threat_statistics()
 	
+	# Get VPN/Tor de-anonymization statistics
+	vpn_stats = pcs_ai.get_vpn_tor_statistics()
+	
 	# Get blocked IPs list
 	blocked_ips = pcs_ai.get_blocked_ips()
 	
@@ -2880,6 +2883,7 @@ async def inspector_ai_monitoring(request: Request):
 			"request": request,
 			"user": inspector,
 			"stats": stats,
+			"vpn_stats": vpn_stats,
 			"blocked_ips": blocked_ips,
 			"threat_logs": threat_logs[:100],  # Show latest 100 threats
 		},
