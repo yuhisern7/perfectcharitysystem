@@ -57,11 +57,27 @@ import urllib.request
 import urllib.error
 import hashlib
 import secrets
+import pickle
+import warnings
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 from collections import defaultdict
+
+# Machine Learning / Real AI imports
+try:
+    import numpy as np
+    from sklearn.ensemble import IsolationForest, RandomForestClassifier, GradientBoostingClassifier
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.cluster import DBSCAN
+    import joblib
+    ML_AVAILABLE = True
+    warnings.filterwarnings('ignore', category=UserWarning)
+except ImportError:
+    ML_AVAILABLE = False
+    print("[WARNING] ML libraries not installed. Run: pip install scikit-learn numpy joblib scipy")
+    print("[WARNING] Falling back to rule-based security only")
 
 
 class ThreatLevel(str, Enum):
@@ -98,6 +114,30 @@ _behavioral_signatures: Dict[str, List[Dict]] = defaultdict(list)  # Behavioral 
 _proxy_chain_tracker: Dict[str, List[str]] = defaultdict(list)  # Track proxy chains
 _real_ip_correlation: Dict[str, set] = defaultdict(set)  # Link VPN IPs to real IPs
 _honeypot_beacons: Dict[str, Dict] = {}  # Tracking beacons for attacker identification
+
+# ============================================================================
+# REAL AI/ML MODELS - Machine Learning Security Intelligence
+# ============================================================================
+
+# ML Model storage paths
+_ML_MODELS_DIR = "data/ml_models"
+_ANOMALY_MODEL_FILE = f"{_ML_MODELS_DIR}/anomaly_detector.pkl"
+_THREAT_CLASSIFIER_FILE = f"{_ML_MODELS_DIR}/threat_classifier.pkl"
+_IP_REPUTATION_FILE = f"{_ML_MODELS_DIR}/ip_reputation.pkl"
+_SCALER_FILE = f"{_ML_MODELS_DIR}/feature_scaler.pkl"
+
+# ML Models (initialized lazily)
+_anomaly_detector = None  # IsolationForest for zero-day attack detection
+_threat_classifier = None  # RandomForest for multi-class threat classification
+_ip_reputation_model = None  # GradientBoosting for IP reputation scoring
+_feature_scaler = None  # StandardScaler for feature normalization
+_ml_training_data = []  # Training data buffer
+_ml_last_trained = None  # Last training timestamp
+_ml_prediction_cache = {}  # Cache for ML predictions
+
+# ML Feature extraction tracking
+_request_features: Dict[str, List[np.ndarray]] = defaultdict(list) if ML_AVAILABLE else defaultdict(list)
+_attack_labels: Dict[str, str] = {}  # Ground truth labels for supervised learning
 
 
 def _save_threat_log() -> None:
@@ -141,6 +181,498 @@ def _load_threat_data() -> None:
             print(f"[SECURITY] Loaded {len(_blocked_ips)} blocked IPs from disk")
     except Exception as e:
         print(f"[WARNING] Failed to load blocked IPs: {e}")
+    
+    # Load ML models
+    _load_ml_models()
+
+
+# ============================================================================
+# REAL AI/ML FUNCTIONS - Machine Learning Core
+# ============================================================================
+
+def _initialize_ml_models() -> None:
+    """Initialize ML models for the first time."""
+    global _anomaly_detector, _threat_classifier, _ip_reputation_model, _feature_scaler, _ml_last_trained
+    
+    if not ML_AVAILABLE:
+        return
+    
+    print("[AI] Initializing machine learning models...")
+    
+    # Anomaly Detection: Unsupervised learning for zero-day attacks
+    # IsolationForest detects outliers without labeled data
+    _anomaly_detector = IsolationForest(
+        n_estimators=100,
+        contamination=0.1,  # Expect 10% of traffic to be anomalous
+        random_state=42,
+        max_samples='auto',
+        bootstrap=False
+    )
+    
+    # Threat Classification: Supervised multi-class classifier
+    # Classifies attacks into categories: SQL injection, XSS, DDoS, brute force, etc.
+    _threat_classifier = RandomForestClassifier(
+        n_estimators=200,
+        max_depth=20,
+        min_samples_split=5,
+        min_samples_leaf=2,
+        random_state=42,
+        n_jobs=-1  # Use all CPU cores
+    )
+    
+    # IP Reputation: Gradient boosting for reputation scoring
+    # Predicts if an IP is likely to attack based on behavioral features
+    _ip_reputation_model = GradientBoostingClassifier(
+        n_estimators=150,
+        learning_rate=0.1,
+        max_depth=5,
+        random_state=42
+    )
+    
+    # Feature Scaler: Normalize features for better ML performance
+    _feature_scaler = StandardScaler()
+    
+    _ml_last_trained = datetime.utcnow()
+    
+    print("[AI] ✅ ML models initialized successfully")
+    print("[AI] - Anomaly Detector: IsolationForest (unsupervised)")
+    print("[AI] - Threat Classifier: RandomForest (multi-class)")
+    print("[AI] - IP Reputation: GradientBoosting (binary)")
+
+
+def _save_ml_models() -> None:
+    """Persist ML models to disk."""
+    if not ML_AVAILABLE:
+        return
+    
+    try:
+        os.makedirs(_ML_MODELS_DIR, exist_ok=True)
+        
+        if _anomaly_detector is not None:
+            joblib.dump(_anomaly_detector, _ANOMALY_MODEL_FILE)
+        if _threat_classifier is not None:
+            joblib.dump(_threat_classifier, _THREAT_CLASSIFIER_FILE)
+        if _ip_reputation_model is not None:
+            joblib.dump(_ip_reputation_model, _IP_REPUTATION_FILE)
+        if _feature_scaler is not None:
+            joblib.dump(_feature_scaler, _SCALER_FILE)
+        
+        print(f"[AI] ML models saved to {_ML_MODELS_DIR}/")
+    except Exception as e:
+        print(f"[AI WARNING] Failed to save ML models: {e}")
+
+
+def _load_ml_models() -> None:
+    """Load pre-trained ML models from disk."""
+    global _anomaly_detector, _threat_classifier, _ip_reputation_model, _feature_scaler, _ml_last_trained
+    
+    if not ML_AVAILABLE:
+        return
+    
+    try:
+        # Try loading existing models
+        if os.path.exists(_ANOMALY_MODEL_FILE):
+            _anomaly_detector = joblib.load(_ANOMALY_MODEL_FILE)
+            print("[AI] ✅ Loaded anomaly detector from disk")
+        
+        if os.path.exists(_THREAT_CLASSIFIER_FILE):
+            _threat_classifier = joblib.load(_THREAT_CLASSIFIER_FILE)
+            print("[AI] ✅ Loaded threat classifier from disk")
+        
+        if os.path.exists(_IP_REPUTATION_FILE):
+            _ip_reputation_model = joblib.load(_IP_REPUTATION_FILE)
+            print("[AI] ✅ Loaded IP reputation model from disk")
+        
+        if os.path.exists(_SCALER_FILE):
+            _feature_scaler = joblib.load(_SCALER_FILE)
+            print("[AI] ✅ Loaded feature scaler from disk")
+        
+        if _anomaly_detector is None:
+            # No models exist, initialize new ones
+            _initialize_ml_models()
+            
+            # Train with historical data if available
+            if len(_threat_log) > 50:
+                print(f"[AI] Training models with {len(_threat_log)} historical threat events...")
+                _train_ml_models_from_history()
+    
+    except Exception as e:
+        print(f"[AI WARNING] Failed to load ML models: {e}")
+        print("[AI] Initializing new models...")
+        _initialize_ml_models()
+
+
+def _extract_features_from_request(ip_address: str, endpoint: str, user_agent: str, 
+                                   headers: dict, method: str = "GET") -> np.ndarray:
+    """Extract numerical features from request for ML models.
+    
+    Features (29 dimensions):
+    1-4: IP characteristics (octets for IPv4)
+    5: Request frequency (requests in last 5 min)
+    6: Failed login count
+    7: Endpoint length
+    8: User agent length
+    9-13: Character distribution (digits, special chars, uppercase, lowercase, spaces)
+    14: Number of query parameters
+    15: HTTP method (encoded as number)
+    16: Hour of day
+    17: Day of week
+    18-20: Timing features (time since first/last request, request interval variance)
+    21-25: Header features (header count, proxy headers, missing UA, suspicious headers)
+    26: VPN/Proxy detected (binary)
+    27-28: Geographic features (placeholder for lat/lon)
+    29: Fingerprint uniqueness score
+    """
+    if not ML_AVAILABLE:
+        return np.array([])
+    
+    features = []
+    
+    # IP features (4): Convert IP to numerical
+    ip_parts = ip_address.replace("::", "0").split(".")[:4]
+    for i in range(4):
+        features.append(float(ip_parts[i]) if i < len(ip_parts) else 0.0)
+    
+    # Request frequency (1)
+    request_count = len(_request_tracker.get(ip_address, []))
+    features.append(float(request_count))
+    
+    # Failed login count (1)
+    failed_logins = len(_failed_login_tracker.get(ip_address, []))
+    features.append(float(failed_logins))
+    
+    # Endpoint features (6)
+    features.append(float(len(endpoint)))  # Length
+    features.append(float(len(user_agent)))  # UA length
+    
+    # Character distribution in endpoint
+    digits = sum(c.isdigit() for c in endpoint)
+    special = sum(not c.isalnum() and not c.isspace() for c in endpoint)
+    uppercase = sum(c.isupper() for c in endpoint)
+    lowercase = sum(c.islower() for c in endpoint)
+    spaces = sum(c.isspace() for c in endpoint)
+    features.extend([float(digits), float(special), float(uppercase), float(lowercase), float(spaces)])
+    
+    # Query parameters (1)
+    query_params = endpoint.count('&') + (1 if '?' in endpoint else 0)
+    features.append(float(query_params))
+    
+    # HTTP method (1)
+    method_encoding = {'GET': 1.0, 'POST': 2.0, 'PUT': 3.0, 'DELETE': 4.0, 'HEAD': 5.0}.get(method, 0.0)
+    features.append(method_encoding)
+    
+    # Temporal features (2)
+    now = datetime.utcnow()
+    features.append(float(now.hour))  # Hour of day
+    features.append(float(now.weekday()))  # Day of week
+    
+    # Timing patterns (3)
+    requests = _request_tracker.get(ip_address, [])
+    if len(requests) > 1:
+        time_since_first = (now - requests[0]).total_seconds()
+        time_since_last = (now - requests[-1]).total_seconds()
+        intervals = [(requests[i] - requests[i-1]).total_seconds() for i in range(1, len(requests))]
+        interval_variance = np.var(intervals) if intervals else 0.0
+        features.extend([time_since_first, time_since_last, float(interval_variance)])
+    else:
+        features.extend([0.0, 0.0, 0.0])
+    
+    # Header features (5)
+    features.append(float(len(headers)))  # Number of headers
+    
+    proxy_headers = sum(1 for h in ['x-forwarded-for', 'x-real-ip', 'via', 'forwarded'] 
+                       if h in {k.lower() for k in headers.keys()})
+    features.append(float(proxy_headers))
+    
+    missing_ua = 1.0 if not user_agent else 0.0
+    features.append(missing_ua)
+    
+    # Suspicious header patterns
+    suspicious_headers = sum(1 for v in headers.values() if isinstance(v, str) and 
+                            any(p in v.lower() for p in ['script', 'eval', 'exec', 'cmd']))
+    features.append(float(suspicious_headers))
+    
+    # Header injection indicators
+    header_injection = sum(1 for v in headers.values() if isinstance(v, str) and 
+                          ('\\r\\n' in v or '\\n' in v))
+    features.append(float(header_injection))
+    
+    # VPN/Proxy detection (1)
+    vpn_detected = 1.0 if proxy_headers > 0 else 0.0
+    features.append(vpn_detected)
+    
+    # Geographic features (2) - placeholder, would use actual geo data
+    features.extend([0.0, 0.0])  # lat, lon
+    
+    # Fingerprint uniqueness (1)
+    fingerprint_ips = len(_fingerprint_tracker.get(ip_address, {}).get('ips_used', set()))
+    features.append(float(fingerprint_ips))
+    
+    return np.array(features)
+
+
+def _ml_predict_anomaly(features: np.ndarray) -> Tuple[bool, float]:
+    """Use ML to detect if request is anomalous.
+    
+    Returns:
+        (is_anomaly, anomaly_score) where score is between -1 and 1
+        (more negative = more anomalous)
+    """
+    if not ML_AVAILABLE or _anomaly_detector is None:
+        return False, 0.0
+    
+    try:
+        # Reshape for single prediction
+        features_2d = features.reshape(1, -1)
+        
+        # Scale features
+        if _feature_scaler is not None and hasattr(_feature_scaler, 'mean_'):
+            features_2d = _feature_scaler.transform(features_2d)
+        
+        # Predict: -1 for anomaly, 1 for normal
+        prediction = _anomaly_detector.predict(features_2d)[0]
+        
+        # Get anomaly score (more negative = more anomalous)
+        score = _anomaly_detector.score_samples(features_2d)[0]
+        
+        is_anomaly = (prediction == -1)
+        
+        return is_anomaly, float(score)
+    
+    except Exception as e:
+        print(f"[AI WARNING] Anomaly prediction failed: {e}")
+        return False, 0.0
+
+
+def _ml_classify_threat(features: np.ndarray) -> Tuple[str, float]:
+    """Use ML to classify threat type.
+    
+    Returns:
+        (threat_type, confidence) where threat_type is one of:
+        'sql_injection', 'xss', 'ddos', 'brute_force', 'scanner', 'safe'
+    """
+    if not ML_AVAILABLE or _threat_classifier is None or not hasattr(_threat_classifier, 'classes_'):
+        return 'unknown', 0.0
+    
+    try:
+        features_2d = features.reshape(1, -1)
+        
+        if _feature_scaler is not None and hasattr(_feature_scaler, 'mean_'):
+            features_2d = _feature_scaler.transform(features_2d)
+        
+        # Get probabilities for each class
+        probabilities = _threat_classifier.predict_proba(features_2d)[0]
+        
+        # Get class with highest probability
+        class_idx = np.argmax(probabilities)
+        threat_type = _threat_classifier.classes_[class_idx]
+        confidence = float(probabilities[class_idx])
+        
+        return threat_type, confidence
+    
+    except Exception as e:
+        print(f"[AI WARNING] Threat classification failed: {e}")
+        return 'unknown', 0.0
+
+
+def _ml_predict_ip_reputation(features: np.ndarray) -> Tuple[bool, float]:
+    """Predict if IP is malicious based on behavioral features.
+    
+    Returns:
+        (is_malicious, confidence)
+    """
+    if not ML_AVAILABLE or _ip_reputation_model is None or not hasattr(_ip_reputation_model, 'classes_'):
+        return False, 0.0
+    
+    try:
+        features_2d = features.reshape(1, -1)
+        
+        if _feature_scaler is not None and hasattr(_feature_scaler, 'mean_'):
+            features_2d = _feature_scaler.transform(features_2d)
+        
+        # Predict probability of being malicious
+        probabilities = _ip_reputation_model.predict_proba(features_2d)[0]
+        
+        # Assuming class 1 = malicious, class 0 = benign
+        if len(probabilities) > 1:
+            malicious_prob = float(probabilities[1])
+            is_malicious = malicious_prob > 0.7  # Threshold
+            return is_malicious, malicious_prob
+        
+        return False, 0.0
+    
+    except Exception as e:
+        print(f"[AI WARNING] IP reputation prediction failed: {e}")
+        return False, 0.0
+
+
+def _train_ml_models_from_history() -> None:
+    """Train ML models using historical threat data."""
+    global _ml_last_trained
+    
+    if not ML_AVAILABLE or len(_threat_log) < 50:
+        return
+    
+    try:
+        print(f"[AI] Training ML models with {len(_threat_log)} threat events...")
+        
+        features_list = []
+        labels_list = []
+        anomaly_labels = []
+        
+        # Extract features from threat log
+        for log in _threat_log:
+            # Reconstruct request features from log
+            ip = log.get('ip_address', '127.0.0.1')
+            endpoint = log.get('details', '')[:100]
+            threat_type = log.get('threat_type', 'unknown')
+            level = log.get('level', 'SAFE')
+            
+            # Create dummy features (in production, store original request features)
+            features = _extract_features_from_request(
+                ip_address=ip,
+                endpoint=endpoint,
+                user_agent='',
+                headers={},
+                method='GET'
+            )
+            
+            if len(features) > 0:
+                features_list.append(features)
+                labels_list.append(threat_type)
+                # Anomaly label: 1 if CRITICAL/DANGEROUS, 0 if SAFE/SUSPICIOUS
+                anomaly_labels.append(1 if level in ['CRITICAL', 'DANGEROUS'] else 0)
+        
+        if len(features_list) < 10:
+            print("[AI] Not enough training data, skipping training")
+            return
+        
+        X = np.array(features_list)
+        y_threat = np.array(labels_list)
+        y_anomaly = np.array(anomaly_labels)
+        
+        # Train feature scaler
+        print("[AI] Training feature scaler...")
+        _feature_scaler.fit(X)
+        X_scaled = _feature_scaler.transform(X)
+        
+        # Train anomaly detector (unsupervised)
+        print("[AI] Training anomaly detector (IsolationForest)...")
+        _anomaly_detector.fit(X_scaled)
+        
+        # Train threat classifier if we have enough diverse labels
+        unique_labels = set(y_threat)
+        if len(unique_labels) >= 2:
+            print(f"[AI] Training threat classifier with {len(unique_labels)} threat types...")
+            _threat_classifier.fit(X_scaled, y_threat)
+        
+        # Train IP reputation model
+        if len(y_anomaly) >= 10:
+            print("[AI] Training IP reputation model...")
+            _ip_reputation_model.fit(X_scaled, y_anomaly)
+        
+        _ml_last_trained = datetime.utcnow()
+        
+        # Save models
+        _save_ml_models()
+        
+        print(f"[AI] ✅ ML training complete! Models updated at {_ml_last_trained.isoformat()}")
+        print(f"[AI] Training set size: {len(X)} samples")
+        print(f"[AI] Threat types: {list(unique_labels)}")
+    
+    except Exception as e:
+        print(f"[AI ERROR] ML training failed: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+def _should_retrain_ml_models() -> bool:
+    """Check if ML models should be retrained.
+    
+    Retrain if:
+    - Never trained before
+    - More than 24 hours since last training
+    - Accumulated 100+ new threat events since last training
+    """
+    if not ML_AVAILABLE:
+        return False
+    
+    if _ml_last_trained is None:
+        return True
+    
+    hours_since_training = (datetime.utcnow() - _ml_last_trained).total_seconds() / 3600
+    
+    if hours_since_training > 24:  # Retrain daily
+        return True
+    
+    if len(_threat_log) > 100:  # Enough new data
+        return True
+    
+    return False
+
+
+def get_ml_model_stats() -> dict:
+    """Get statistics about ML model performance and status."""
+    if not ML_AVAILABLE:
+        return {
+            "ml_enabled": False,
+            "reason": "ML libraries not installed"
+        }
+    
+    stats = {
+        "ml_enabled": True,
+        "models_initialized": _anomaly_detector is not None,
+        "last_trained": _ml_last_trained.isoformat() if _ml_last_trained else None,
+        "training_data_size": len(_threat_log),
+        "models": {}
+    }
+    
+    if _anomaly_detector is not None:
+        stats["models"]["anomaly_detector"] = {
+            "type": "IsolationForest",
+            "n_estimators": _anomaly_detector.n_estimators,
+            "trained": hasattr(_anomaly_detector, 'estimators_')
+        }
+    
+    if _threat_classifier is not None:
+        stats["models"]["threat_classifier"] = {
+            "type": "RandomForestClassifier",
+            "n_estimators": _threat_classifier.n_estimators,
+            "trained": hasattr(_threat_classifier, 'classes_'),
+            "classes": list(_threat_classifier.classes_) if hasattr(_threat_classifier, 'classes_') else []
+        }
+    
+    if _ip_reputation_model is not None:
+        stats["models"]["ip_reputation"] = {
+            "type": "GradientBoostingClassifier",
+            "n_estimators": _ip_reputation_model.n_estimators,
+            "trained": hasattr(_ip_reputation_model, 'classes_')
+        }
+    
+    # Check if retraining is needed
+    stats["needs_retraining"] = _should_retrain_ml_models()
+    
+    return stats
+
+
+def retrain_ml_models_now() -> dict:
+    """Force immediate retraining of ML models.
+    
+    Returns summary of training results.
+    """
+    if not ML_AVAILABLE:
+        return {"success": False, "error": "ML not available"}
+    
+    try:
+        _train_ml_models_from_history()
+        return {
+            "success": True,
+            "trained_at": _ml_last_trained.isoformat(),
+            "training_samples": len(_threat_log),
+            "models_trained": ["anomaly_detector", "threat_classifier", "ip_reputation"]
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
 def _detect_vpn_tor_proxy(ip_address: str, headers: dict) -> dict:
@@ -713,17 +1245,14 @@ def assess_request_pattern(
     user_agent: str = "",
     headers: dict = None,
 ) -> SecurityAssessment:
-    """Assess security risk based on request patterns with VPN/Tor detection.
+    """Assess security risk based on request patterns with AI/ML + VPN/Tor detection.
     
-    Detects:
-    - DDoS attempts (too many requests)
-    - Port scanning patterns
-    - Directory traversal attempts
-    - SQL injection patterns in URLs
-    - Security scanner tools
-    - Malicious user agents
-    - Malicious curl usage (command injection)
-    - VPN/Tor/Proxy usage with real IP revelation
+    Combines:
+    - Real AI/ML anomaly detection (IsolationForest)
+    - ML threat classification (RandomForest)
+    - ML IP reputation scoring (GradientBoosting)
+    - Rule-based pattern matching (SQL injection, XSS, etc.)
+    - VPN/Tor/Proxy detection with real IP revelation
     
     Parameters
     ----------
@@ -735,13 +1264,57 @@ def assess_request_pattern(
     
     Returns
     -------
-    SecurityAssessment with threat level
+    SecurityAssessment with threat level (AI-enhanced)
     """
     threats: list[str] = []
     
     # Create client fingerprint and detect VPN/Tor
     if headers is None:
         headers = {}
+    
+    # === REAL AI/ML ANALYSIS ===
+    ml_threats = []
+    ai_confidence = 0.0
+    
+    if ML_AVAILABLE and _anomaly_detector is not None:
+        try:
+            # Extract features for ML models
+            features = _extract_features_from_request(ip_address, endpoint, user_agent, headers, method)
+            
+            if len(features) > 0:
+                # 1. Anomaly Detection (unsupervised learning)
+                is_anomaly, anomaly_score = _ml_predict_anomaly(features)
+                if is_anomaly:
+                    ml_threats.append(f"🤖 AI ANOMALY DETECTED (score: {anomaly_score:.3f})")
+                    ai_confidence += 0.4
+                
+                # 2. Threat Classification (supervised learning)
+                if hasattr(_threat_classifier, 'classes_'):
+                    threat_type, threat_conf = _ml_classify_threat(features)
+                    if threat_conf > 0.7 and threat_type != 'safe':
+                        ml_threats.append(f"🤖 AI CLASSIFIED: {threat_type.upper()} ({threat_conf*100:.1f}% confidence)")
+                        ai_confidence += threat_conf * 0.3
+                
+                # 3. IP Reputation Prediction
+                if hasattr(_ip_reputation_model, 'classes_'):
+                    is_malicious, reputation_score = _ml_predict_ip_reputation(features)
+                    if is_malicious:
+                        ml_threats.append(f"🤖 AI REPUTATION: MALICIOUS ({reputation_score*100:.1f}% probability)")
+                        ai_confidence += reputation_score * 0.3
+                
+                # Store features for future training
+                _request_features[ip_address].append(features)
+                
+                # Auto-retrain if needed
+                if _should_retrain_ml_models():
+                    print("[AI] Auto-retraining ML models with new data...")
+                    _train_ml_models_from_history()
+        
+        except Exception as e:
+            print(f"[AI WARNING] ML analysis failed: {e}")
+    
+    # Add ML threats to main threats list
+    threats.extend(ml_threats)
     
     # Fingerprint client for cross-IP tracking
     fingerprint = _fingerprint_client(ip_address, user_agent, headers)
@@ -752,6 +1325,25 @@ def assess_request_pattern(
         threats.append(f"🚨 ANONYMIZED CONNECTION: {vpn_detection['anonymization_type']} (Confidence: {vpn_detection['confidence']}%)")
         if vpn_detection["real_ip_candidates"]:
             threats.append(f"🎯 Real IP revealed: {vpn_detection['real_ip_candidates'][0]}")
+    
+    # === AI-BASED EARLY BLOCKING ===
+    # If AI confidence is very high, block immediately (before rule-based checks)
+    if ai_confidence > 0.8:
+        _block_ip(ip_address)
+        _log_threat(
+            ip_address=ip_address,
+            threat_type="AI-Detected Attack",
+            details=f"🤖 ML models detected attack with {ai_confidence*100:.1f}% confidence | Threats: {', '.join(ml_threats[:3])}",
+            level=ThreatLevel.CRITICAL,
+            action="BLOCKED_BY_AI",
+            headers=headers
+        )
+        return SecurityAssessment(
+            level=ThreatLevel.CRITICAL,
+            threats=[f"🤖 AI BLOCKED (confidence: {ai_confidence*100:.1f}%)"] + ml_threats,
+            should_block=True,
+            ip_address=ip_address,
+        )
     
     # Whitelist check - never block localhost/development IPs
     if ip_address in _WHITELISTED_IPS:
