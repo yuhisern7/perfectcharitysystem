@@ -2866,6 +2866,9 @@ async def inspector_ai_monitoring(request: Request):
 	# Get AI threat statistics
 	stats = pcs_ai.get_threat_statistics()
 	
+	# Get ML model statistics (NEW: Real AI/ML stats)
+	ml_stats = pcs_ai.get_ml_model_stats()
+	
 	# Get VPN/Tor de-anonymization statistics
 	vpn_stats = pcs_ai.get_vpn_tor_statistics()
 	
@@ -2883,6 +2886,7 @@ async def inspector_ai_monitoring(request: Request):
 			"request": request,
 			"user": inspector,
 			"stats": stats,
+			"ml_stats": ml_stats,  # NEW: Pass ML stats to template
 			"vpn_stats": vpn_stats,
 			"blocked_ips": blocked_ips,
 			"threat_logs": threat_logs[:100],  # Show latest 100 threats
@@ -2952,6 +2956,16 @@ async def clear_blocked_ips_only(request: Request):
 		"message": "Blocked IPs cleared successfully",
 		"summary": summary
 	})
+
+
+@app.post("/inspector/ai-monitoring/retrain-ml")
+async def retrain_ml_models(request: Request):
+	"""Force immediate retraining of ML models."""
+	inspector = _require_inspector(request)
+	
+	result = pcs_ai.retrain_ml_models_now()
+	
+	return JSONResponse(result)
 
 
 @app.get("/inspector/add-coins", response_class=HTMLResponse)

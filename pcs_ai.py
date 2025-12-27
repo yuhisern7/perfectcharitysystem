@@ -139,6 +139,37 @@ _ml_prediction_cache = {}  # Cache for ML predictions
 _request_features: Dict[str, List[np.ndarray]] = defaultdict(list) if ML_AVAILABLE else defaultdict(list)
 _attack_labels: Dict[str, str] = {}  # Ground truth labels for supervised learning
 
+# Enterprise ML Features - Performance Tracking
+_ml_performance_metrics = {
+    "predictions_made": 0,
+    "true_positives": 0,
+    "false_positives": 0,
+    "true_negatives": 0,
+    "false_negatives": 0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1_score": 0.0,
+    "accuracy": 0.0
+}
+
+# Ensemble Voting - Combine multiple model predictions
+_ensemble_weights = {
+    "anomaly_detector": 0.35,
+    "threat_classifier": 0.40,
+    "ip_reputation": 0.25
+}
+
+# Adaptive Thresholds - Learn from feedback
+_adaptive_thresholds = {
+    "anomaly_score": -0.5,  # IsolationForest threshold
+    "threat_confidence": 0.7,  # Classification confidence
+    "reputation_score": 0.7,  # IP reputation threshold
+    "ensemble_threshold": 0.65  # Combined prediction threshold
+}
+
+# Feature Importance Tracking
+_feature_importance_cache = {}
+
 
 def _save_threat_log() -> None:
     """Save threat log to persistent storage."""
@@ -291,10 +322,12 @@ def _load_ml_models() -> None:
             # No models exist, initialize new ones
             _initialize_ml_models()
             
-            # Train with historical data if available
-            if len(_threat_log) > 50:
-                print(f"[AI] Training models with {len(_threat_log)} historical threat events...")
+            # Auto-train with historical data if available (NEW: lowered from 50 to 5)
+            if len(_threat_log) >= 5:
+                print(f"[AI] 🎓 AUTO-TRAINING on startup with {len(_threat_log)} historical threat events...")
                 _train_ml_models_from_history()
+            else:
+                print(f"[AI] 📚 Collecting data for training. Have {len(_threat_log)}/5 events needed.")
     
     except Exception as e:
         print(f"[AI WARNING] Failed to load ML models: {e}")
@@ -510,7 +543,12 @@ def _train_ml_models_from_history() -> None:
     """Train ML models using historical threat data."""
     global _ml_last_trained
     
-    if not ML_AVAILABLE or len(_threat_log) < 50:
+    if not ML_AVAILABLE:
+        return
+    
+    # Lowered threshold: Train with as few as 5 events (was 50)
+    if len(_threat_log) < 5:
+        print(f"[AI] Not enough data to train. Need at least 5 threat events, have {len(_threat_log)}")
         return
     
     try:
@@ -543,8 +581,8 @@ def _train_ml_models_from_history() -> None:
                 # Anomaly label: 1 if CRITICAL/DANGEROUS, 0 if SAFE/SUSPICIOUS
                 anomaly_labels.append(1 if level in ['CRITICAL', 'DANGEROUS'] else 0)
         
-        if len(features_list) < 10:
-            print("[AI] Not enough training data, skipping training")
+        if len(features_list) < 5:
+            print(f"[AI] Not enough training data, need at least 5 samples, have {len(features_list)}")
             return
         
         X = np.array(features_list)
@@ -587,14 +625,21 @@ def _train_ml_models_from_history() -> None:
 
 
 def _should_retrain_ml_models() -> bool:
-    """Check if ML models should be retrained.
+    """Check if ML models should be retrained (AGGRESSIVE AUTO-TRAINING).
     
     Retrain if:
     - Never trained before
-    - More than 24 hours since last training
-    - Accumulated 100+ new threat events since last training
+    - More than 6 hours since last training (VERY FREQUENT)
+    - Accumulated 5+ new threat events since last training (VERY AGGRESSIVE)
+    - Have at least 5 events total
+    
+    This ensures models stay fresh and adapt quickly to new threats.
     """
     if not ML_AVAILABLE:
+        return False
+    
+    # Need minimum data
+    if len(_threat_log) < 5:
         return False
     
     if _ml_last_trained is None:
@@ -602,10 +647,12 @@ def _should_retrain_ml_models() -> bool:
     
     hours_since_training = (datetime.utcnow() - _ml_last_trained).total_seconds() / 3600
     
-    if hours_since_training > 24:  # Retrain daily
+    # Retrain every 6 hours (4x per day) - AGGRESSIVE
+    if hours_since_training > 6:
         return True
     
-    if len(_threat_log) > 100:  # Enough new data
+    # Retrain every 5 new events - VERY AGGRESSIVE
+    if len(_threat_log) % 5 == 0 and len(_threat_log) > 5:
         return True
     
     return False
@@ -624,30 +671,51 @@ def get_ml_model_stats() -> dict:
         "models_initialized": _anomaly_detector is not None,
         "last_trained": _ml_last_trained.isoformat() if _ml_last_trained else None,
         "training_data_size": len(_threat_log),
-        "models": {}
+        "models": {},
+        "performance_metrics": _ml_performance_metrics.copy(),
+        "ensemble_weights": _ensemble_weights.copy(),
+        "adaptive_thresholds": _adaptive_thresholds.copy()
     }
     
     if _anomaly_detector is not None:
-        stats["models"]["anomaly_detector"] = {
+        model_stats = {
             "type": "IsolationForest",
             "n_estimators": _anomaly_detector.n_estimators,
             "trained": hasattr(_anomaly_detector, 'estimators_')
         }
+        # Add feature importance if available
+        if hasattr(_anomaly_detector, 'estimators_') and _feature_importance_cache.get('anomaly'):
+            model_stats["feature_importance_top5"] = _feature_importance_cache['anomaly'][:5]
+        stats["models"]["anomaly_detector"] = model_stats
     
     if _threat_classifier is not None:
-        stats["models"]["threat_classifier"] = {
+        model_stats = {
             "type": "RandomForestClassifier",
             "n_estimators": _threat_classifier.n_estimators,
             "trained": hasattr(_threat_classifier, 'classes_'),
             "classes": list(_threat_classifier.classes_) if hasattr(_threat_classifier, 'classes_') else []
         }
+        # Add feature importance
+        if hasattr(_threat_classifier, 'feature_importances_'):
+            importances = _threat_classifier.feature_importances_
+            top_indices = importances.argsort()[-5:][::-1]
+            model_stats["feature_importance_top5"] = [(int(i), float(importances[i])) for i in top_indices]
+            _feature_importance_cache['classifier'] = model_stats["feature_importance_top5"]
+        stats["models"]["threat_classifier"] = model_stats
     
     if _ip_reputation_model is not None:
-        stats["models"]["ip_reputation"] = {
+        model_stats = {
             "type": "GradientBoostingClassifier",
             "n_estimators": _ip_reputation_model.n_estimators,
             "trained": hasattr(_ip_reputation_model, 'classes_')
         }
+        # Add feature importance
+        if hasattr(_ip_reputation_model, 'feature_importances_'):
+            importances = _ip_reputation_model.feature_importances_
+            top_indices = importances.argsort()[-5:][::-1]
+            model_stats["feature_importance_top5"] = [(int(i), float(importances[i])) for i in top_indices]
+            _feature_importance_cache['reputation'] = model_stats["feature_importance_top5"]
+        stats["models"]["ip_reputation"] = model_stats
     
     # Check if retraining is needed
     stats["needs_retraining"] = _should_retrain_ml_models()
@@ -669,10 +737,144 @@ def retrain_ml_models_now() -> dict:
             "success": True,
             "trained_at": _ml_last_trained.isoformat(),
             "training_samples": len(_threat_log),
-            "models_trained": ["anomaly_detector", "threat_classifier", "ip_reputation"]
+            "models_trained": ["anomaly_detector", "threat_classifier", "ip_reputation"],
+            "performance_metrics": _ml_performance_metrics.copy(),
+            "adaptive_thresholds": _adaptive_thresholds.copy()
         }
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+def _ensemble_predict(features: np.ndarray) -> Tuple[bool, float, dict]:
+    """Ensemble voting: Combine predictions from all ML models.
+    
+    Uses weighted voting to combine:
+    - Anomaly detection (IsolationForest)
+    - Threat classification (RandomForest)
+    - IP reputation (GradientBoosting)
+    
+    Returns:
+        (is_threat, confidence, details)
+    """
+    if not ML_AVAILABLE:
+        return False, 0.0, {}
+    
+    try:
+        predictions = {}
+        scores = {}
+        
+        # 1. Anomaly Detection
+        is_anomaly, anomaly_score = _ml_predict_anomaly(features)
+        predictions['anomaly'] = is_anomaly
+        # Normalize anomaly score to 0-1 range (IsolationForest gives negative scores)
+        normalized_anomaly = max(0.0, min(1.0, (-anomaly_score + 0.5) / 1.5))
+        scores['anomaly'] = normalized_anomaly if is_anomaly else (1.0 - normalized_anomaly)
+        
+        # 2. Threat Classification
+        if hasattr(_threat_classifier, 'classes_'):
+            threat_type, threat_conf = _ml_classify_threat(features)
+            predictions['threat'] = (threat_conf > _adaptive_thresholds['threat_confidence'] and threat_type != 'safe')
+            scores['threat'] = threat_conf
+        else:
+            predictions['threat'] = False
+            scores['threat'] = 0.0
+        
+        # 3. IP Reputation
+        if hasattr(_ip_reputation_model, 'classes_'):
+            is_malicious, reputation_score = _ml_predict_ip_reputation(features)
+            predictions['reputation'] = is_malicious
+            scores['reputation'] = reputation_score
+        else:
+            predictions['reputation'] = False
+            scores['reputation'] = 0.0
+        
+        # Weighted ensemble voting
+        ensemble_score = (
+            scores['anomaly'] * _ensemble_weights['anomaly_detector'] +
+            scores['threat'] * _ensemble_weights['threat_classifier'] +
+            scores['reputation'] * _ensemble_weights['ip_reputation']
+        )
+        
+        is_threat = ensemble_score > _adaptive_thresholds['ensemble_threshold']
+        
+        details = {
+            'predictions': predictions,
+            'scores': scores,
+            'ensemble_score': float(ensemble_score),
+            'threshold': _adaptive_thresholds['ensemble_threshold']
+        }
+        
+        return is_threat, float(ensemble_score), details
+    
+    except Exception as e:
+        print(f"[AI WARNING] Ensemble prediction failed: {e}")
+        return False, 0.0, {}
+
+
+def _update_performance_metrics(predicted_threat: bool, actual_threat: bool) -> None:
+    """Update ML performance metrics based on predictions vs reality.
+    
+    Args:
+        predicted_threat: What the model predicted
+        actual_threat: What actually happened (ground truth)
+    """
+    global _ml_performance_metrics
+    
+    _ml_performance_metrics['predictions_made'] += 1
+    
+    if predicted_threat and actual_threat:
+        _ml_performance_metrics['true_positives'] += 1
+    elif predicted_threat and not actual_threat:
+        _ml_performance_metrics['false_positives'] += 1
+    elif not predicted_threat and actual_threat:
+        _ml_performance_metrics['false_negatives'] += 1
+    else:
+        _ml_performance_metrics['true_negatives'] += 1
+    
+    # Calculate metrics
+    tp = _ml_performance_metrics['true_positives']
+    fp = _ml_performance_metrics['false_positives']
+    fn = _ml_performance_metrics['false_negatives']
+    tn = _ml_performance_metrics['true_negatives']
+    
+    total = tp + fp + tn + fn
+    
+    if total > 0:
+        _ml_performance_metrics['accuracy'] = (tp + tn) / total
+    
+    if (tp + fp) > 0:
+        _ml_performance_metrics['precision'] = tp / (tp + fp)
+    
+    if (tp + fn) > 0:
+        _ml_performance_metrics['recall'] = tp / (tp + fn)
+    
+    precision = _ml_performance_metrics['precision']
+    recall = _ml_performance_metrics['recall']
+    
+    if (precision + recall) > 0:
+        _ml_performance_metrics['f1_score'] = 2 * (precision * recall) / (precision + recall)
+
+
+def _adapt_thresholds() -> None:
+    """Adaptive learning: Adjust thresholds based on performance metrics."""
+    global _adaptive_thresholds
+    
+    # Only adapt if we have enough data
+    if _ml_performance_metrics['predictions_made'] < 100:
+        return
+    
+    precision = _ml_performance_metrics['precision']
+    recall = _ml_performance_metrics['recall']
+    
+    # If too many false positives, increase threshold (be more conservative)
+    if precision < 0.85 and precision > 0:
+        _adaptive_thresholds['ensemble_threshold'] = min(0.85, _adaptive_thresholds['ensemble_threshold'] + 0.02)
+        print(f"[AI ADAPTIVE] Increased ensemble threshold to {_adaptive_thresholds['ensemble_threshold']:.2f} (precision={precision:.2f})")
+    
+    # If too many false negatives, decrease threshold (be more aggressive)
+    elif recall < 0.90 and recall > 0:
+        _adaptive_thresholds['ensemble_threshold'] = max(0.50, _adaptive_thresholds['ensemble_threshold'] - 0.02)
+        print(f"[AI ADAPTIVE] Decreased ensemble threshold to {_adaptive_thresholds['ensemble_threshold']:.2f} (recall={recall:.2f})")
 
 
 def _detect_vpn_tor_proxy(ip_address: str, headers: dict) -> dict:
@@ -994,6 +1196,11 @@ def _log_threat(ip_address: str, threat_type: str, details: str, level: ThreatLe
     
     # Save to disk for persistence
     _save_threat_log()
+    
+    # 🎓 AUTO-TRAINING: Train models automatically when criteria met (SELF-LEARNING)
+    if ML_AVAILABLE and _should_retrain_ml_models():
+        print(f"[AI] 🎓 AUTO-TRAINING triggered after logging threat (total: {len(_threat_log)} events)...")
+        _train_ml_models_from_history()
 
 
 def _block_ip(ip_address: str) -> None:
