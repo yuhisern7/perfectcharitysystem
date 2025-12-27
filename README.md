@@ -225,7 +225,31 @@ Receiver gets monthly credit refills to continue helping others
 - **Threat intelligence logging** - Comprehensive event correlation with geolocation
 - **Dynamic configuration** - Tunable thresholds per threat type
 
-**Protection:** Military-grade defense against cyber attacks, hackers, and automated exploitation tools.
+**🗂️ Monitoring Data Management (NEW):**
+- **Export All Data** - Download complete forensic package as JSON
+  - All threat logs with timestamps, IPs, threat types, severities
+  - All blocked IPs with block reasons and timestamps
+  - Browser fingerprint tracking data (cross-IP correlation)
+  - Proxy chain detections and penetration data
+  - Real IP correlations (VPN/Tor → Real IP mappings)
+  - Complete statistics summary for law enforcement reporting
+  - Timestamped filename: `pcs_monitoring_export_YYYYMMDD_HHMMSS.json`
+- **Granular Data Clearing** - 3 deletion options with double confirmation
+  - **Clear ALL Data** - Complete wipe (threats + blocked IPs + tracking data)
+  - **Clear Threat Logs Only** - Remove historical events, preserve blocked IPs
+  - **Clear Blocked IPs Only** - Unblock all IPs, preserve threat logs
+  - All operations require Inspector authentication
+  - Confirmation dialogs prevent accidental deletion
+  - Summary of cleared items displayed after operation
+  - Auto-refresh dashboard after successful clearing
+- **Use Cases:**
+  - Export data for law enforcement evidence packages
+  - Archive historical threat data for long-term analysis
+  - Clear old logs while maintaining active ban list
+  - Reset system after penetration testing or security audits
+  - Generate compliance reports for regulatory requirements
+
+**Protection:** Military-grade defense against cyber attacks, hackers, and automated exploitation tools with comprehensive data export for law enforcement cooperation.
 
 ---
 
