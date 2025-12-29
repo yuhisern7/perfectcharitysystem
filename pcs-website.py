@@ -2402,32 +2402,39 @@ async def donate(
 
 @app.get("/chain", response_class=HTMLResponse)
 async def view_blockchain(request: Request):
-	"""View all blockchain transactions in a nice HTML format."""
+	"""View blockchain transactions for current user's wallet."""
 	current_user = _get_current_user(request)
 	
-	# Get all blockchain data (excluding genesis block)
+	# Get user's wallet address
+	user_wallet = None
+	if current_user:
+		user_wallet = _users.get(current_user, {}).get("wallet_address")
+	
+	# Get blockchain data filtered by user's wallet (excluding genesis block)
 	all_transactions = []
 	for block in pcs_api.blockchain.chain:
 		for tx in block.transactions:
 			# Skip genesis block transactions
 			if tx.sender == "SYSTEM" and tx.receiver == "SYSTEM":
 				continue
-				
-			# Extract message from metadata if it exists
-			message = ''
-			if hasattr(tx, 'metadata') and tx.metadata:
-				if isinstance(tx.metadata, dict):
-					message = tx.metadata.get('message', '')
-				
-			all_transactions.append({
-				'block_index': block.index,
-				'timestamp': block.timestamp,
-				'from_wallet': tx.sender,
-				'to_wallet': tx.receiver,
-				'amount': tx.amount,
-				'message': message,
-				'block_hash': block.hash,
-			})
+			
+			# Only show transactions involving the current user's wallet
+			if user_wallet and (tx.sender == user_wallet or tx.receiver == user_wallet):
+				# Extract message from metadata if it exists
+				message = ''
+				if hasattr(tx, 'metadata') and tx.metadata:
+					if isinstance(tx.metadata, dict):
+						message = tx.metadata.get('message', '')
+					
+				all_transactions.append({
+					'block_index': block.index,
+					'timestamp': block.timestamp,
+					'from_wallet': tx.sender,
+					'to_wallet': tx.receiver,
+					'amount': tx.amount,
+					'message': message,
+					'block_hash': block.hash,
+				})
 	
 	# Reverse to show newest first
 	all_transactions.reverse()
