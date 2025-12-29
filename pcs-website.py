@@ -2408,7 +2408,7 @@ async def view_blockchain(request: Request):
 	# Get user's wallet address
 	user_wallet = None
 	if current_user:
-		user_wallet = _users.get(current_user, {}).get("wallet_address")
+		user_wallet = _users.get(current_user, {}).get("wallet_id")
 	
 	# Get blockchain data filtered by user's wallet (excluding genesis block)
 	all_transactions = []
