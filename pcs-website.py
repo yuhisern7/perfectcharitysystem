@@ -792,7 +792,7 @@ async def login(request: Request, username: str = Form(...), password: str = For
 		user_id = USERNAME_INDEX.get(sanitized)
 	
 	if not user_id:
-		# OWASP A07:2021 - Authentication: Log failed attempt with AI monitoring
+		# OWASP A07:2021 - Authentication: Log failed attempt
 		security_check = pcs_ai.assess_login_attempt(
 			ip_address=client_ip,
 			username=username_input,
@@ -842,7 +842,7 @@ async def login(request: Request, username: str = Form(...), password: str = For
 		_save_users()
 		return RedirectResponse(url="/login", status_code=303)
 
-	# OWASP A07:2021 - Authentication: Successful login with AI monitoring
+	# OWASP A07:2021 - Authentication: Successful login
 	security_check = pcs_ai.assess_login_attempt(
 		ip_address=client_ip,
 		username=username,
@@ -2856,116 +2856,6 @@ async def inspector_view_locations(request: Request):
 			"location_data": location_data,
 		},
 	)
-
-
-@app.get("/inspector/ai-monitoring", response_class=HTMLResponse)
-async def inspector_ai_monitoring(request: Request):
-	"""AI Security Monitoring Dashboard for law enforcement oversight."""
-	inspector = _require_inspector(request)
-	
-	# Get AI threat statistics
-	stats = pcs_ai.get_threat_statistics()
-	
-	# Get ML model statistics (NEW: Real AI/ML stats)
-	ml_stats = pcs_ai.get_ml_model_stats()
-	
-	# Get VPN/Tor de-anonymization statistics
-	vpn_stats = pcs_ai.get_vpn_tor_statistics()
-	
-	# Get blocked IPs list
-	blocked_ips = pcs_ai.get_blocked_ips()
-	
-	# Get all threat logs from AI module
-	threat_logs = []
-	if hasattr(pcs_ai, '_threat_log'):
-		threat_logs = sorted(pcs_ai._threat_log, key=lambda x: x.get('timestamp', ''), reverse=True)
-	
-	return templates.TemplateResponse(
-		"inspector_ai_monitoring.html",
-		{
-			"request": request,
-			"user": inspector,
-			"stats": stats,
-			"ml_stats": ml_stats,  # NEW: Pass ML stats to template
-			"vpn_stats": vpn_stats,
-			"blocked_ips": blocked_ips,
-			"threat_logs": threat_logs[:100],  # Show latest 100 threats
-		},
-	)
-
-
-@app.get("/inspector/ai-monitoring/export")
-async def export_monitoring_data(request: Request):
-	"""Export all AI monitoring data as JSON file."""
-	inspector = _require_inspector(request)
-	
-	# Get comprehensive data export
-	export_data = pcs_ai.export_all_monitoring_data()
-	
-	# Generate filename with timestamp
-	timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-	filename = f"pcs_monitoring_export_{timestamp}.json"
-	
-	# Return as downloadable JSON file
-	return Response(
-		content=json.dumps(export_data, indent=2, default=str),
-		media_type="application/json",
-		headers={
-			"Content-Disposition": f"attachment; filename={filename}"
-		}
-	)
-
-
-@app.post("/inspector/ai-monitoring/clear-all")
-async def clear_all_data(request: Request):
-	"""Clear ALL monitoring data (destructive operation)."""
-	inspector = _require_inspector(request)
-	
-	summary = pcs_ai.clear_all_monitoring_data()
-	
-	return JSONResponse({
-		"success": True,
-		"message": "All monitoring data cleared successfully",
-		"summary": summary
-	})
-
-
-@app.post("/inspector/ai-monitoring/clear-threats")
-async def clear_threats_only(request: Request):
-	"""Clear only threat logs, preserve blocked IPs."""
-	inspector = _require_inspector(request)
-	
-	summary = pcs_ai.clear_threat_log_only()
-	
-	return JSONResponse({
-		"success": True,
-		"message": "Threat logs cleared successfully",
-		"summary": summary
-	})
-
-
-@app.post("/inspector/ai-monitoring/clear-blocked-ips")
-async def clear_blocked_ips_only(request: Request):
-	"""Clear only blocked IPs, preserve threat logs."""
-	inspector = _require_inspector(request)
-	
-	summary = pcs_ai.clear_blocked_ips_only()
-	
-	return JSONResponse({
-		"success": True,
-		"message": "Blocked IPs cleared successfully",
-		"summary": summary
-	})
-
-
-@app.post("/inspector/ai-monitoring/retrain-ml")
-async def retrain_ml_models(request: Request):
-	"""Force immediate retraining of ML models."""
-	inspector = _require_inspector(request)
-	
-	result = pcs_ai.retrain_ml_models_now()
-	
-	return JSONResponse(result)
 
 
 @app.get("/inspector/add-coins", response_class=HTMLResponse)

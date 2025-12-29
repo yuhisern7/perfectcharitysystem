@@ -2639,7 +2639,7 @@ def get_complete_deanonymization_payload(ip_address: str, threat_level: str = "h
 
 def export_all_monitoring_data() -> dict:
     """
-    Export all AI monitoring data for download/backup.
+    Export all security monitoring data for download/backup.
     Returns a comprehensive snapshot of all security data.
     """
     return {
@@ -2671,7 +2671,7 @@ def export_all_monitoring_data() -> dict:
 
 def clear_all_monitoring_data() -> dict:
     """
-    Clear ALL AI monitoring data (threat logs, blocked IPs, tracking data).
+    Clear ALL security monitoring data (threat logs, blocked IPs, tracking data).
     WARNING: This is a destructive operation. Returns summary of cleared data.
     """
     global _threat_log, _blocked_ips, _fingerprint_tracker, _proxy_chain_tracker, _real_ip_correlation

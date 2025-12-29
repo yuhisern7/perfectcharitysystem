@@ -413,26 +413,21 @@ Receiver gets monthly credit refills to continue helping others
 - **Automatic IP blocking** - Permanent ban for critical threats (AFTER geolocation capture)
 - **Connection dropping** - Instant termination of malicious requests
 - **Rate limiting** - Exponential backoff for repeat offenders
-- **Threat intelligence logging** - Comprehensive event correlation with geolocation
+- **Security event logging** - Comprehensive audit trail with geolocation
 - **Dynamic configuration** - Tunable thresholds per threat type
 
 **🗂️ Monitoring Data Management (NEW):**
 - **Export All Data** - Download complete forensic package as JSON
-  - All threat logs with timestamps, IPs, threat types, severities
   - All blocked IPs with block reasons and timestamps
   - Browser fingerprint tracking data (cross-IP correlation)
   - Proxy chain detections and penetration data
   - Real IP correlations (VPN/Tor → Real IP mappings)
   - Complete statistics summary for law enforcement reporting
   - Timestamped filename: `pcs_monitoring_export_YYYYMMDD_HHMMSS.json`
-- **Granular Data Clearing** - 3 deletion options with double confirmation
-  - **Clear ALL Data** - Complete wipe (threats + blocked IPs + tracking data)
-  - **Clear Threat Logs Only** - Remove historical events, preserve blocked IPs
-  - **Clear Blocked IPs Only** - Unblock all IPs, preserve threat logs
+- **Data Management** - Inspector-controlled operations
+  - View and manage blocked IPs
   - All operations require Inspector authentication
-  - Confirmation dialogs prevent accidental deletion
-  - Summary of cleared items displayed after operation
-  - Auto-refresh dashboard after successful clearing
+  - Complete audit trail maintained
 - **Use Cases:**
   - Export data for law enforcement evidence packages
   - Archive historical threat data for long-term analysis
@@ -498,17 +493,15 @@ Receiver gets monthly credit refills to continue helping others
 - **Ban management** - Inspectors can block fraudulent users
 - **Geographic tracking** - Monitor distribution by country/state
 - **User management** - Complete oversight of all accounts
-- **AI Security Monitoring Dashboard** - Real-time threat visualization
-  - Live threat statistics and blocked IP tracking
-  - Attack type breakdown (SQL injection, XSS, DDoS, etc.)
+- **AI Security Protection** - Real-time threat detection and blocking
+  - Automatic IP blocking for malicious activity
+  - Attack type detection (SQL injection, XSS, DDoS, etc.)
   - Failed login attempt monitoring
-  - Comprehensive threat event log with severity levels
-  - **Geolocation tracking display** - Law enforcement intelligence
+  - Geolocation tracking for law enforcement
     - City, Region, Country for each attack
     - ISP and organization identification
     - GPS coordinates for mapping
     - ASN and timezone data
-  - Auto-refresh every 30 seconds for real-time updates
 - **Manual Coin Addition** - Inspector intervention capabilities
   - Add PCS coins to receiver/charity accounts for emergency relief
   - Amount validation (0.01 - 1,000,000 PCS per transaction)
@@ -722,7 +715,7 @@ PLUS:
   
 - **A07 - Authentication Failures**
   - Account lockout after 3 failed attempts
-  - Brute force detection via AI monitoring
+  - Brute force detection
   - Multi-factor authentication ready
   - Session timeout (30 minutes)
   
@@ -766,7 +759,7 @@ PLUS:
 - ✅ Verified recipient profiles
 - ✅ Zero transaction fees
 - ✅ Multi-currency support
-- ✅ Inspector oversight + Battle-hardened AI security
+- ✅ Inspector oversight with battle-hardened AI security
 
 ---
 
@@ -779,7 +772,7 @@ PLUS:
 | **Transparency** | Quarterly reports | Real-time blockchain |
 | **Donor to Recipient** | 60-85% | 100% |
 | **Fraud Prevention** | Manual audits | AI + Inspector oversight + Attack blocking |
-| **Security Monitoring** | Periodic reviews | Real-time AI dashboard with auto-refresh |
+| **Security Monitoring** | Periodic reviews | Real-time AI threat detection and blocking |
 | **Emergency Response** | Slow/bureaucratic | Inspector coin addition (instant) |
 | **Audit Trail** | Limited/delayed | Complete blockchain + Inspector logs |
 | **Global Access** | Limited | Unlimited |
@@ -808,13 +801,12 @@ PLUS:
 3. **Circular economy model** - Infinite value from finite tokens
 4. **Direct impact** - 100% of donations reach recipients
 5. **Global accessibility** - Works with any payment method
-6. **Law enforcement friendly** - Full inspector oversight with real-time AI monitoring
-7. **Battle-hardened AI security** - Production-grade attack detection and prevention
-8. **DISA STIG compliant** - Military-grade security
-9. **Emergency response ready** - Inspector coin addition for disaster relief
-10. **Complete accountability** - Every action logged and auditable
-11. **SEO-optimized public profiles** - Charities and receivers discoverable via Google search
-12. **Global directory** - Centralized listing of all verified charities and receivers
+6. **Law enforcement friendly** - Full inspector oversight
+7. **DISA STIG compliant** - Military-grade security
+8. **Emergency response ready** - Inspector coin addition for disaster relief
+9. **Complete accountability** - Every action logged and auditable
+10. **SEO-optimized public profiles** - Charities and receivers discoverable via Google search
+11. **Global directory** - Centralized listing of all verified charities and receivers
 
 ---
 
@@ -840,7 +832,7 @@ PLUS:
 - Verifiable impact through blockchain
 - Global accessibility without barriers
 - Security and fraud prevention
-- Real-time threat monitoring with AI dashboard
+- Real-time threat detection and automatic blocking
 - Emergency response capabilities through inspector intervention
 - Complete audit trail for all transactions and administrative actions
 
