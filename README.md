@@ -2,7 +2,8 @@
 
 A blockchain-based charity donation platform with transparent transaction tracking, zero fees, and complete accountability.
 
-**Watch Perfect Charity System logical flow**: https://youtu.be/m-OlfJgl8mY?si=rd03imjPiaXsr0o3
+**Watch Perfect Charity System logical flow**: 
+https://www.youtube.com/watch?v=vbGIIpMVr5E
 
 ---
 
