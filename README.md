@@ -1,5 +1,5 @@
 # Perfect Charity System (PCS)
-The most transparent charity system ever built, each individual will have a profile and the donations are recoded using blockchain technology, you choose your own preferred payment gateway. Each donations are direct, the direct donations are not used to pay for the expenses, the logical flow is engineered to eliminate existing charity crimes.
+The most transparent charity system ever built, each individual will have a profile and the donations are recoded using blockchain technology. Choose your own preferred payment gateway, each donations are direct, these direct donations are not used to pay for the expenses. The logical flow is engineered to eliminate existing charity crimes.
 
 ## Never profits from the donations
 The direct donations towards the suffering poor or existing charity systems are not extracted to pay for the expenses, the expenses are paid via separated donations, such as IT expenses, staffs, travelling to unite the poor, etc. will have a separate section called "Internal Operations". Everything is blockchained, so you would know who are the staffs, how much are their salaries, and what are all the expenses, visible to the public including the financial strength of PCS internal operations.
