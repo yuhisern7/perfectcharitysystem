@@ -9,7 +9,7 @@ Ongoing updates to ensure perfection.
 
 #### Example scenario
 
-Someone is asking for donations, they showed videos and pictures of the poor, if they only require "X" amount, how could we ever know how much much was collected in total ? Their objectives are to receive the most donations possible.
+Someone is asking for donations, they showed videos and pictures of the poor, if they only require "X" amount, how could we ever know how much was collected in total ? Their objectives are to receive the most donations possible.
 
 #### Solution
 
