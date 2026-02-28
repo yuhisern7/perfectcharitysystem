@@ -1,3 +1,5 @@
+![Perfect Charity System](documentation/pcs-banner.png)
+
 # Perfect Charity System (PCS)
 The most transparent charity system ever built, each individual will have a profile and the donations are recoded using blockchain technology. Choose your own preferred payment gateway, each donations are direct, these direct donations are not used to pay for the expenses. The logical flow is engineered to eliminate existing charity crimes.
 
@@ -28,7 +30,7 @@ The direct donations towards the suffering poor or existing charity systems are 
 Perfect Charity System promotes existing gateways, such as Banks, Western Unions, Paypal, Stripe and others, PCS does not profit from the donations, the existing transaction fees are between you and the payment gateway you choose.
 
 ## Absolute transparency
-There are no merchandise sales, no transaction fees, no advertisements, no commisions, no hidden fees and so on, this is built to be the most transparent charity system in history to set the example for the World, that such things are possible.
+There are no merchandise sales, no transaction fees, no advertisements, no commissions, no hidden fees and so on, this is built to be the most transparent charity system in history to set the example for the World, that such things are possible.
 
 ## When will this launch? 
 To run PCS we need hundreds of thousands of dollars, therefore Yuhisern developed Battle-Hardened AI to use his personal profits to finance Perfect Charity System someday.
