@@ -3,7 +3,7 @@ The most transparent charity system ever built, each individual will have a prof
 
 ## Built for Governments worldwide
 
-This system is built for Governments worldwide to reduce the rate of charity crimes.
+This system is built for Governments worldwide, the perfect solution to battle charity crimes while protecting donors and reducing the rate of poverty.
 
 #### Still under development stage
 
