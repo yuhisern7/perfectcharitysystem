@@ -34,18 +34,18 @@ sudo apt install certbot -y
 
 ```bash
 # Option A: Using Git (recommended)
-git clone https://github.com/your-username/PCS.git
-cd PCS
+git clone https://github.com/your-username/perfectcharitysystem.git
+cd perfectcharitysystem
 
 # Option B: Using SCP from your local machine
-# scp -r /path/to/PCS user@your-server-ip:/home/user/
+# scp -r /path/to/perfectcharitysystem user@your-server-ip:/home/user/
 ```
 
 ### 3. Configure Domain and SSL
 
 **Edit apache.conf:**
 ```bash
-nano apache.conf
+nano config/apache.conf
 # Replace "your-domain.com" with your actual domain (appears in multiple places)
 ```
 
@@ -57,10 +57,10 @@ sudo mkdir -p /var/www/certbot
 # Get SSL certificate
 sudo certbot certonly --standalone -d your-domain.com -d www.your-domain.com
 
-# Copy certificates to project
-sudo mkdir -p certs
-sudo cp -r /etc/letsencrypt/* certs/
-sudo chown -R $USER:$USER certs/
+# Copy certificates to project (for Docker Apache container)
+sudo mkdir -p docker/certs
+sudo cp -r /etc/letsencrypt/* docker/certs/
+sudo chown -R $USER:$USER docker/certs/
 ```
 
 ### 4. Set Environment Variables
@@ -88,14 +88,14 @@ sudo ufw enable
 ### 6. Deploy the Application
 
 ```bash
-# Build and start containers
-docker-compose -f docker-compose.prod.yml up -d --build
+# Build and start containers (from project root)
+docker-compose -f docker/docker-compose.prod.yml up -d --build
 
 # Check if containers are running
-docker-compose -f docker-compose.prod.yml ps
+docker-compose -f docker/docker-compose.prod.yml ps
 
 # View logs
-docker-compose -f docker-compose.prod.yml logs -f
+docker-compose -f docker/docker-compose.prod.yml logs -f
 ```
 
 ### 7. Verify Deployment
@@ -117,7 +117,7 @@ Default admin credentials:
 sudo crontab -e
 
 # Add this line to renew certificates monthly
-0 0 1 * * certbot renew --quiet && docker-compose -f /path/to/PCS/docker-compose.prod.yml restart apache
+0 0 1 * * certbot renew --quiet && docker-compose -f /path/to/perfectcharitysystem/docker/docker-compose.prod.yml restart apache
 ```
 
 ## Backup Strategy
@@ -148,17 +148,17 @@ chmod +x backup.sh
 
 # Add to crontab (runs daily at 2 AM)
 crontab -e
-# Add: 0 2 * * * /home/$USER/PCS/backup.sh
+# Add: 0 2 * * * /home/$USER/perfectcharitysystem/backup.sh
 ```
 
 ## Updating the Application
 
 ```bash
-# Pull latest code
+# Pull latest code (from project root)
 git pull
 
 # Rebuild and restart
-docker-compose -f docker-compose.prod.yml up -d --build
+docker-compose -f docker/docker-compose.prod.yml up -d --build
 
 # Clean up old images
 docker image prune -f
@@ -168,13 +168,13 @@ docker image prune -f
 
 ```bash
 # View live logs
-docker-compose -f docker-compose.prod.yml logs -f
+docker-compose -f docker/docker-compose.prod.yml logs -f
 
 # Check container health
-docker-compose -f docker-compose.prod.yml ps
+docker-compose -f docker/docker-compose.prod.yml ps
 
 # View Apache logs
-docker-compose -f docker-compose.prod.yml logs -f apache
+docker-compose -f docker/docker-compose.prod.yml logs -f apache
 ```
 
 ## Troubleshooting
@@ -221,31 +221,31 @@ docker stats
 
 ### For high traffic:
 
-Edit [Dockerfile.prod](Dockerfile.prod) and increase workers:
+Edit [docker/Dockerfile.prod](docker/Dockerfile.prod) and increase workers:
 ```dockerfile
-CMD ["gunicorn", "pcs-website:app", \
+CMD ["gunicorn", "codes.pcs_website:app", \
      "--workers", "8", \  # Increase from 4 to 8
 ```
 
 Then rebuild:
 ```bash
-docker-compose -f docker-compose.prod.yml up -d --build
+docker-compose -f docker/docker-compose.prod.yml up -d --build
 ```
 
 ## Stopping the Application
 
 ```bash
 # Stop containers
-docker-compose -f docker-compose.prod.yml down
+docker-compose -f docker/docker-compose.prod.yml down
 
 # Stop and remove all data (CAUTION!)
-docker-compose -f docker-compose.prod.yml down -v
+docker-compose -f docker/docker-compose.prod.yml down -v
 ```
 
 ## Support
 
 For issues:
-1. Check logs: `docker-compose -f docker-compose.prod.yml logs`
+1. Check logs: `docker-compose -f docker/docker-compose.prod.yml logs`
 2. Verify firewall: `sudo ufw status`
 3. Check DNS: `nslookup your-domain.com`
 4. Test locally: `curl http://localhost:8000`

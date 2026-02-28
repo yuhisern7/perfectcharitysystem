@@ -7,14 +7,18 @@
    pip install -r requirements.txt
    ```
 
-2. **Run the application:**
+2. **Run the application (development):**
    ```bash
-   python pcs-website.py
+   uvicorn codes.pcs_website:app --reload --host 0.0.0.0 --port 8000
    ```
-   
-   Or using uvicorn directly:
+
+   Or using the helper scripts:
    ```bash
-   uvicorn pcs-website:app --reload --host 0.0.0.0 --port 8000
+   # Windows
+   scripts/start.bat
+
+   # Linux / macOS
+   ./scripts/start.sh
    ```
 
 3. **Access the application:**
@@ -26,9 +30,35 @@
 All data is automatically saved to the `data/` directory:
 - `data/users.json` - User accounts and profiles
 - `data/blockchain.json` - PCS blockchain transactions
-- `data/profiles.json` - Charity profiles
+- `data/inspector_coin_additions.json` - Inspector coin audit log
 
 User uploads are stored in the `uploads/` directory.
+
+## User Roles
+
+| Role        | Registration  | Features |
+|-------------|---------------|----------|
+| **Donor**   | Public signup | Create profile, purchase PCS (which IS donating), view history |
+| **Receiver**| Admin creates | Sell PCS to donors for real money, get monthly credits, public profile |
+| **Inspector** | Pre-seeded  | Ban users, view locations, export data |
+
+## Key URLs
+
+- `/` - Homepage
+- `/register` - Sign up (donors only)
+- `/login` - Login
+- `/profile` - Your profile
+- `/search` - Search users
+- `/inspector/users` - Manage users (admin)
+- `/inspector/locations` - Geographic view (admin)
+- `/inspector/create-receiver` - Create receiver (admin)
+
+## API Endpoints (under `/api`)
+
+- `GET /api/health` - Health check
+- `GET /api/profiles` - List profiles
+- `POST /api/donate` - Record PCS transfer (internal use)
+- `GET /api/chain` - View blockchain
 
 ## Production Deployment
 
@@ -36,12 +66,12 @@ User uploads are stored in the `uploads/` directory.
 
 1. **Build the image:**
    ```bash
-   docker build -t pcs-charity-system .
+   docker build -f docker/Dockerfile -t pcs-charity-system .
    ```
 
 2. **Run with Docker Compose:**
    ```bash
-   docker-compose up -d
+   docker-compose -f docker/docker-compose.yml up -d
    ```
 
 3. **Access the application:**
@@ -55,7 +85,7 @@ User uploads are stored in the `uploads/` directory.
 
 2. **Run with production settings:**
    ```bash
-   uvicorn pcs-website:app --host 0.0.0.0 --port 8000 --workers 4
+   uvicorn codes.pcs_website:app --host 0.0.0.0 --port 8000 --workers 4
    ```
 
 3. **Setup as a systemd service:**
@@ -68,7 +98,7 @@ User uploads are stored in the `uploads/` directory.
    [Service]
    User=www-data
    WorkingDirectory=/var/www/pcs
-   ExecStart=/usr/local/bin/uvicorn pcs-website:app --host 0.0.0.0 --port 8000 --workers 4
+   ExecStart=/usr/local/bin/uvicorn codes.pcs_website:app --host 0.0.0.0 --port 8000 --workers 4
    Restart=always
 
    [Install]
@@ -146,8 +176,13 @@ export PCS_ADMIN_PASSWORD="secure-admin-password"
 ## Backup and Recovery
 
 **Backup:**
+
 ```bash
+# Linux / macOS
 tar -czf pcs-backup-$(date +%Y%m%d).tar.gz data/ uploads/
+
+# Windows (Git Bash or similar)
+tar -czf pcs-backup-$(date +%Y%m%d).tar.gz data uploads
 ```
 
 **Restore:**
@@ -165,6 +200,12 @@ lsof -i :8000
 kill -9 <PID>
 ```
 
+On Windows:
+
+```bash
+netstat -ano | findstr :8000
+```
+
 **Permission errors:**
 ```bash
 sudo chown -R www-data:www-data /var/www/pcs
@@ -174,6 +215,11 @@ sudo chmod -R 755 /var/www/pcs
 **Data not persisting:**
 - Check that `data/` directory exists and is writable
 - Review logs for permission errors
+
+**Dependencies missing?**
+```bash
+pip install -r requirements.txt
+```
 
 ## Support
 

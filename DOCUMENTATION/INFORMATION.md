@@ -34,7 +34,7 @@ A blockchain-based charity donation platform with transparent transaction tracki
 
 3. **Run the application:**
    ```bash
-   python pcs-website.py
+   uvicorn codes.pcs_website:app --reload --host 0.0.0.0 --port 8000
    ```
 
 4. **Access the website:**
@@ -44,16 +44,27 @@ A blockchain-based charity donation platform with transparent transaction tracki
 ## Project Structure
 
 ```
-PCS/
-├── pcs-crypto.py           # Blockchain implementation
-├── pcs-wallet.py           # Wallet management
-├── pcs-profiles.py         # Charity profile management
-├── pcs_ai.py               # Donation risk assessment
-├── pcs_persistence.py      # Data persistence layer
-├── perfectcharitysystem.py # Core API
-├── pcs-website.py          # Web frontend (main app)
-├── config.py               # Production configuration
-├── templates/              # HTML templates
+perfectcharitysystem/
+├── codes/                      # Core backend package
+│   ├── pcs-crypto.py           # Blockchain implementation
+│   ├── pcs-wallet.py           # Wallet management
+│   ├── pcs-profiles.py         # Charity profile management
+│   ├── pcs_ai.py               # Donation risk assessment & security
+│   ├── pcs_persistence.py      # Data persistence layer
+│   ├── perfectcharitysystem.py # Core API
+│   └── pcs-website.py          # Web frontend (main app)
+│
+├── config/
+│   ├── config.py               # Production configuration
+│   └── apache.conf             # Web server config (optional)
+│
+├── docker/
+│   ├── Dockerfile              # Dev/standard container image
+│   ├── Dockerfile.prod         # Production container image
+│   ├── docker-compose.yml      # Docker orchestration
+│   └── docker-compose.prod.yml # Production orchestration
+│
+├── templates/                  # HTML templates
 │   ├── index.html
 │   ├── login.html
 │   ├── register.html
@@ -62,12 +73,30 @@ PCS/
 │   ├── inspector_users.html
 │   ├── inspector_user_detail.html
 │   ├── inspector_locations.html
-│   └── inspector_create_receiver.html
-├── data/                   # Persisted data (auto-created)
+│   ├── inspector_create_receiver.html
+│   └── directory.html
+│
+├── data/                       # Persisted data (auto-created)
 │   ├── users.json
 │   ├── blockchain.json
-│   └── profiles.json
-└── uploads/                # User-uploaded media
+│   ├── inspector_coin_additions.json
+│   └── ml_models/
+│
+├── uploads/                    # User-uploaded media
+│
+├── documentation/              # Project documentation
+│   ├── deployment.md
+│   ├── implementation.md
+│   ├── information.md
+│   └── production.md
+│
+├── scripts/
+│   ├── start.bat               # Windows startup
+│   └── start.sh                # Linux/Mac startup
+│
+├── requirements.txt            # Python dependencies
+├── .env.example                # Environment template
+└── .gitignore                  # Git ignore configuration
 
 ```
 
@@ -101,7 +130,7 @@ PCS/
 All data is automatically saved to the `data/` directory:
 - **users.json**: All user accounts, profiles, and settings
 - **blockchain.json**: Complete blockchain transaction history
-- **profiles.json**: Charity profiles
+- **inspector_coin_additions.json**: Inspector coin change audit log
 
 Data is saved immediately after any changes, ensuring no data loss.
 
@@ -117,7 +146,7 @@ Data is saved immediately after any changes, ensuring no data loss.
 
 ## Production Deployment
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions including:
+See [documentation/deployment.md](documentation/deployment.md) for detailed deployment instructions including:
 - Docker deployment
 - Cloud hosting (AWS, Azure, Google Cloud)
 - Nginx reverse proxy setup
@@ -127,7 +156,7 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions includin
 ### Quick Docker Deploy
 
 ```bash
-docker-compose up -d
+docker-compose -f docker/docker-compose.yml up -d
 ```
 
 ## Configuration
@@ -146,11 +175,8 @@ export PCS_PORT="8000"
 The system also exposes a REST API under `/api`:
 
 - `GET /api/health` - Health check
-- `POST /api/profiles` - Create charity profile
 - `GET /api/profiles` - List all profiles
-- `GET /api/profiles/{id}` - Get profile details
 - `POST /api/donate` - Record PCS transfer (internal blockchain operation)
-- `GET /api/wallets/{id}` - Get wallet balance
 - `GET /api/chain` - View blockchain
 
 ## Development
@@ -158,7 +184,7 @@ The system also exposes a REST API under `/api`:
 Run in development mode with auto-reload:
 
 ```bash
-uvicorn pcs-website:app --reload
+uvicorn codes.pcs_website:app --reload
 ```
 
 ## Technology Stack
@@ -181,7 +207,7 @@ Set the `PCS_ADMIN_PASSWORD` environment variable or the system will use the def
 
 ## Support
 
-For deployment help, see [DEPLOYMENT.md](DEPLOYMENT.md)
+For deployment help, see [documentation/deployment.md](documentation/deployment.md)
 
 ---
 

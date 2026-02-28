@@ -3,13 +3,13 @@
 ## ✅ Completed Features
 
 ### 1. Data Persistence
-- **Module**: `pcs_persistence.py`
+- **Module**: `codes.pcs_persistence`
 - **Storage**: JSON files in `data/` directory
 - **Auto-save**: All changes automatically persisted
-- **Files**:
+- **Core files**:
   - `data/users.json` - User accounts and profiles
   - `data/blockchain.json` - Complete blockchain history
-  - `data/profiles.json` - Charity profiles
+  - `data/inspector_coin_additions.json` - Inspector coin audit log
 
 ### 2. User Management
 - **Roles**: Donor, Receiver, Inspector
@@ -36,20 +36,21 @@
 ### 5. Production-Ready Deployment
 
 #### Configuration Files
-- `requirements.txt` - Python dependencies
-- `config.py` - Environment-based configuration
-- `.env.example` - Example environment variables
-- `Dockerfile` - Container deployment
-- `docker-compose.yml` - Docker orchestration
+- `requirements.txt` - Python dependencies (project root)
+- `config/config.py` - Environment-based configuration
+- `.env.example` - Example environment variables (project root)
+- `docker/Dockerfile` and `docker/Dockerfile.prod` - Container images
+- `docker/docker-compose.yml` and `docker/docker-compose.prod.yml` - Docker orchestration
 - `.gitignore` - Source control exclusions
 
 #### Documentation
 - `README.md` - Complete project documentation
-- `DEPLOYMENT.md` - Detailed deployment guide
+- `documentation/deployment.md` - Detailed deployment & quick start guide
+- `documentation/implementation.md` - This implementation summary
 
 #### Startup Scripts
-- `start.bat` - Windows startup script
-- `start.sh` - Linux/Mac startup script
+- `scripts/start.bat` - Windows startup script
+- `scripts/start.sh` - Linux/Mac startup script
 
 ### 6. Security Enhancements
 - **Session Secret**: Environment-based configuration
@@ -62,24 +63,27 @@
 ## 📁 Project Structure
 
 ```
-PCS/
-├── Core Backend
-│   ├── pcs-crypto.py           # Blockchain with persistence
-│   ├── pcs-wallet.py           # Wallet management
-│   ├── pcs-profiles.py         # Profiles with persistence
-│   ├── pcs_ai.py               # Risk assessment
-│   ├── pcs_persistence.py      # Data storage layer
-│   ├── perfectcharitysystem.py # Core API
-│   └── pcs-website.py          # Main web application
+perfectcharitysystem/
+├── codes/                     # Core backend package
+│   ├── pcs-crypto.py          # Blockchain with persistence
+│   ├── pcs-wallet.py          # Wallet management
+│   ├── pcs-profiles.py        # Profiles with persistence
+│   ├── pcs_ai.py              # Risk assessment & security AI
+│   ├── pcs_persistence.py     # Data storage layer
+│   ├── perfectcharitysystem.py# Core API
+│   └── pcs-website.py         # Main web application
 │
-├── Configuration
-│   ├── config.py               # Production settings
-│   ├── requirements.txt        # Dependencies
-│   ├── .env.example           # Environment template
-│   ├── Dockerfile             # Container image
-│   └── docker-compose.yml     # Container orchestration
+├── config/
+│   ├── config.py              # Production settings
+│   └── apache.conf            # Web server config (optional)
 │
-├── Templates (HTML)
+├── docker/
+│   ├── Dockerfile             # Dev/standard container image
+│   ├── Dockerfile.prod        # Production container image
+│   ├── docker-compose.yml     # Docker orchestration
+│   └── docker-compose.prod.yml# Production orchestration
+│
+├── templates/                 # HTML templates
 │   ├── index.html             # Homepage
 │   ├── login.html             # Login page
 │   ├── register.html          # Registration (donor only)
@@ -92,22 +96,31 @@ PCS/
 │   ├── search.html            # User search
 │   ├── profile_public.html    # Public user view
 │   ├── upload_media.html      # Media uploads
-│   └── upload_picture.html    # Picture uploads
+│   ├── upload_picture.html    # Picture uploads
+│   └── directory.html         # Public charity/receiver directory
 │
-├── Data & Uploads
-│   ├── data/                  # Persisted JSON data
-│   │   ├── users.json
-│   │   ├── blockchain.json
-│   │   └── profiles.json
-│   └── uploads/               # User media files
+├── data/                      # Persisted JSON data & models
+│   ├── users.json
+│   ├── blockchain.json
+│   ├── inspector_coin_additions.json
+│   └── ml_models/             # Trained ML models for pcs_ai
 │
-├── Documentation
-│   ├── README.md              # Main documentation
-│   └── DEPLOYMENT.md          # Deployment guide
+├── uploads/                   # User media files
 │
-└── Scripts
-    ├── start.bat              # Windows startup
-    └── start.sh               # Linux/Mac startup
+├── documentation/
+│   ├── README.md (root)       # Main documentation
+│   ├── documentation/deployment.md
+│   ├── documentation/implementation.md
+│   ├── documentation/information.md
+│   └── documentation/production.md
+│
+├── scripts/
+│   ├── start.bat              # Windows startup
+│   └── start.sh               # Linux/Mac startup
+│
+├── requirements.txt           # Dependencies
+├── .env.example               # Environment template
+└── .gitignore                 # Source control exclusions
 ```
 
 ## 🚀 Quick Start
@@ -117,16 +130,20 @@ PCS/
 # Install dependencies
 pip install -r requirements.txt
 
-# Run the server
-python pcs-website.py
+# Run the server (development)
+uvicorn codes.pcs_website:app --reload --host 0.0.0.0 --port 8000
+
+# Or use the helper scripts
+scripts/start.bat   # Windows
+./scripts/start.sh  # Linux / macOS
 
 # Access at http://localhost:8000
-# Default admin: admin / admin
+# Default admin (inspector): admin / admin
 ```
 
 ### Docker Deployment
 ```bash
-docker-compose up -d
+docker-compose -f docker/docker-compose.yml up -d
 ```
 
 ### Production Deployment
@@ -136,7 +153,7 @@ export PCS_SECRET_KEY="your-random-secret-key"
 export PCS_ADMIN_PASSWORD="secure-password"
 
 # Run with production settings
-uvicorn pcs-website:app --host 0.0.0.0 --port 8000 --workers 4
+uvicorn codes.pcs_website:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
 ## 🔐 Environment Variables

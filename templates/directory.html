@@ -25,7 +25,7 @@
     <style>
       body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background: #0b1020; color: #f5f7ff; }
       header { padding: 2rem; background: linear-gradient(135deg, #111727, #1a2233); border-bottom: 1px solid #232a3d; text-align: center; }
-      header h1 { margin: 0; font-size: 2.2rem; background: linear-gradient(135deg, #4f9cff, #5fe2ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+      header h1 { margin: 0; font-size: 2.2rem; background: linear-gradient(135deg, #4f9cff, #5fe2ff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
       header p { margin: 0.5rem 0 0; color: #a9b3d4; font-size: 1rem; }
       .stats { display: flex; gap: 2rem; justify-content: center; margin-top: 1.5rem; flex-wrap: wrap; }
       .stat-box { background: #0e1424; padding: 1rem 2rem; border-radius: 10px; border: 1px solid #313a55; }
@@ -45,7 +45,7 @@
       .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
       .profile-name { font-size: 1.1rem; font-weight: 600; color: #5fe2ff; margin: 0; }
       .profile-location { font-size: 0.8rem; color: #8a92b6; margin: 0.25rem 0 0 0; }
-      .profile-intro { font-size: 0.85rem; color: #a9b3d4; margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+      .profile-intro { font-size: 0.85rem; color: #a9b3d4; margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
       .btn { display: inline-block; padding: 0.6rem 1.5rem; border-radius: 6px; background: linear-gradient(135deg, #4f9cff, #5fe2ff); color: #050814; font-weight: 600; text-decoration: none; margin-top: 0.5rem; }
       .btn:hover { filter: brightness(1.1); }
       .muted { color: #8a92b6; font-size: 0.9rem; }
