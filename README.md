@@ -3,7 +3,7 @@ The most transparent charity system ever built, each individual will have a prof
 
 ## Built for Governments worldwide
 
-This system is built for Governments worldwide, the perfect solution to battle charity crimes while protecting donors and reducing the rate of poverty.
+This system is built for Governments worldwide, the perfect solution for law enforcements to battle charity crimes while protecting donors and reducing the rate of poverty.
 
 #### Still under development stage
 
@@ -18,8 +18,6 @@ Someone is asking for donations, they showed videos and pictures of the poor, if
 #### Solution
 
 This is where Perfect Charity System shines, the transactions of the donors and receivers are recorded so everyone could examine how much the individual or organization has received in total.
-
-Perfect Charity System is profiled based, the donors and receivers each have thier profiles, the donors could choose who they wish to donate too directly, and Perfect Charity System does not profit from these donations, this eliminates existing charity crimes.
 
 ---
 
