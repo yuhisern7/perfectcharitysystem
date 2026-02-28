@@ -1,13 +1,17 @@
 # Perfect Charity System (PCS)
 The most transparent charity system ever built, each individual will have a profile and the donations are recoded using blockchain technology. Choose your own preferred payment gateway, each donations are direct, these direct donations are not used to pay for the expenses. The logical flow is engineered to eliminate existing charity crimes.
 
-### Still under development stage
+## Built for Governments worldwide
+
+This system is built for Governments worldwide to reduce the rate of charity crimes.
+
+#### Still under development stage
 
 Ongoing updates to ensure perfection.
 
 ## Enforcing transparency 
 
-#### Example scenario
+#### Problem
 
 Someone is asking for donations, they showed videos and pictures of the poor, if they only require "X" amount, how could we ever know how much was collected in total ? Their objectives are to receive the most donations possible.
 
@@ -15,7 +19,7 @@ Someone is asking for donations, they showed videos and pictures of the poor, if
 
 This is where Perfect Charity System shines, the transactions of the donors and receivers are recorded so everyone could examine how much the individual or organization has received in total.
 
-This eliminates existing charity crimes because donors could choose who they wish to donate too directly, and Perfect Charity System does not profit from these donations.
+Perfect Charity System is profiled based, the donors and receivers each have thier profiles, the donors could choose who they wish to donate too directly, and Perfect Charity System does not profit from these donations, this eliminates existing charity crimes.
 
 ---
 
