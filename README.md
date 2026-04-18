@@ -1,5 +1,7 @@
 ![Perfect Charity System](assets/Perfect-Charity-System.png)
 
+> This system is about 20% complete, I have no time because I am busy perfecting Battle Hardened AI and Battle Offensive AI, I will complete this someday.
+
 # Perfect Charity System (PCS)
 The most transparent charity system ever built, each individual will have a profile and the donations are recoded using blockchain technology. Choose your own preferred payment gateway, each donations are direct, these direct donations are not used to pay for the expenses. The logical flow is engineered to eliminate existing charity crimes.
 
